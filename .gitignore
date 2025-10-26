@@ -33,3 +33,10 @@ dist-ssr
 
 # Local Netlify folder
 .netlify
+
+# Database files
+*.db
+*.sqlite
+
+# MCP servers
+hydroinfo-mcp/
