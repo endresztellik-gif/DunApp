@@ -1,0 +1,188 @@
+{
+  "projectName": "DunApp PWA",
+  "description": "Progressive Web Application - Meteorológiai, vízállás és aszály monitoring rendszer Magyarország déli részére",
+  "version": "0.1.0",
+  "type": "web-application",
+  "primaryLanguage": "TypeScript",
+  "framework": "React",
+  
+  "techStack": {
+    "frontend": [
+      "React 18",
+      "TypeScript",
+      "Vite",
+      "Tailwind CSS",
+      "React Router"
+    ],
+    "charts": [
+      "Recharts"
+    ],
+    "maps": [
+      "Leaflet",
+      "React-Leaflet"
+    ],
+    "backend": [
+      "Supabase (PostgreSQL)",
+      "Supabase Edge Functions"
+    ],
+    "deployment": [
+      "GitHub",
+      "Netlify"
+    ]
+  },
+  
+  "modules": [
+    {
+      "name": "Meteorology",
+      "description": "Meteorológiai adatok 4 városra",
+      "cities": ["Szekszárd", "Baja", "Dunaszekcső", "Mohács"],
+      "dataCards": 6,
+      "hasRadar": true
+    },
+    {
+      "name": "WaterLevel",
+      "description": "Vízállás adatok 3 állomásra",
+      "stations": ["Baja", "Mohács", "Nagybajcs"],
+      "dataCards": 3,
+      "hasComparison": true
+    },
+    {
+      "name": "Drought",
+      "description": "Aszály és talajvíz monitoring",
+      "locations": ["Katymár", "Dávod", "Szederkény", "Sükösd", "Csávoly"],
+      "wells": 15,
+      "maps": 3,
+      "dataCards": 4
+    }
+  ],
+  
+  "keyFeatures": [
+    "Module-specific location selectors",
+    "Responsive mobile-first design",
+    "PWA with offline support",
+    "Interactive charts and maps",
+    "Real-time data fetching",
+    "Multi-station comparison"
+  ],
+  
+  "documentation": {
+    "primary": "docs/PROJECT_SUMMARY.md",
+    "design": "docs/DESIGN_SPECIFICATION.md",
+    "data": "docs/DATA_STRUCTURES.md",
+    "locations": "docs/LOCATIONS_DATA.md",
+    "changes": "docs/KEY_CHANGES_SUMMARY.md"
+  },
+  
+  "developmentPhases": [
+    {
+      "phase": 1,
+      "name": "Project Setup",
+      "duration": "1-2 days",
+      "tasks": [
+        "Vite + React + TypeScript initialization",
+        "Tailwind CSS configuration",
+        "Folder structure",
+        "Supabase setup"
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Database & Locations",
+      "duration": "1-2 days",
+      "tasks": [
+        "Database schema creation",
+        "Seed data insertion",
+        "Supabase client setup"
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Core Components",
+      "duration": "2-3 days",
+      "tasks": [
+        "Layout components",
+        "Header + ModuleTabs",
+        "BaseSelector",
+        "DataCard",
+        "Loading & Error states"
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "Meteorology Module",
+      "duration": "2 days"
+    },
+    {
+      "phase": 5,
+      "name": "Water Level Module",
+      "duration": "2 days"
+    },
+    {
+      "phase": 6,
+      "name": "Drought Module",
+      "duration": "3 days"
+    },
+    {
+      "phase": 7,
+      "name": "PWA Features",
+      "duration": "1-2 days"
+    },
+    {
+      "phase": 8,
+      "name": "Deployment",
+      "duration": "1 day"
+    }
+  ],
+  
+  "codeStandards": {
+    "typescript": {
+      "strict": true,
+      "noImplicitAny": true,
+      "preferInterfaces": true
+    },
+    "react": {
+      "componentType": "functional",
+      "hooksOnly": true,
+      "propTypes": "TypeScript interfaces"
+    },
+    "styling": {
+      "method": "Tailwind CSS",
+      "utilities": "prefer utility classes",
+      "customClasses": "only when necessary"
+    },
+    "fileNaming": {
+      "components": "PascalCase.tsx",
+      "hooks": "camelCase.ts",
+      "utils": "camelCase.ts"
+    }
+  },
+  
+  "criticalRules": [
+    "ALWAYS read documentation BEFORE starting any task",
+    "Module-specific selectors - NEVER global city selector",
+    "Drought module has TWO separate selector types (locations + wells)",
+    "TypeScript strict mode - NO 'any' types",
+    "Mobile-first responsive design",
+    "Follow DESIGN_SPECIFICATION.md color scheme exactly",
+    "All components must be accessible (ARIA labels)",
+    "Use functional components with hooks only"
+  ],
+  
+  "environmentVariables": {
+    "required": [
+      "VITE_SUPABASE_URL",
+      "VITE_SUPABASE_ANON_KEY"
+    ],
+    "optional": [
+      "VITE_OMSZ_API_KEY",
+      "VITE_RAINVIEWER_API_KEY",
+      "VITE_VIZUGY_API_KEY"
+    ]
+  },
+  
+  "dataRefreshIntervals": {
+    "meteorology": "1 hour",
+    "waterLevel": "6 hours",
+    "drought": "24 hours"
+  }
+}
