@@ -6,13 +6,12 @@
  * - Stores data in water_level_data table
  * - Called by cron job every hour
  *
- * TODO (Data Engineer):
- * 1. Implement vizugy.hu scraping (primary source for actual data)
- * 2. Implement hydroinfo.hu scraping (for forecasts)
- * 3. Add HTML parsing with Cheerio or similar
- * 4. Handle ISO-8859-2 encoding for hydroinfo.hu
- * 5. Add error handling and retry logic
- * 6. Store both actual and forecast data
+ * IMPLEMENTATION:
+ * - vizugy.hu scraping for actual water levels
+ * - hydroinfo.hu scraping for forecasts (with ISO-8859-2 encoding)
+ * - HTML parsing with DOMParser
+ * - Retry logic with exponential backoff
+ * - Error logging and handling
  *
  * Environment variables needed:
  * - SUPABASE_URL
@@ -21,6 +20,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts';
 
 // Environment variables
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -28,19 +28,160 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 // Stations to scrape
 const STATIONS = [
-  {
-    name: 'Baja',
-    vizugyUrl: 'https://www.vizugy.hu/index.php?id=vizmerce&mernev=Baja'
-  },
-  {
-    name: 'Mohács',
-    vizugyUrl: 'https://www.vizugy.hu/index.php?id=vizmerce&mernev=Mohács'
-  },
-  {
-    name: 'Nagybajcs',
-    vizugyUrl: 'https://www.vizugy.hu/index.php?id=vizmerce&mernev=Nagybajcs'
-  }
+  { name: 'Baja', hydroinfoCode: 'baja' },
+  { name: 'Mohács', hydroinfoCode: 'mohacs' },
+  { name: 'Nagybajcs', hydroinfoCode: 'nagybajcs' }
 ];
+
+// Retry configuration
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000; // ms
+
+/**
+ * Fetch with retry logic (exponential backoff)
+ */
+async function fetchWithRetry(
+  fetchFn: () => Promise<Response>,
+  retries = MAX_RETRIES,
+  delay = INITIAL_RETRY_DELAY
+): Promise<Response> {
+  try {
+    const response = await fetchFn();
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    return response;
+  } catch (error) {
+    if (retries === 0) {
+      throw error;
+    }
+    console.warn(`Fetch failed, retrying in ${delay}ms... (${retries} retries left)`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return fetchWithRetry(fetchFn, retries - 1, delay * 2);
+  }
+}
+
+/**
+ * Scrape water level data from vizugy.hu
+ */
+async function scrapeVizugyActual() {
+  const url = 'https://www.vizugy.hu/index.php?module=content&programelemid=138';
+
+  const response = await fetchWithRetry(() => fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; DunApp/1.0; +https://dunapp.hu)'
+    }
+  }));
+
+  const html = await response.text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+
+  if (!doc) {
+    throw new Error('Failed to parse HTML from vizugy.hu');
+  }
+
+  const waterLevels: Record<string, number> = {};
+
+  // Find all table rows
+  const rows = doc.querySelectorAll('table tr');
+
+  for (const row of rows) {
+    const cells = row.querySelectorAll('td');
+    if (cells.length === 0) continue;
+
+    const stationText = cells[0]?.textContent?.trim() || '';
+
+    // Check if this row contains one of our stations
+    for (const station of STATIONS) {
+      if (stationText.includes(station.name)) {
+        // Water level is typically in the last column
+        const lastCell = cells[cells.length - 1];
+        const waterLevelText = lastCell?.textContent?.trim() || '';
+        const waterLevel = parseInt(waterLevelText);
+
+        if (!isNaN(waterLevel)) {
+          waterLevels[station.name] = waterLevel;
+          console.log(`Scraped ${station.name}: ${waterLevel} cm`);
+        }
+        break;
+      }
+    }
+  }
+
+  return waterLevels;
+}
+
+/**
+ * Scrape water level forecast from hydroinfo.hu
+ */
+async function scrapeHydroinfoForecast() {
+  const url = 'http://www.hydroinfo.hu/Html/hidelo/duna.html';
+
+  const response = await fetchWithRetry(() => fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; DunApp/1.0; +https://dunapp.hu)'
+    }
+  }));
+
+  // Handle ISO-8859-2 encoding
+  const buffer = await response.arrayBuffer();
+  const decoder = new TextDecoder('iso-8859-2');
+  const html = decoder.decode(buffer);
+
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+
+  if (!doc) {
+    throw new Error('Failed to parse HTML from hydroinfo.hu');
+  }
+
+  const forecasts: Record<string, Array<{ day: number; waterLevel: number; date: string }>> = {};
+
+  // Find forecast table
+  const tables = doc.querySelectorAll('table');
+
+  for (const table of tables) {
+    const rows = table.querySelectorAll('tr');
+
+    for (const row of rows) {
+      const cells = row.querySelectorAll('td');
+      if (cells.length < 6) continue; // Need at least station name + 5 days forecast
+
+      const stationText = cells[0]?.textContent?.trim() || '';
+
+      // Check if this row contains one of our stations
+      for (const station of STATIONS) {
+        if (stationText.includes(station.name)) {
+          const stationForecasts = [];
+
+          // Extract 5-day forecast (next 5 cells)
+          for (let i = 1; i <= 5 && i < cells.length; i++) {
+            const forecastText = cells[i]?.textContent?.trim() || '';
+            const forecastLevel = parseInt(forecastText);
+
+            if (!isNaN(forecastLevel)) {
+              const forecastDate = new Date();
+              forecastDate.setDate(forecastDate.getDate() + i);
+
+              stationForecasts.push({
+                day: i,
+                waterLevel: forecastLevel,
+                date: forecastDate.toISOString().split('T')[0]
+              });
+            }
+          }
+
+          if (stationForecasts.length > 0) {
+            forecasts[station.name] = stationForecasts;
+            console.log(`Scraped forecast for ${station.name}: ${stationForecasts.length} days`);
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  return forecasts;
+}
 
 serve(async (req) => {
   try {
@@ -53,32 +194,119 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // TODO: Implement actual water level scraping
-    // For now, return placeholder response
+    const results = [];
+    let successCount = 0;
+    let failureCount = 0;
 
-    const results = STATIONS.map(station => ({
-      station: station.name,
-      status: 'placeholder',
-      message: 'Data Engineer: Implement vizugy.hu scraping here',
-      url: station.vizugyUrl
-    }));
+    // Scrape actual water levels from vizugy.hu
+    console.log('Scraping actual water levels from vizugy.hu...');
+    let waterLevels: Record<string, number> = {};
 
-    console.log('✅ Fetch Water Level Edge Function - Completed (placeholder)');
+    try {
+      waterLevels = await scrapeVizugyActual();
+    } catch (error) {
+      console.error('Failed to scrape vizugy.hu:', error.message);
+      // Continue anyway - we might still have forecast data
+    }
+
+    // Scrape forecasts from hydroinfo.hu
+    console.log('Scraping forecasts from hydroinfo.hu...');
+    let forecasts: Record<string, Array<{ day: number; waterLevel: number; date: string }>> = {};
+
+    try {
+      forecasts = await scrapeHydroinfoForecast();
+    } catch (error) {
+      console.error('Failed to scrape hydroinfo.hu:', error.message);
+      // Continue anyway - we might have actual data
+    }
+
+    // Process each station
+    for (const station of STATIONS) {
+      try {
+        console.log(`Processing ${station.name}...`);
+
+        // Get station_id from database
+        const { data: stationData, error: stationError } = await supabase
+          .from('water_level_stations')
+          .select('id')
+          .eq('station_name', station.name)
+          .single();
+
+        if (stationError || !stationData) {
+          throw new Error(`Station not found in database: ${station.name}`);
+        }
+
+        // Insert actual water level if available
+        if (waterLevels[station.name]) {
+          const { error: insertError } = await supabase
+            .from('water_level_data')
+            .insert({
+              station_id: stationData.id,
+              water_level_cm: waterLevels[station.name],
+              flow_rate_m3s: null, // Not available from scraping
+              water_temp_celsius: null, // Not available from scraping
+              timestamp: new Date().toISOString()
+            });
+
+          if (insertError) {
+            console.error(`Failed to insert water level for ${station.name}:`, insertError.message);
+          } else {
+            console.log(`✅ Inserted water level for ${station.name}: ${waterLevels[station.name]} cm`);
+          }
+        }
+
+        // Insert forecasts if available
+        if (forecasts[station.name]) {
+          for (const forecast of forecasts[station.name]) {
+            const { error: forecastError } = await supabase
+              .from('water_level_forecasts')
+              .upsert({
+                station_id: stationData.id,
+                forecast_date: forecast.date,
+                water_level_cm: forecast.waterLevel,
+                forecast_day: forecast.day
+              }, {
+                onConflict: 'station_id,forecast_date'
+              });
+
+            if (forecastError) {
+              console.error(`Failed to insert forecast for ${station.name} day ${forecast.day}:`, forecastError.message);
+            }
+          }
+          console.log(`✅ Inserted ${forecasts[station.name].length} forecasts for ${station.name}`);
+        }
+
+        successCount++;
+        results.push({
+          station: station.name,
+          status: 'success',
+          waterLevel: waterLevels[station.name] || null,
+          forecastDays: forecasts[station.name]?.length || 0
+        });
+
+      } catch (error) {
+        failureCount++;
+        results.push({
+          station: station.name,
+          status: 'error',
+          error: error.message
+        });
+        console.error(`❌ Error for ${station.name}:`, error.message);
+      }
+    }
+
+    console.log(`✅ Fetch Water Level Edge Function - Completed: ${successCount} success, ${failureCount} failed`);
 
     return new Response(
       JSON.stringify({
         success: true,
         timestamp: new Date().toISOString(),
-        results: results,
-        todo: [
-          'Implement vizugy.hu scraping for actual water levels',
-          'Implement hydroinfo.hu scraping for forecasts',
-          'Parse HTML tables with Cheerio or DOMParser',
-          'Handle ISO-8859-2 encoding for hydroinfo.hu',
-          'Store in water_level_data table',
-          'Store forecasts in water_level_forecasts table',
-          'Add error handling and retry logic'
-        ]
+        summary: {
+          total: STATIONS.length,
+          success: successCount,
+          failed: failureCount
+        },
+        results
       }),
       {
         headers: { 'Content-Type': 'application/json' },
@@ -102,64 +330,3 @@ serve(async (req) => {
     );
   }
 });
-
-/**
- * IMPLEMENTATION GUIDE (for Data Engineer):
- *
- * 1. Scrape vizugy.hu for actual water levels:
- *    - URL: https://www.vizugy.hu/index.php?module=content&programelemid=138
- *    - Look for table rows with station names
- *    - Extract water level from last column (cm)
- *    - User-Agent header required
- *
- * 2. Example scraping code:
- *    const response = await fetch(VIZUGY_URL, {
- *      headers: {
- *        'User-Agent': 'Mozilla/5.0 DunApp/1.0'
- *      }
- *    });
- *    const html = await response.text();
- *    // Parse HTML with Cheerio or DOMParser
- *
- * 3. Get station_id from database:
- *    const { data: stationData } = await supabase
- *      .from('water_level_stations')
- *      .select('id')
- *      .eq('station_name', stationName)
- *      .single();
- *
- * 4. Insert into water_level_data table:
- *    const { error } = await supabase
- *      .from('water_level_data')
- *      .insert({
- *        station_id: stationData.id,
- *        water_level_cm: waterLevel,
- *        timestamp: new Date().toISOString()
- *      });
- *
- * 5. Scrape hydroinfo.hu for forecasts:
- *    - URL: http://www.hydroinfo.hu/Html/hidelo/duna.html
- *    - IMPORTANT: ISO-8859-2 encoding!
- *    - Use iconv-lite or similar for decoding
- *    - Extract 5-day forecast for each station
- *
- * 6. Store forecasts in water_level_forecasts table:
- *    const { error } = await supabase
- *      .from('water_level_forecasts')
- *      .upsert({
- *        station_id: stationData.id,
- *        forecast_date: forecastDate,
- *        water_level_cm: forecastLevel,
- *        forecast_day: dayNumber
- *      });
- *
- * 7. Error handling:
- *    - Retry scraping 3 times with exponential backoff
- *    - Log all errors for debugging
- *    - If scraping fails, keep previous cached data
- *
- * CRITICAL: For hydroinfo.hu, handle ISO-8859-2 encoding:
- * const buffer = await response.arrayBuffer();
- * const decoder = new TextDecoder('iso-8859-2');
- * const html = decoder.decode(buffer);
- */

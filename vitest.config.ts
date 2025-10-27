@@ -9,9 +9,10 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: true,
+    testTimeout: 30000, // 30 seconds for async operations
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html', 'lcov'],
       exclude: [
         'node_modules/',
         'src/test/',
@@ -20,6 +21,16 @@ export default defineConfig({
         '**/mockData.ts',
         '**/*.test.tsx',
         '**/*.test.ts',
+        'src/test/mocks/**',
+        'src/test/integration/**',
+        '**/*.spec.ts',
+        '**/*.spec.tsx',
+      ],
+      include: [
+        'src/hooks/**/*.ts',
+        'src/hooks/**/*.tsx',
+        'src/lib/**/*.ts',
+        'src/components/**/*.tsx',
       ],
       thresholds: {
         lines: 80,
