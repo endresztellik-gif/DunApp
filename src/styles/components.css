@@ -1,0 +1,342 @@
+/**
+ * DunApp PWA Component Classes
+ *
+ * Reusable Tailwind component classes for consistent design.
+ * These classes use @layer components to ensure proper specificity.
+ *
+ * Usage: Apply these classes to components alongside Tailwind utilities
+ */
+
+@layer components {
+  /* ========================================
+     DATA CARD COMPONENT
+     ======================================== */
+
+  .data-card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-5 min-h-[140px] transition-shadow duration-200 hover:shadow-md;
+  }
+
+  .data-card-header {
+    @apply flex items-center gap-2 mb-3;
+  }
+
+  .data-card-label {
+    @apply text-sm text-gray-600 font-medium;
+  }
+
+  .data-card-value {
+    @apply text-3xl font-bold text-gray-900;
+  }
+
+  .data-card-unit {
+    @apply text-base text-gray-500 mt-1;
+  }
+
+  .data-card-icon {
+    @apply h-6 w-6;
+  }
+
+  /* ========================================
+     DATA CARD WITH DROPDOWN (DROUGHT MODULE)
+     ======================================== */
+
+  .data-card-dropdown {
+    @apply data-card;
+  }
+
+  .data-card-dropdown-selector {
+    @apply w-full px-3 py-2 border border-orange-400 rounded-lg text-sm font-medium text-gray-900 bg-white transition-colors duration-200 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2;
+  }
+
+  /* ========================================
+     MODULE TAB BUTTONS
+     ======================================== */
+
+  .module-tab {
+    @apply px-5 py-2.5 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .module-tab-meteorology {
+    @apply module-tab text-cyan-600 border-2 border-cyan-200 hover:bg-cyan-50 focus:ring-cyan-500;
+  }
+
+  .module-tab-meteorology-active {
+    @apply module-tab bg-cyan-600 text-white border-2 border-cyan-600 hover:bg-cyan-700 focus:ring-cyan-500;
+  }
+
+  .module-tab-water {
+    @apply module-tab text-cyan-600 border-2 border-cyan-300 hover:bg-cyan-50 focus:ring-cyan-500;
+  }
+
+  .module-tab-water-active {
+    @apply module-tab bg-cyan-500 text-white border-2 border-cyan-500 hover:bg-cyan-600 focus:ring-cyan-500;
+  }
+
+  .module-tab-drought {
+    @apply module-tab text-orange-600 border-2 border-orange-300 hover:bg-orange-50 focus:ring-orange-500;
+  }
+
+  .module-tab-drought-active {
+    @apply module-tab bg-orange-500 text-white border-2 border-orange-500 hover:bg-orange-600 focus:ring-orange-500;
+  }
+
+  /* ========================================
+     LOCATION/STATION SELECTOR DROPDOWN
+     ======================================== */
+
+  .selector-dropdown {
+    @apply relative w-full md:w-auto;
+  }
+
+  .selector-button {
+    @apply flex items-center gap-2 px-4 py-2 bg-white border-2 rounded-lg font-medium transition-all duration-200 w-full md:w-auto focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  /* Meteorology selector */
+  .selector-button-meteorology {
+    @apply selector-button border-cyan-200 text-cyan-700 hover:bg-cyan-50 focus:ring-cyan-500;
+  }
+
+  /* Water level selector */
+  .selector-button-water {
+    @apply selector-button border-cyan-300 text-cyan-700 hover:bg-cyan-50 focus:ring-cyan-500;
+  }
+
+  /* Drought selector */
+  .selector-button-drought {
+    @apply selector-button border-orange-300 text-orange-700 hover:bg-orange-50 focus:ring-orange-500;
+  }
+
+  .selector-dropdown-menu {
+    @apply absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto;
+  }
+
+  .selector-dropdown-item {
+    @apply px-4 py-2 cursor-pointer transition-colors duration-150 hover:bg-gray-100 active:bg-gray-200;
+  }
+
+  .selector-dropdown-item-selected {
+    @apply selector-dropdown-item bg-gray-100 font-medium;
+  }
+
+  /* ========================================
+     CHART CONTAINER
+     ======================================== */
+
+  .chart-container {
+    @apply w-full bg-white rounded-lg shadow-sm border border-gray-200 p-4;
+  }
+
+  .chart-container-standard {
+    @apply chart-container h-[350px] md:h-[350px];
+  }
+
+  .chart-container-mobile {
+    @apply chart-container h-[250px] md:h-[350px];
+  }
+
+  .chart-container-comparison {
+    @apply chart-container h-[400px];
+  }
+
+  .chart-header {
+    @apply flex items-center gap-2 mb-4;
+  }
+
+  .chart-title {
+    @apply text-xl font-semibold text-gray-900;
+  }
+
+  /* ========================================
+     MAP CONTAINER
+     ======================================== */
+
+  .map-container {
+    @apply w-full bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden;
+  }
+
+  .map-container-standard {
+    @apply map-container h-[300px] md:h-[400px];
+  }
+
+  .map-header {
+    @apply p-4 border-b border-gray-200;
+  }
+
+  .map-title {
+    @apply text-lg font-semibold text-gray-900;
+  }
+
+  .map-legend {
+    @apply absolute bottom-4 right-4 bg-white rounded-lg shadow-md p-3 z-[1000];
+  }
+
+  .map-legend-item {
+    @apply flex items-center gap-2 text-sm text-gray-700;
+  }
+
+  .map-legend-color {
+    @apply w-4 h-4 rounded;
+  }
+
+  /* ========================================
+     LOADING STATES
+     ======================================== */
+
+  .skeleton-loader {
+    @apply animate-pulse bg-gray-200 rounded;
+  }
+
+  .skeleton-card {
+    @apply skeleton-loader h-[140px] rounded-lg;
+  }
+
+  .skeleton-text {
+    @apply skeleton-loader h-4 rounded;
+  }
+
+  .spinner {
+    @apply inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent;
+  }
+
+  /* ========================================
+     ERROR STATES
+     ======================================== */
+
+  .error-card {
+    @apply data-card border-red-300 bg-red-50;
+  }
+
+  .error-message {
+    @apply text-red-700 text-sm font-medium;
+  }
+
+  .error-retry-button {
+    @apply mt-2 px-3 py-1 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+  }
+
+  /* ========================================
+     EMPTY STATES
+     ======================================== */
+
+  .empty-state {
+    @apply data-card flex flex-col items-center justify-center text-center py-8;
+  }
+
+  .empty-state-icon {
+    @apply h-12 w-12 text-gray-400 mb-3;
+  }
+
+  .empty-state-text {
+    @apply text-gray-600 text-sm;
+  }
+
+  /* ========================================
+     SECTION HEADER
+     ======================================== */
+
+  .section-header {
+    @apply flex items-center justify-between mb-4;
+  }
+
+  .section-title {
+    @apply text-2xl font-bold text-gray-900;
+  }
+
+  .section-subtitle {
+    @apply text-sm text-gray-600 mt-1;
+  }
+
+  /* ========================================
+     DATA SOURCE FOOTER
+     ======================================== */
+
+  .data-source-footer {
+    @apply mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500;
+  }
+
+  .data-source-timestamp {
+    @apply font-medium text-gray-600;
+  }
+
+  /* ========================================
+     RESPONSIVE GRID LAYOUTS
+     ======================================== */
+
+  .grid-meteorology-cards {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+
+  .grid-water-cards {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+
+  .grid-drought-cards {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+  }
+
+  .grid-drought-maps {
+    @apply grid grid-cols-1 lg:grid-cols-3 gap-4;
+  }
+
+  .grid-well-list {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3;
+  }
+
+  /* ========================================
+     WELL MONITORING (DROUGHT MODULE)
+     ======================================== */
+
+  .well-card {
+    @apply bg-white border border-gray-200 rounded-lg p-3 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-orange-400;
+  }
+
+  .well-card-name {
+    @apply text-base font-semibold text-gray-900;
+  }
+
+  .well-card-code {
+    @apply text-sm text-gray-600;
+  }
+
+  /* ========================================
+     HEADER COMPONENT
+     ======================================== */
+
+  .app-header {
+    @apply sticky top-0 z-20 bg-white shadow-sm px-6 py-4;
+  }
+
+  .app-header-content {
+    @apply max-w-7xl mx-auto flex items-center justify-between;
+  }
+
+  .app-logo {
+    @apply text-2xl font-bold text-gray-900;
+  }
+
+  .app-nav {
+    @apply flex items-center gap-3;
+  }
+
+  /* ========================================
+     MAIN CONTENT CONTAINER
+     ======================================== */
+
+  .main-container {
+    @apply max-w-7xl mx-auto px-6 py-6 space-y-6;
+  }
+
+  /* ========================================
+     ACCESSIBILITY UTILITIES
+     ======================================== */
+
+  .sr-only {
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .focus-visible-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+}
