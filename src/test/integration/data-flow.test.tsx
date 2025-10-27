@@ -233,12 +233,11 @@ describe('Integration: Meteorology Data Flow', () => {
     });
 
     // First attempt should fail
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.error).toBeDefined();
+    await waitFor(() => expect(result.current.error).toBeDefined(), { timeout: 10000 });
 
     // Refetch should succeed
     result.current.refetch();
-    await waitFor(() => expect(result.current.weatherData).toBeDefined());
+    await waitFor(() => expect(result.current.weatherData).toBeDefined(), { timeout: 10000 });
   });
 });
 

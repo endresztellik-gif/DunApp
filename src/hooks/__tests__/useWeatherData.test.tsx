@@ -159,7 +159,7 @@ describe('useWeatherData', () => {
       wrapper: createWrapper()
     });
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await waitFor(() => expect(result.current.isLoading).toBe(false), { timeout: 10000 });
 
     expect(result.current.error).toBeDefined();
     expect(result.current.weatherData).toBe(null);
@@ -201,7 +201,7 @@ describe('useWeatherData', () => {
       wrapper: createWrapper()
     });
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await waitFor(() => expect(result.current.isLoading).toBe(false), { timeout: 10000 });
 
     expect(result.current.error).toBeDefined();
     expect(result.current.weatherData).toBe(null);

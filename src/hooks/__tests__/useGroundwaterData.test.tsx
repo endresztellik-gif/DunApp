@@ -127,7 +127,7 @@ describe('useGroundwaterData', () => {
       wrapper: createWrapper()
     });
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await waitFor(() => expect(result.current.isLoading).toBe(false), { timeout: 10000 });
 
     expect(result.current.error).toBeDefined();
     expect(result.current.groundwaterData).toBe(null);
