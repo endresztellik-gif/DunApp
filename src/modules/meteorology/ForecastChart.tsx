@@ -1,0 +1,131 @@
+/**
+ * ForecastChart Component
+ *
+ * Displays 3-day weather forecast with 6-hour breakdown.
+ * Uses Recharts for visualization with temperature and precipitation.
+ */
+
+import React from 'react';
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
+import { EmptyState } from '../../components/UI/EmptyState';
+import { Calendar } from 'lucide-react';
+
+interface ForecastChartProps {
+  cityId: string;
+}
+
+// Placeholder forecast data (will be replaced with real data)
+const generateMockForecastData = () => {
+  const data = [];
+  const now = new Date();
+
+  for (let i = 0; i < 12; i++) {
+    // 12 data points (6-hour intervals for 3 days)
+    const date = new Date(now.getTime() + i * 6 * 60 * 60 * 1000);
+    data.push({
+      time: date.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric', hour: '2-digit' }),
+      temperature: 10 + Math.random() * 10,
+      precipitation: Math.random() * 5,
+    });
+  }
+
+  return data;
+};
+
+export const ForecastChart: React.FC<ForecastChartProps> = ({ cityId }) => {
+  // Placeholder data - will be fetched from API
+  const forecastData = cityId ? generateMockForecastData() : [];
+
+  if (!cityId || forecastData.length === 0) {
+    return (
+      <EmptyState
+        icon={Calendar}
+        message="Nincs előrejelzési adat"
+        description="Válasszon várost az időjárás előrejelzés megtekintéséhez"
+      />
+    );
+  }
+
+  return (
+    <div className="chart-container-standard">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={forecastData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ed" />
+          <XAxis
+            dataKey="time"
+            stroke="#607d8b"
+            style={{ fontSize: '12px' }}
+            angle={-45}
+            textAnchor="end"
+            height={80}
+          />
+          <YAxis
+            yAxisId="temp"
+            stroke="#00a8cc"
+            style={{ fontSize: '12px' }}
+            label={{ value: '°C', angle: -90, position: 'insideLeft' }}
+          />
+          <YAxis
+            yAxisId="precip"
+            orientation="right"
+            stroke="#1e88e5"
+            style={{ fontSize: '12px' }}
+            label={{ value: 'mm', angle: 90, position: 'insideRight' }}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: 'white',
+              border: '1px solid #e0e7ed',
+              borderRadius: '8px',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+            }}
+            formatter={(value: number, name: string) => {
+              if (name === 'temperature') return [`${value.toFixed(1)}°C`, 'Hőmérséklet'];
+              if (name === 'precipitation') return [`${value.toFixed(1)} mm`, 'Csapadék'];
+              return value;
+            }}
+          />
+          <Legend
+            verticalAlign="top"
+            height={36}
+            formatter={(value) => {
+              if (value === 'temperature') return 'Hőmérséklet';
+              if (value === 'precipitation') return 'Csapadék';
+              return value;
+            }}
+          />
+          <Line
+            yAxisId="temp"
+            type="monotone"
+            dataKey="temperature"
+            stroke="#00a8cc"
+            strokeWidth={2}
+            dot={{ fill: '#00a8cc', r: 4 }}
+            activeDot={{ r: 6 }}
+          />
+          <Line
+            yAxisId="precip"
+            type="monotone"
+            dataKey="precipitation"
+            stroke="#1e88e5"
+            strokeWidth={2}
+            strokeDasharray="5 5"
+            dot={{ fill: '#1e88e5', r: 4 }}
+            activeDot={{ r: 6 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};

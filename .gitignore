@@ -40,3 +40,6 @@ dist-ssr
 
 # MCP servers
 hydroinfo-mcp/
+
+# Test coverage
+coverage/
