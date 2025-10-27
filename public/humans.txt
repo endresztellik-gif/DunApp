@@ -1,0 +1,103 @@
+/* TEAM */
+
+Developer: Claude Code (Anthropic)
+Role: AI Software Engineer
+Contact: noreply@anthropic.com
+From: San Francisco, California, USA
+
+Project Owner: Endre Sztellik
+Role: Product Owner / Domain Expert
+Location: Hungary
+
+/* THANKS */
+
+Claude (Sonnet 4.5) - AI-powered development
+Anthropic - For creating Claude Code
+Open Source Community - For amazing tools and libraries
+
+/* SITE */
+
+Project: DunApp PWA
+Description: Meteorológiai, vízállás és aszály monitoring alkalmazás Magyarország déli részére
+Last update: 2025-10-27
+Language: Hungarian (hu)
+Doctype: HTML5
+IDE: Visual Studio Code + Claude Code
+
+/* TECHNOLOGY */
+
+Frontend Framework: React 18 + TypeScript
+Build Tool: Vite 7
+Styling: Tailwind CSS 4
+State Management: TanStack Query
+Backend: Supabase (PostgreSQL + Edge Functions)
+Charts: Recharts
+Maps: Leaflet + React-Leaflet
+Deployment: Netlify
+Version Control: Git + GitHub
+CI/CD: GitHub Actions
+Testing: Vitest + React Testing Library
+Code Quality: ESLint + Prettier + TypeScript
+
+/* FEATURES */
+
+- Progressive Web App (PWA)
+- Offline-first architecture
+- Real-time data synchronization
+- Responsive design (mobile-first)
+- Accessibility compliant (WCAG AA)
+- Performance optimized (Lighthouse 90+)
+- Dark mode support (coming soon)
+- Push notifications (optional)
+
+/* DATA SOURCES */
+
+Meteorology: OMSZ (Hungarian Meteorological Service)
+Water Level: VízÜgy (Hungarian Water Authority)
+Drought Monitoring: OVF + HUGEO
+Groundwater: VízÜgy Wells Database
+
+/* MODULES */
+
+1. Meteorology Module (Meteorológia)
+   - 4 cities: Szekszárd, Baja, Dunaszekcső, Mohács
+   - Real-time weather data
+   - 7-day forecast
+   - Radar imagery
+
+2. Water Level Module (Vízállás)
+   - 3 stations: Baja, Mohács, Nagybajcs
+   - Danube water level monitoring
+   - Historical data charts
+   - Flood alerts
+
+3. Drought Module (Aszály)
+   - 5 monitoring locations
+   - 15 groundwater wells
+   - Soil moisture data
+   - Drought index calculations
+   - Interactive maps
+
+/* LOCATIONS */
+
+Cities: Szekszárd, Baja, Dunaszekcső, Mohács
+Water Stations: Baja, Mohács, Nagybajcs
+Drought Monitoring: Katymár, Dávod, Szederkény, Sükösd, Csávoly
+Groundwater Wells: 15 locations across southern Hungary
+
+/* LICENSE */
+
+Copyright (c) 2025 Endre Sztellik
+All rights reserved.
+
+This is proprietary software developed for monitoring environmental
+conditions in southern Hungary. Unauthorized copying, distribution,
+or modification is strictly prohibited.
+
+/* CONTACT */
+
+For questions, issues, or feature requests:
+Repository: github.com/[username]/dunapp-pwa
+Issues: github.com/[username]/dunapp-pwa/issues
+
+Built with love for the Hungarian environment monitoring community.

@@ -13,7 +13,18 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "deploy": "./scripts/deploy.sh",
+    "deploy:preview": "./scripts/deploy.sh --preview",
+    "deploy:skip-tests": "./scripts/deploy.sh --skip-tests",
+    "supabase:setup": "./scripts/setup-supabase.sh",
+    "supabase:new": "./scripts/setup-supabase.sh --new-project",
+    "supabase:link": "./scripts/setup-supabase.sh --link",
+    "supabase:update": "./scripts/setup-supabase.sh --update",
+    "lighthouse": "lhci autorun",
+    "lighthouse:mobile": "lighthouse http://localhost:4173 --preset=mobile --view",
+    "lighthouse:desktop": "lighthouse http://localhost:4173 --preset=desktop --view",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.76.1",
@@ -55,6 +66,8 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.45.0",
     "vite": "^7.1.7",
-    "vitest": "^4.0.4"
+    "vite-plugin-pwa": "^1.1.0",
+    "vitest": "^4.0.4",
+    "workbox-window": "^7.3.0"
   }
 }
