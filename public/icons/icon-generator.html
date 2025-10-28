@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DunApp Icon Generator</title>
+</head>
+<body>
+  <h1>DunApp PWA Icon Generator</h1>
+  <p>Use this page to generate placeholder icons. Right-click and "Save image as..." for each size.</p>
+
+  <div id="icons"></div>
+
+  <script>
+    const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+    const iconsContainer = document.getElementById('icons');
+
+    sizes.forEach(size => {
+      // Create canvas
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      // Background gradient (DunApp theme color)
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#00A8CC');
+      gradient.addColorStop(1, '#0088AA');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+
+      // Draw wave pattern (representing water)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = size * 0.02;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        const amplitude = size * 0.1;
+        const frequency = 2 * Math.PI / size;
+        const yOffset = size * 0.3 + (i * size * 0.15);
+
+        for (let x = 0; x <= size; x++) {
+          const y = yOffset + Math.sin(x * frequency) * amplitude;
+          if (x === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.stroke();
+      }
+
+      // Draw text "DA"
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = `bold ${size * 0.35}px Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('DA', size / 2, size / 2);
+
+      // Draw droplet icon (simplified)
+      ctx.beginPath();
+      const dropletSize = size * 0.15;
+      const dropletX = size * 0.75;
+      const dropletY = size * 0.25;
+      ctx.arc(dropletX, dropletY + dropletSize * 0.3, dropletSize * 0.4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.fill();
+
+      // Add to page
+      const container = document.createElement('div');
+      container.style.marginBottom = '20px';
+
+      const label = document.createElement('h3');
+      label.textContent = `${size}x${size}`;
+      container.appendChild(label);
+
+      canvas.style.border = '2px solid #ccc';
+      canvas.style.borderRadius = '8px';
+      container.appendChild(canvas);
+
+      const downloadBtn = document.createElement('button');
+      downloadBtn.textContent = `Download icon-${size}x${size}.png`;
+      downloadBtn.style.display = 'block';
+      downloadBtn.style.marginTop = '10px';
+      downloadBtn.style.padding = '10px 20px';
+      downloadBtn.style.backgroundColor = '#00A8CC';
+      downloadBtn.style.color = 'white';
+      downloadBtn.style.border = 'none';
+      downloadBtn.style.borderRadius = '4px';
+      downloadBtn.style.cursor = 'pointer';
+      downloadBtn.onclick = () => {
+        const link = document.createElement('a');
+        link.download = `icon-${size}x${size}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+      };
+      container.appendChild(downloadBtn);
+
+      iconsContainer.appendChild(container);
+    });
+
+    // Auto-download all icons button
+    const downloadAllBtn = document.createElement('button');
+    downloadAllBtn.textContent = 'Download All Icons';
+    downloadAllBtn.style.position = 'fixed';
+    downloadAllBtn.style.top = '20px';
+    downloadAllBtn.style.right = '20px';
+    downloadAllBtn.style.padding = '15px 30px';
+    downloadAllBtn.style.backgroundColor = '#0088AA';
+    downloadAllBtn.style.color = 'white';
+    downloadAllBtn.style.border = 'none';
+    downloadAllBtn.style.borderRadius = '8px';
+    downloadAllBtn.style.cursor = 'pointer';
+    downloadAllBtn.style.fontSize = '16px';
+    downloadAllBtn.style.fontWeight = 'bold';
+    downloadAllBtn.onclick = () => {
+      const canvases = document.querySelectorAll('canvas');
+      canvases.forEach((canvas, index) => {
+        setTimeout(() => {
+          const link = document.createElement('a');
+          link.download = `icon-${sizes[index]}x${sizes[index]}.png`;
+          link.href = canvas.toDataURL();
+          link.click();
+        }, index * 100); // Stagger downloads
+      });
+    };
+    document.body.appendChild(downloadAllBtn);
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #F0F4F8;
+    }
+    h1 {
+      color: #00A8CC;
+    }
+  </style>
+</body>
+</html>

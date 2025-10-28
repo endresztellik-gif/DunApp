@@ -14,6 +14,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
+    "test:edge-functions": "deno test --allow-net --allow-env --allow-read supabase/functions/tests/*.test.ts",
+    "test:all": "npm run test && npm run test:edge-functions",
     "deploy": "./scripts/deploy.sh",
     "deploy:preview": "./scripts/deploy.sh --preview",
     "deploy:skip-tests": "./scripts/deploy.sh --skip-tests",

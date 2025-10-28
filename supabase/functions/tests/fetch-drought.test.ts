@@ -191,7 +191,7 @@ Deno.test('fetch-drought: handle API error responses', async () => {
       throw new Error(errorResponse.error);
     }
   } catch (error) {
-    assertEquals(error.message, 'Station not found');
+    assertEquals((error as Error).message, 'Station not found');
   }
 });
 

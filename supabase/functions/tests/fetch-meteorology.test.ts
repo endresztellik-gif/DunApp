@@ -169,7 +169,12 @@ Deno.test('fetch-meteorology: data transformation from API to database format', 
 });
 
 Deno.test('fetch-meteorology: handle missing optional fields', () => {
-  const minimalApiResponse = {
+  const minimalApiResponse: {
+    main: { temp: number; feels_like?: number; humidity?: number };
+    wind: { speed?: number };
+    clouds: Record<string, unknown>;
+    weather: Array<{ main?: string }>;
+  } = {
     main: { temp: 22.5 },
     wind: {},
     clouds: {},

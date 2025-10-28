@@ -10,6 +10,11 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     css: true,
     testTimeout: 30000, // 30 seconds for async operations
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/supabase/functions/tests/**', // Exclude Edge Function tests (run with Deno)
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],

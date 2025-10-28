@@ -1,87 +1,69 @@
-import { useState } from 'react'
+/**
+ * App Component
+ *
+ * Main application entry point with module routing.
+ * Integrates all three modules:
+ * - Meteorology Module (4 cities)
+ * - Water Level Module (3 stations)
+ * - Drought Module (5 locations + 15 wells)
+ *
+ * CRITICAL: Each module has its own selector - NO global selectors!
+ */
+
+import { useState } from 'react';
+import { Header } from './components/Layout/Header';
+import { InstallPrompt } from './components/InstallPrompt';
+import { MeteorologyModule } from './modules/meteorology/MeteorologyModule';
+import { WaterLevelModule } from './modules/water-level/WaterLevelModule';
+import { DroughtModule } from './modules/drought/DroughtModule';
+import {
+  MOCK_CITIES,
+  MOCK_STATIONS,
+  MOCK_DROUGHT_LOCATIONS,
+  MOCK_GROUNDWATER_WELLS,
+  validateMockData,
+} from './data/mockData';
+import type { ModuleType } from './types';
 
 function App() {
-  const [activeModule, setActiveModule] = useState<'meteorology' | 'water-level' | 'drought'>(
-    'meteorology'
-  )
+  // Validate mock data on mount (development only)
+  if (import.meta.env.DEV) {
+    try {
+      validateMockData();
+    } catch (error) {
+      console.error('Mock data validation error:', error);
+    }
+  }
+
+  const [activeModule, setActiveModule] = useState<ModuleType>('meteorology');
 
   return (
-    <div className="bg-bg-main min-h-screen">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4">
-          <h1 className="text-text-primary text-2xl font-bold">🌊 DunApp PWA</h1>
-          <p className="text-text-secondary text-sm">
-            Meteorológiai, vízállás és aszály monitoring
-          </p>
-        </div>
-      </header>
+    <div className="min-h-screen bg-bg-main">
+      {/* Header with Module Navigation */}
+      <Header currentModule={activeModule} onModuleChange={setActiveModule} />
 
-      {/* Module Tabs */}
-      <div className="border-b bg-white">
-        <div className="mx-auto max-w-7xl px-4">
-          <nav className="flex space-x-8">
-            <button
-              onClick={() => setActiveModule('meteorology')}
-              className={`border-b-2 px-2 py-4 text-sm font-medium transition-colors ${
-                activeModule === 'meteorology'
-                  ? 'border-meteorology text-meteorology'
-                  : 'text-text-secondary hover:text-text-primary border-transparent'
-              }`}
-            >
-              🌤️ Meteorológia
-            </button>
-            <button
-              onClick={() => setActiveModule('water-level')}
-              className={`border-b-2 px-2 py-4 text-sm font-medium transition-colors ${
-                activeModule === 'water-level'
-                  ? 'border-water-level text-water-level'
-                  : 'text-text-secondary hover:text-text-primary border-transparent'
-              }`}
-            >
-              💧 Vízállás
-            </button>
-            <button
-              onClick={() => setActiveModule('drought')}
-              className={`border-b-2 px-2 py-4 text-sm font-medium transition-colors ${
-                activeModule === 'drought'
-                  ? 'border-drought text-drought'
-                  : 'text-text-secondary hover:text-text-primary border-transparent'
-              }`}
-            >
-              🏜️ Aszály
-            </button>
-          </nav>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 py-8">
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h2 className="text-text-primary mb-4 text-xl font-semibold">
-            {activeModule === 'meteorology' && 'Meteorológia Modul'}
-            {activeModule === 'water-level' && 'Vízállás Modul'}
-            {activeModule === 'drought' && 'Aszály Modul'}
-          </h2>
-          <p className="text-text-secondary">
-            A DunApp PWA sikeresen inicializálva! A modulok fejlesztése folyamatban...
-          </p>
-
-          <div className="bg-bg-main mt-6 rounded p-4">
-            <h3 className="text-text-primary mb-2 font-medium">Projekt Állapot</h3>
-            <ul className="text-text-secondary space-y-2 text-sm">
-              <li>✅ Vite + React + TypeScript</li>
-              <li>✅ Tailwind CSS</li>
-              <li>✅ React Router, Recharts, Leaflet</li>
-              <li>✅ Supabase Client</li>
-              <li>⏳ Modulok fejlesztése</li>
-              <li>⏳ GitHub & Netlify deployment</li>
-            </ul>
-          </div>
-        </div>
+      {/* Main Content - Render Active Module */}
+      <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">
+        {activeModule === 'meteorology' && (
+          <MeteorologyModule cities={MOCK_CITIES} initialCity={MOCK_CITIES[0]} />
+        )}
+        {activeModule === 'water-level' && (
+          <WaterLevelModule stations={MOCK_STATIONS} initialStation={MOCK_STATIONS[0]} />
+        )}
+        {activeModule === 'drought' && (
+          <DroughtModule
+            locations={MOCK_DROUGHT_LOCATIONS}
+            wells={MOCK_GROUNDWATER_WELLS}
+            initialLocation={MOCK_DROUGHT_LOCATIONS[0]}
+            initialWell={MOCK_GROUNDWATER_WELLS[0]}
+          />
+        )}
       </main>
+
+      {/* PWA Install Prompt */}
+      <InstallPrompt />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

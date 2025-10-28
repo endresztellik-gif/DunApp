@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="384" height="384" viewBox="0 0 384 384" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00A8CC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0088AA;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="384" height="384" fill="url(#bg-gradient)" rx="57.599999999999994"/>
+
+  <!-- Wave pattern -->
+  <g opacity="0.2" stroke="white" stroke-width="7.68" fill="none">
+    <path d="M 0,115.19999999999999 Q 96,76.80000000000001 192,115.19999999999999 T 384,115.19999999999999" />
+    <path d="M 0,172.8 Q 96,134.39999999999998 192,172.8 T 384,172.8" />
+    <path d="M 0,230.39999999999998 Q 96,192 192,230.39999999999998 T 384,230.39999999999998" />
+  </g>
+
+  <!-- Text -->
+  <text
+    x="192"
+    y="192"
+    font-family="Arial, sans-serif"
+    font-size="134.39999999999998"
+    font-weight="bold"
+    fill="white"
+    text-anchor="middle"
+    dominant-baseline="middle">
+    DA
+  </text>
+
+  <!-- Droplet accent -->
+  
+  <circle cx="288" cy="96" r="30.72" fill="white" opacity="0.8"/>
+  <ellipse cx="288" cy="107.52000000000001" rx="23.04" ry="30.72" fill="white" opacity="0.8"/>
+  
+</svg>

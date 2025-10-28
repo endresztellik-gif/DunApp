@@ -1,0 +1,55 @@
+{
+  "version": "5",
+  "remote": {
+    "https://deno.land/std@0.168.0/fmt/colors.ts": "03ad95e543d2808bc43c17a3dd29d25b43d0f16287fe562a0be89bf632454a12",
+    "https://deno.land/std@0.168.0/testing/_diff.ts": "a23e7fc2b4d8daa3e158fa06856bedf5334ce2a2831e8bf9e509717f455adb2c",
+    "https://deno.land/std@0.168.0/testing/_format.ts": "cd11136e1797791045e639e9f0f4640d5b4166148796cad37e6ef75f7d7f3832",
+    "https://deno.land/std@0.168.0/testing/asserts.ts": "51353e79437361d4b02d8e32f3fc83b22231bc8f8d4c841d86fd32b0b0afe940"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@eslint/js@^9.36.0",
+        "npm:@supabase/supabase-js@^2.76.1",
+        "npm:@tailwindcss/postcss@^4.1.16",
+        "npm:@tanstack/react-query@^5.90.5",
+        "npm:@testing-library/jest-dom@^6.9.1",
+        "npm:@testing-library/react@^16.3.0",
+        "npm:@testing-library/user-event@^14.6.1",
+        "npm:@types/leaflet@^1.9.21",
+        "npm:@types/node@^24.6.0",
+        "npm:@types/react-dom@^19.1.9",
+        "npm:@types/react@^19.1.16",
+        "npm:@typescript-eslint/eslint-plugin@^8.46.2",
+        "npm:@typescript-eslint/parser@^8.46.2",
+        "npm:@vitejs/plugin-react@^5.0.4",
+        "npm:@vitest/coverage-v8@^4.0.4",
+        "npm:@vitest/ui@^4.0.4",
+        "npm:autoprefixer@^10.4.21",
+        "npm:eslint-plugin-react-hooks@^5.2.0",
+        "npm:eslint-plugin-react-refresh@~0.4.22",
+        "npm:eslint-plugin-react@^7.37.5",
+        "npm:eslint@^9.38.0",
+        "npm:globals@^16.4.0",
+        "npm:jsdom@^27.0.1",
+        "npm:leaflet@^1.9.4",
+        "npm:lucide-react@0.548",
+        "npm:postcss@^8.5.6",
+        "npm:prettier-plugin-tailwindcss@~0.7.1",
+        "npm:prettier@^3.6.2",
+        "npm:react-dom@^19.1.1",
+        "npm:react-leaflet@5",
+        "npm:react-router-dom@^7.9.4",
+        "npm:react@^19.1.1",
+        "npm:recharts@^3.3.0",
+        "npm:tailwindcss@^4.1.16",
+        "npm:typescript-eslint@^8.45.0",
+        "npm:typescript@~5.9.3",
+        "npm:vite-plugin-pwa@^1.1.0",
+        "npm:vite@^7.1.7",
+        "npm:vitest@^4.0.4",
+        "npm:workbox-window@^7.3.0"
+      ]
+    }
+  }
+}

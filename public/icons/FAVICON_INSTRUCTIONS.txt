@@ -1,0 +1,14 @@
+
+<!-- Favicon -->
+To generate favicon.ico, use one of these methods:
+
+1. Online converter: https://realfavicongenerator.net/
+   - Upload icon-192x192.svg
+   - Download the generated favicon package
+
+2. Command line (requires ImageMagick):
+   convert icon-192x192.svg -resize 32x32 ../favicon.ico
+
+3. Manual: Use any icon-72x72.svg and save as .ico format
+
+Place the favicon.ico in the public/ directory.

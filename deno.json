@@ -1,0 +1,15 @@
+{
+  "tasks": {
+    "test:edge-functions": "deno test --allow-net --allow-env --allow-read supabase/functions/tests/*.test.ts"
+  },
+  "imports": {
+    "std/": "https://deno.land/std@0.168.0/"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window"],
+    "strict": true
+  },
+  "test": {
+    "include": ["supabase/functions/tests/*.test.ts"]
+  }
+}

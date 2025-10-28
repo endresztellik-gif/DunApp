@@ -199,13 +199,13 @@ Deno.test('fetch-water-level: retry logic on scraping failure', async () => {
 
 Deno.test('fetch-water-level: handle missing station data gracefully', () => {
   const allStations = ['Baja', 'Mohács', 'Nagybajcs'];
-  const scrapedData = {
+  const scrapedData: Record<string, number> = {
     'Baja': 420,
     'Mohács': 395
     // Nagybajcs is missing
   };
 
-  const results = [];
+  const results: Array<{ station: string; waterLevel: number | null; status: string }> = [];
   for (const station of allStations) {
     if (scrapedData[station]) {
       results.push({ station, waterLevel: scrapedData[station], status: 'success' });
