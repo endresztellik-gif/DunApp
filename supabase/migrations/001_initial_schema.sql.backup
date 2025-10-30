@@ -12,7 +12,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Meteorology Cities (4 cities: Szekszárd, Baja, Dunaszekcső, Mohács)
 CREATE TABLE meteorology_cities (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL UNIQUE,
   county TEXT NOT NULL,
   latitude DECIMAL(9,6) NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE meteorology_cities (
 
 -- Meteorology Data Cache
 CREATE TABLE meteorology_data (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   city_id UUID NOT NULL REFERENCES meteorology_cities(id) ON DELETE CASCADE,
   temperature DECIMAL(4,1),
   feels_like DECIMAL(4,1),
@@ -59,7 +59,7 @@ CREATE INDEX idx_meteorology_data_timestamp ON meteorology_data(timestamp DESC);
 
 -- Water Level Stations (3 stations: Baja, Mohács, Nagybajcs)
 CREATE TABLE water_level_stations (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   station_name TEXT NOT NULL UNIQUE,
   river_name TEXT NOT NULL,
   city_name TEXT NOT NULL,
@@ -76,7 +76,7 @@ CREATE TABLE water_level_stations (
 
 -- Water Level Data Cache
 CREATE TABLE water_level_data (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   station_id UUID NOT NULL REFERENCES water_level_stations(id) ON DELETE CASCADE,
   water_level_cm INTEGER NOT NULL,
   flow_rate_m3s DECIMAL(7,2),
@@ -92,7 +92,7 @@ CREATE INDEX idx_water_level_data_timestamp ON water_level_data(timestamp DESC);
 
 -- Water Level Forecast Data
 CREATE TABLE water_level_forecasts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   station_id UUID NOT NULL REFERENCES water_level_stations(id) ON DELETE CASCADE,
   forecast_date DATE NOT NULL,
   water_level_cm INTEGER NOT NULL,
@@ -111,7 +111,7 @@ CREATE INDEX idx_water_level_forecasts_station ON water_level_forecasts(station_
 
 -- Drought Monitoring Locations (5 locations)
 CREATE TABLE drought_locations (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   location_name TEXT NOT NULL UNIQUE,
   location_type TEXT NOT NULL DEFAULT 'monitoring_station',
   county TEXT NOT NULL,
@@ -124,7 +124,7 @@ CREATE TABLE drought_locations (
 
 -- Drought Data Cache
 CREATE TABLE drought_data (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   location_id UUID NOT NULL REFERENCES drought_locations(id) ON DELETE CASCADE,
   drought_index DECIMAL(5,2), -- HDI (Hungarian Drought Index)
   water_deficit_index DECIMAL(5,2), -- HDIS
@@ -153,7 +153,7 @@ CREATE INDEX idx_drought_data_timestamp ON drought_data(timestamp DESC);
 
 -- Groundwater Wells (15 wells)
 CREATE TABLE groundwater_wells (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   well_name TEXT NOT NULL,
   well_code TEXT NOT NULL UNIQUE,
   county TEXT NOT NULL,
@@ -169,7 +169,7 @@ CREATE TABLE groundwater_wells (
 
 -- Groundwater Data Cache
 CREATE TABLE groundwater_data (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   well_id UUID NOT NULL REFERENCES groundwater_wells(id) ON DELETE CASCADE,
   water_level_meters DECIMAL(6,2), -- Depth below ground
   water_level_masl DECIMAL(6,2), -- Meters above sea level (mBf)
@@ -188,7 +188,7 @@ CREATE INDEX idx_groundwater_data_timestamp ON groundwater_data(timestamp DESC);
 -- ============================================================================
 
 CREATE TABLE precipitation_data (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   city_id UUID NOT NULL REFERENCES meteorology_cities(id) ON DELETE CASCADE,
   daily_mm DECIMAL(6,2),
   weekly_mm DECIMAL(6,2),
@@ -208,7 +208,7 @@ CREATE INDEX idx_precipitation_data_city_date ON precipitation_data(city_id, dat
 
 -- Push Subscriptions
 CREATE TABLE push_subscriptions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   endpoint TEXT NOT NULL UNIQUE,
   p256dh_key TEXT NOT NULL,
   auth_key TEXT NOT NULL,
@@ -219,7 +219,7 @@ CREATE TABLE push_subscriptions (
 
 -- Push Notification Logs
 CREATE TABLE push_notification_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   subscription_id UUID REFERENCES push_subscriptions(id) ON DELETE CASCADE,
   station_id UUID REFERENCES water_level_stations(id) ON DELETE CASCADE,
   water_level_cm INTEGER NOT NULL,

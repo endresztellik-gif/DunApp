@@ -1,0 +1,102 @@
+# DunApp PWA - Supabase Configuration
+# This file is used for local development with Supabase CLI
+
+[project]
+# Reference ID for your Supabase project
+# Get this from: https://app.supabase.com/project/YOUR_PROJECT/settings/general
+project_id = "zpwoicpajmvbtmtumsah"
+
+[api]
+enabled = true
+port = 54321
+# Schemas to expose in your API. Tables, views and stored procedures in these
+# schemas will get API endpoints. `public` is always included.
+schemas = ["public"]
+extra_search_path = ["public"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[realtime]
+enabled = true
+ip_version = "IPv4"
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1:54321"
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["https://localhost:5173"]
+jwt_expiry = 3600
+enable_signup = false
+# For DunApp, we don't use authentication
+# All data is public-readable via RLS policies
+
+[auth.email]
+enable_signup = false
+enable_confirmations = false
+
+[edge_functions]
+enabled = true
+
+# Edge Functions configuration
+[[edge_functions.functions]]
+name = "fetch-meteorology"
+verify_jwt = false
+
+[[edge_functions.functions]]
+name = "fetch-water-level"
+verify_jwt = false
+
+[[edge_functions.functions]]
+name = "fetch-drought"
+verify_jwt = false
+
+[[edge_functions.functions]]
+name = "check-water-level-alert"
+verify_jwt = false
+
+# Environment variables for local development
+# For production, set these in Supabase Dashboard > Project Settings > Edge Functions
+# IMPORTANT: Copy .env.example to .env.local and fill in real values (DO NOT commit real keys!)
+[env]
+# OpenWeatherMap API
+OPENWEATHER_API_KEY = "your_openweather_api_key_here"
+
+# Meteoblue API
+METEOBLUE_API_KEY = "your_meteoblue_api_key_here"
+
+# VAPID keys for push notifications
+# Generate with: npx web-push generate-vapid-keys
+VITE_VAPID_PUBLIC_KEY = "your_vapid_public_key_here"
+VAPID_PRIVATE_KEY = "your_vapid_private_key_here"
+VAPID_SUBJECT = "mailto:your-email@example.com"
+
+# Yr.no User-Agent
+YR_NO_USER_AGENT = "DunApp PWA/1.0 (contact@dunapp.hu)"
+
+# Debug flag
+DEBUG = "true"
