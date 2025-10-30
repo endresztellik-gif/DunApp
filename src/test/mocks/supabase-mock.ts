@@ -112,16 +112,16 @@ export const mockDatabaseData = {
 /**
  * Create a mock Supabase select query builder
  */
-function createMockSelectBuilder(table: string, data: any[]) {
+function createMockSelectBuilder(_table: string, data: any[]) {
   return {
-    select: (fields: string = '*') => ({
+    select: (_fields: string = '*') => ({
       eq: (field: string, value: any) => ({
         single: vi.fn().mockResolvedValue({
           data: data.find(item => item[field] === value) || null,
           error: data.find(item => item[field] === value) ? null : { message: 'Not found' }
         }),
-        order: (orderField: string, options?: any) => ({
-          limit: (n: number) => ({
+        order: (_orderField: string, _options?: any) => ({
+          limit: (_n: number) => ({
             single: vi.fn().mockResolvedValue({
               data: data.find(item => item[field] === value) || null,
               error: data.find(item => item[field] === value) ? null : { message: 'Not found' }
@@ -139,7 +139,7 @@ function createMockSelectBuilder(table: string, data: any[]) {
           })
         })
       }),
-      order: (orderField: string, options?: any) => ({
+      order: (_orderField: string, _options?: any) => ({
         limit: (n: number) => vi.fn().mockResolvedValue({
           data: data.slice(0, n),
           error: null
@@ -188,7 +188,7 @@ export function createMockSupabaseClient(customData: Partial<typeof mockDatabase
           }
         })),
 
-        upsert: vi.fn().mockImplementation((upsertData: any, options?: any) => {
+        upsert: vi.fn().mockImplementation((upsertData: any, _options?: any) => {
           // Simplified upsert - just adds to database
           if (Array.isArray(tableData)) {
             (tableData as any[]).push({
@@ -246,7 +246,7 @@ export function createMockSupabaseClient(customData: Partial<typeof mockDatabase
  */
 export function createMockSupabaseClientWithErrors() {
   return {
-    from: (table: string) => ({
+    from: (_table: string) => ({
       select: () => ({
         eq: () => ({
           single: vi.fn().mockResolvedValue({

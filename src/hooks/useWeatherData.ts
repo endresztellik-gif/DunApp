@@ -17,7 +17,7 @@ interface UseWeatherDataReturn {
   city: City | null;
   isLoading: boolean;
   error: Error | null;
-  refetch: () => void;
+  refetch: () => Promise<unknown>;
 }
 
 /**
@@ -51,34 +51,34 @@ async function fetchWeatherData(cityId: string): Promise<{ weatherData: WeatherD
   // Transform database fields to match WeatherData type
   return {
     weatherData: {
-      cityId: weatherData.city_id,
-      temperature: weatherData.temperature,
-      feelsLike: weatherData.feels_like,
-      tempMin: weatherData.temp_min,
-      tempMax: weatherData.temp_max,
-      pressure: weatherData.pressure,
-      humidity: weatherData.humidity,
-      windSpeed: weatherData.wind_speed,
-      windDirection: weatherData.wind_direction,
-      cloudsPercent: weatherData.clouds_percent,
-      weatherMain: weatherData.weather_main,
-      weatherDescription: weatherData.weather_description,
-      weatherIcon: weatherData.weather_icon,
-      rain1h: weatherData.rain_1h,
-      rain3h: weatherData.rain_3h,
-      snow1h: weatherData.snow_1h,
-      snow3h: weatherData.snow_3h,
-      visibility: weatherData.visibility,
-      timestamp: weatherData.timestamp
+      cityId: (weatherData as Record<string, unknown>).city_id as string,
+      temperature: (weatherData as Record<string, unknown>).temperature as number,
+      feelsLike: (weatherData as Record<string, unknown>).feels_like as number,
+      tempMin: (weatherData as Record<string, unknown>).temp_min as number,
+      tempMax: (weatherData as Record<string, unknown>).temp_max as number,
+      pressure: (weatherData as Record<string, unknown>).pressure as number,
+      humidity: (weatherData as Record<string, unknown>).humidity as number,
+      windSpeed: (weatherData as Record<string, unknown>).wind_speed as number,
+      windDirection: (weatherData as Record<string, unknown>).wind_direction as number,
+      cloudsPercent: (weatherData as Record<string, unknown>).clouds_percent as number,
+      weatherMain: (weatherData as Record<string, unknown>).weather_main as string,
+      weatherDescription: (weatherData as Record<string, unknown>).weather_description as string,
+      weatherIcon: (weatherData as Record<string, unknown>).weather_icon as string,
+      rain1h: (weatherData as Record<string, unknown>).rain_1h as number | null,
+      rain3h: (weatherData as Record<string, unknown>).rain_3h as number | null,
+      snow1h: (weatherData as Record<string, unknown>).snow_1h as number | null,
+      snow3h: (weatherData as Record<string, unknown>).snow_3h as number | null,
+      visibility: (weatherData as Record<string, unknown>).visibility as number,
+      timestamp: (weatherData as Record<string, unknown>).timestamp as string
     },
     city: {
-      id: cityData.id,
-      name: cityData.name,
-      county: cityData.county,
-      latitude: cityData.latitude,
-      longitude: cityData.longitude,
-      population: cityData.population,
-      isActive: cityData.is_active
+      id: (cityData as Record<string, unknown>).id as string,
+      name: (cityData as Record<string, unknown>).name as string,
+      county: (cityData as Record<string, unknown>).county as string,
+      latitude: (cityData as Record<string, unknown>).latitude as number,
+      longitude: (cityData as Record<string, unknown>).longitude as number,
+      population: (cityData as Record<string, unknown>).population as number,
+      isActive: (cityData as Record<string, unknown>).is_active as boolean
     }
   };
 }

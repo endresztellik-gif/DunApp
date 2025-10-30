@@ -14,8 +14,8 @@ describe('EmptyState - Rendering', () => {
   });
 
   it('renders default Inbox icon when no icon provided', () => {
-    const { container } = render(<EmptyState message="Test" />);
-    const icon = container.querySelector('.empty-state-icon');
+    render(<EmptyState message="Test" />);
+    const icon = document.querySelector('.empty-state-icon');
     expect(icon).toBeInTheDocument();
   });
 
@@ -35,8 +35,8 @@ describe('EmptyState - Rendering', () => {
   });
 
   it('does not render description when not provided', () => {
-    const { container } = render(<EmptyState message="No data" />);
-    const description = container.querySelector('.empty-state-text');
+    render(<EmptyState message="No data" />);
+    const description = document.querySelector('.empty-state-text');
     expect(description).not.toBeInTheDocument();
   });
 });
@@ -98,8 +98,8 @@ describe('EmptyState - Accessibility', () => {
   });
 
   it('icon has aria-hidden attribute', () => {
-    const { container } = render(<EmptyState message="Test" />);
-    const icon = container.querySelector('.empty-state-icon');
+    render(<EmptyState message="Test" />);
+    const icon = document.querySelector('.empty-state-icon');
     expect(icon).toHaveAttribute('aria-hidden', 'true');
   });
 
@@ -117,30 +117,30 @@ describe('EmptyState - Accessibility', () => {
 
 describe('EmptyState - Styling', () => {
   it('applies empty-state class', () => {
-    const { container } = render(<EmptyState message="Test" />);
-    const emptyState = container.querySelector('.empty-state');
+    render(<EmptyState message="Test" />);
+    const emptyState = document.querySelector('.empty-state');
     expect(emptyState).toBeInTheDocument();
   });
 
   it('accepts custom className', () => {
-    const { container } = render(
+    render(
       <EmptyState message="Test" className="custom-class" />
     );
-    const emptyState = container.querySelector('.empty-state');
+    const emptyState = document.querySelector('.empty-state');
     expect(emptyState).toHaveClass('custom-class');
   });
 
   it('applies empty-state-icon class to icon', () => {
-    const { container } = render(<EmptyState message="Test" />);
-    const icon = container.querySelector('.empty-state-icon');
+    render(<EmptyState message="Test" />);
+    const icon = document.querySelector('.empty-state-icon');
     expect(icon).toBeInTheDocument();
   });
 
   it('applies empty-state-text class to description', () => {
-    const { container } = render(
+    render(
       <EmptyState message="Test" description="Description" />
     );
-    const description = container.querySelector('.empty-state-text');
+    const description = document.querySelector('.empty-state-text');
     expect(description).toBeInTheDocument();
   });
 
@@ -150,7 +150,7 @@ describe('EmptyState - Styling', () => {
       onClick: vi.fn(),
     };
 
-    const { container } = render(<EmptyState message="Test" action={action} />);
+    render(<EmptyState message="Test" action={action} />);
     const button = screen.getByRole('button');
     expect(button).toHaveClass('bg-cyan-600');
   });

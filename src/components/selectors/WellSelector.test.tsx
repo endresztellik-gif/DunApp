@@ -6,7 +6,7 @@
  * This is SEPARATE from DroughtLocationSelector (which handles 5 monitoring locations)
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { WellSelector } from './WellSelector';
@@ -375,8 +375,8 @@ describe('WellSelector - Styling', () => {
   });
 
   it('accepts custom className prop', () => {
-    const { container } = render(<WellSelector {...props} className="custom-test-class" />);
-    const dropdown = container.querySelector('.selector-dropdown');
+    render(<WellSelector {...props} className="custom-test-class" />);
+    const dropdown = document.querySelector('.selector-dropdown');
     expect(dropdown).toHaveClass('custom-test-class');
   });
 

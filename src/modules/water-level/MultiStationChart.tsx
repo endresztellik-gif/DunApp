@@ -15,7 +15,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  ReferenceLine,
 } from 'recharts';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { TrendingUp } from 'lucide-react';

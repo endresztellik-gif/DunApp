@@ -63,7 +63,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 export async function checkSupabaseConnection(): Promise<boolean> {
   try {
     // Try to query a simple table (meteorology_cities)
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('meteorology_cities')
       .select('id')
       .limit(1);
@@ -208,7 +208,7 @@ export async function createPushSubscription(
       p256dh_key: p256dhKey,
       auth_key: authKey,
       station_id: stationId,
-    })
+    } as never)
     .select()
     .single();
 

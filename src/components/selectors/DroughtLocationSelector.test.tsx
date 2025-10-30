@@ -6,7 +6,7 @@
  * This is SEPARATE from WellSelector (which handles 15 wells)
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DroughtLocationSelector } from './DroughtLocationSelector';
@@ -383,10 +383,10 @@ describe('DroughtLocationSelector - Styling', () => {
   });
 
   it('accepts custom className prop', () => {
-    const { container } = render(
+    render(
       <DroughtLocationSelector {...props} className="custom-test-class" />
     );
-    const dropdown = container.querySelector('.selector-dropdown');
+    const dropdown = document.querySelector('.selector-dropdown');
     expect(dropdown).toHaveClass('custom-test-class');
   });
 });

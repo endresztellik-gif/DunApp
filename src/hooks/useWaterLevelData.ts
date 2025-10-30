@@ -18,7 +18,7 @@ interface UseWaterLevelDataReturn {
   forecast: WaterLevelForecast[];
   isLoading: boolean;
   error: Error | null;
-  refetch: () => void;
+  refetch: () => Promise<unknown>;
 }
 
 /**
@@ -50,7 +50,7 @@ async function fetchWaterLevelData(stationId: string) {
   }
 
   // Get forecast data (next 5 days)
-  const { data: forecastData, error: forecastError } = await supabase
+  const { data: forecastData } = await supabase
     .from('water_level_forecasts')
     .select('*')
     .eq('station_id', stationId)
@@ -62,30 +62,30 @@ async function fetchWaterLevelData(stationId: string) {
 
   return {
     waterLevelData: {
-      stationId: waterLevelData.station_id,
-      waterLevelCm: waterLevelData.water_level_cm,
-      flowRateM3s: waterLevelData.flow_rate_m3s,
-      waterTempCelsius: waterLevelData.water_temp_celsius,
-      timestamp: waterLevelData.timestamp
+      stationId: (waterLevelData as Record<string, unknown>).station_id as string,
+      waterLevelCm: (waterLevelData as Record<string, unknown>).water_level_cm as number,
+      flowRateM3s: (waterLevelData as Record<string, unknown>).flow_rate_m3s as number,
+      waterTempCelsius: (waterLevelData as Record<string, unknown>).water_temp_celsius as number,
+      timestamp: (waterLevelData as Record<string, unknown>).timestamp as string
     },
     station: {
-      id: stationData.id,
-      stationName: stationData.station_name,
-      riverName: stationData.river_name,
-      cityName: stationData.city_name,
-      latitude: stationData.latitude,
-      longitude: stationData.longitude,
-      lnvLevel: stationData.lnv_level,
-      kkvLevel: stationData.kkv_level,
-      nvLevel: stationData.nv_level,
-      isActive: stationData.is_active,
-      displayInComparison: stationData.display_in_comparison
+      id: (stationData as Record<string, unknown>).id as string,
+      stationName: (stationData as Record<string, unknown>).station_name as string,
+      riverName: (stationData as Record<string, unknown>).river_name as string,
+      cityName: (stationData as Record<string, unknown>).city_name as string,
+      latitude: (stationData as Record<string, unknown>).latitude as number,
+      longitude: (stationData as Record<string, unknown>).longitude as number,
+      lnvLevel: (stationData as Record<string, unknown>).lnv_level as number,
+      kkvLevel: (stationData as Record<string, unknown>).kkv_level as number,
+      nvLevel: (stationData as Record<string, unknown>).nv_level as number,
+      isActive: (stationData as Record<string, unknown>).is_active as boolean,
+      displayInComparison: (stationData as Record<string, unknown>).display_in_comparison as boolean
     },
-    forecast: forecast.map((f: any) => ({
-      stationId: f.station_id,
-      forecastDate: f.forecast_date,
-      waterLevelCm: f.water_level_cm,
-      forecastDay: f.forecast_day
+    forecast: forecast.map((f: Record<string, unknown>) => ({
+      stationId: f.station_id as string,
+      forecastDate: f.forecast_date as string,
+      waterLevelCm: f.water_level_cm as number,
+      forecastDay: f.forecast_day as number
     }))
   };
 }

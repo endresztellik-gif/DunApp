@@ -2,7 +2,7 @@
  * Header Component Tests
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Header } from './Header';
 import type { ModuleType } from '../../types';
@@ -19,8 +19,8 @@ describe('Header - Rendering', () => {
   });
 
   it('renders header element', () => {
-    const { container } = render(<Header {...props} />);
-    const header = container.querySelector('header');
+    render(<Header {...props} />);
+    const header = document.querySelector('header');
     expect(header).toBeInTheDocument();
   });
 
@@ -38,8 +38,8 @@ describe('Header - Rendering', () => {
   });
 
   it('renders navigation element', () => {
-    const { container } = render(<Header {...props} />);
-    const nav = container.querySelector('nav');
+    render(<Header {...props} />);
+    const nav = document.querySelector('nav');
     expect(nav).toBeInTheDocument();
   });
 });
@@ -52,20 +52,20 @@ describe('Header - Logo Styling', () => {
   };
 
   it('applies cyan color to "Dun" text', () => {
-    const { container } = render(<Header {...props} />);
+    render(<Header {...props} />);
     const dunText = screen.getByText('Dun');
     expect(dunText).toHaveClass('text-cyan-600');
   });
 
   it('applies gray color to "App" text', () => {
-    const { container } = render(<Header {...props} />);
+    render(<Header {...props} />);
     const appText = screen.getByText('App');
     expect(appText).toHaveClass('text-gray-900');
   });
 
   it('logo has correct container class', () => {
-    const { container } = render(<Header {...props} />);
-    const logo = container.querySelector('.app-logo');
+    render(<Header {...props} />);
+    const logo = document.querySelector('.app-logo');
     expect(logo).toBeInTheDocument();
   });
 });
@@ -78,14 +78,14 @@ describe('Header - Navigation', () => {
   };
 
   it('navigation has correct aria-label', () => {
-    const { container } = render(<Header {...props} />);
-    const nav = container.querySelector('nav');
+    render(<Header {...props} />);
+    const nav = document.querySelector('nav');
     expect(nav).toHaveAttribute('aria-label', 'Modul navigáció');
   });
 
   it('navigation has correct class', () => {
-    const { container } = render(<Header {...props} />);
-    const nav = container.querySelector('nav');
+    render(<Header {...props} />);
+    const nav = document.querySelector('nav');
     expect(nav).toHaveClass('app-nav');
   });
 
@@ -112,20 +112,20 @@ describe('Header - Layout Structure', () => {
   };
 
   it('applies app-header class', () => {
-    const { container } = render(<Header {...props} />);
-    const header = container.querySelector('.app-header');
+    render(<Header {...props} />);
+    const header = document.querySelector('.app-header');
     expect(header).toBeInTheDocument();
   });
 
   it('applies app-header-content class to content wrapper', () => {
-    const { container } = render(<Header {...props} />);
-    const content = container.querySelector('.app-header-content');
+    render(<Header {...props} />);
+    const content = document.querySelector('.app-header-content');
     expect(content).toBeInTheDocument();
   });
 
   it('contains logo and navigation in correct order', () => {
-    const { container } = render(<Header {...props} />);
-    const content = container.querySelector('.app-header-content');
+    render(<Header {...props} />);
+    const content = document.querySelector('.app-header-content');
     const children = content?.children;
 
     expect(children).toHaveLength(2);
@@ -168,20 +168,20 @@ describe('Header - Accessibility', () => {
   };
 
   it('header is a semantic header element', () => {
-    const { container } = render(<Header {...props} />);
-    const header = container.querySelector('header');
+    render(<Header {...props} />);
+    const header = document.querySelector('header');
     expect(header?.tagName).toBe('HEADER');
   });
 
   it('navigation is a semantic nav element', () => {
-    const { container } = render(<Header {...props} />);
-    const nav = container.querySelector('nav');
+    render(<Header {...props} />);
+    const nav = document.querySelector('nav');
     expect(nav?.tagName).toBe('NAV');
   });
 
   it('navigation has descriptive aria-label', () => {
-    const { container } = render(<Header {...props} />);
-    const nav = container.querySelector('nav');
+    render(<Header {...props} />);
+    const nav = document.querySelector('nav');
     expect(nav).toHaveAttribute('aria-label', 'Modul navigáció');
   });
 

@@ -2,7 +2,7 @@
  * ErrorBoundary Component Tests
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ErrorBoundary } from './ErrorBoundary';
 
@@ -145,59 +145,59 @@ describe('ErrorBoundary - Accessibility', () => {
   });
 
   it('error icon has aria-hidden attribute', () => {
-    const { container } = render(
+    render(
       <ErrorBoundary>
         <ThrowError />
       </ErrorBoundary>
     );
 
-    const icon = container.querySelector('[aria-hidden="true"]');
+    const icon = document.querySelector('[aria-hidden="true"]');
     expect(icon).toBeInTheDocument();
   });
 });
 
 describe('ErrorBoundary - Styling', () => {
   it('applies error-card class', () => {
-    const { container } = render(
+    render(
       <ErrorBoundary>
         <ThrowError />
       </ErrorBoundary>
     );
 
-    const errorCard = container.querySelector('.error-card');
+    const errorCard = document.querySelector('.error-card');
     expect(errorCard).toBeInTheDocument();
   });
 
   it('applies error-message class to message', () => {
-    const { container } = render(
+    render(
       <ErrorBoundary>
         <ThrowError />
       </ErrorBoundary>
     );
 
-    const errorMessage = container.querySelector('.error-message');
+    const errorMessage = document.querySelector('.error-message');
     expect(errorMessage).toBeInTheDocument();
   });
 
   it('applies error-retry-button class to button', () => {
-    const { container } = render(
+    render(
       <ErrorBoundary>
         <ThrowError />
       </ErrorBoundary>
     );
 
-    const retryButton = container.querySelector('.error-retry-button');
+    const retryButton = document.querySelector('.error-retry-button');
     expect(retryButton).toBeInTheDocument();
   });
 
   it('error icon has red color class', () => {
-    const { container } = render(
+    render(
       <ErrorBoundary>
         <ThrowError />
       </ErrorBoundary>
     );
 
-    const icon = container.querySelector('.text-red-600');
+    const icon = document.querySelector('.text-red-600');
     expect(icon).toBeInTheDocument();
   });
 });
@@ -224,14 +224,14 @@ describe('ErrorBoundary - Error Display', () => {
   });
 
   it('renders AlertTriangle icon', () => {
-    const { container } = render(
+    render(
       <ErrorBoundary>
         <ThrowError />
       </ErrorBoundary>
     );
 
     // Icon should be rendered with correct size classes
-    const icon = container.querySelector('.h-6.w-6');
+    const icon = document.querySelector('.h-6.w-6');
     expect(icon).toBeInTheDocument();
   });
 });

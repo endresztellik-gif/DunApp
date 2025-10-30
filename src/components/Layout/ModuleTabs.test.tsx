@@ -2,7 +2,7 @@
  * ModuleTabs Component Tests
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ModuleTabs } from './ModuleTabs';
@@ -41,9 +41,9 @@ describe('ModuleTabs - Rendering', () => {
   });
 
   it('renders icons for each tab', () => {
-    const { container } = render(<ModuleTabs {...props} />);
+    render(<ModuleTabs {...props} />);
     // Each tab should have an icon (lucide-react renders SVG elements)
-    const icons = container.querySelectorAll('svg');
+    const icons = document.querySelectorAll('svg');
     expect(icons.length).toBeGreaterThanOrEqual(3);
   });
 });
@@ -231,8 +231,8 @@ describe('ModuleTabs - Accessibility', () => {
   });
 
   it('icons have aria-hidden attribute', () => {
-    const { container } = render(<ModuleTabs {...props} />);
-    const icons = container.querySelectorAll('[aria-hidden="true"]');
+    render(<ModuleTabs {...props} />);
+    const icons = document.querySelectorAll('[aria-hidden="true"]');
     expect(icons.length).toBeGreaterThanOrEqual(3);
   });
 });
@@ -310,8 +310,8 @@ describe('ModuleTabs - Responsive Display', () => {
   };
 
   it('has responsive gap classes', () => {
-    const { container } = render(<ModuleTabs {...props} />);
-    const tablist = container.querySelector('[role="tablist"]');
+    render(<ModuleTabs {...props} />);
+    const tablist = document.querySelector('[role="tablist"]');
     expect(tablist).toHaveClass('gap-2');
     expect(tablist).toHaveClass('md:gap-3');
   });

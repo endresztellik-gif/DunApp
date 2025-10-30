@@ -17,7 +17,7 @@ interface UseDroughtDataReturn {
   location: DroughtLocation | null;
   isLoading: boolean;
   error: Error | null;
-  refetch: () => void;
+  refetch: () => Promise<unknown>;
 }
 
 /**
@@ -44,35 +44,35 @@ async function fetchDroughtData(locationId: string) {
     .limit(1)
     .single();
 
-  if (droughtError) {
-    throw new Error(`Failed to fetch drought data: ${droughtError.message}`);
+  if (droughtError || !droughtData) {
+    throw new Error(`Failed to fetch drought data: ${droughtError?.message || 'No data found'}`);
   }
 
   return {
     droughtData: {
-      locationId: droughtData.location_id,
-      droughtIndex: droughtData.drought_index,
-      waterDeficitIndex: droughtData.water_deficit_index,
-      soilMoisture10cm: droughtData.soil_moisture_10cm,
-      soilMoisture20cm: droughtData.soil_moisture_20cm,
-      soilMoisture30cm: droughtData.soil_moisture_30cm,
-      soilMoisture50cm: droughtData.soil_moisture_50cm,
-      soilMoisture70cm: droughtData.soil_moisture_70cm,
-      soilMoisture100cm: droughtData.soil_moisture_100cm,
-      soilTemperature: droughtData.soil_temperature,
-      airTemperature: droughtData.air_temperature,
-      precipitation: droughtData.precipitation,
-      relativeHumidity: droughtData.relative_humidity,
-      timestamp: droughtData.timestamp
+      locationId: (droughtData as Record<string, unknown>).location_id as string,
+      droughtIndex: (droughtData as Record<string, unknown>).drought_index as number,
+      waterDeficitIndex: (droughtData as Record<string, unknown>).water_deficit_index as number,
+      soilMoisture10cm: (droughtData as Record<string, unknown>).soil_moisture_10cm as number,
+      soilMoisture20cm: (droughtData as Record<string, unknown>).soil_moisture_20cm as number,
+      soilMoisture30cm: (droughtData as Record<string, unknown>).soil_moisture_30cm as number,
+      soilMoisture50cm: (droughtData as Record<string, unknown>).soil_moisture_50cm as number,
+      soilMoisture70cm: (droughtData as Record<string, unknown>).soil_moisture_70cm as number,
+      soilMoisture100cm: (droughtData as Record<string, unknown>).soil_moisture_100cm as number,
+      soilTemperature: (droughtData as Record<string, unknown>).soil_temperature as number,
+      airTemperature: (droughtData as Record<string, unknown>).air_temperature as number,
+      precipitation: (droughtData as Record<string, unknown>).precipitation as number,
+      relativeHumidity: (droughtData as Record<string, unknown>).relative_humidity as number,
+      timestamp: (droughtData as Record<string, unknown>).timestamp as string
     },
     location: {
-      id: locationData.id,
-      locationName: locationData.location_name,
-      locationType: locationData.location_type,
-      county: locationData.county,
-      latitude: locationData.latitude,
-      longitude: locationData.longitude,
-      isActive: locationData.is_active
+      id: (locationData as Record<string, unknown>).id as string,
+      locationName: (locationData as Record<string, unknown>).location_name as string,
+      locationType: (locationData as Record<string, unknown>).location_type as string,
+      county: (locationData as Record<string, unknown>).county as string,
+      latitude: (locationData as Record<string, unknown>).latitude as number,
+      longitude: (locationData as Record<string, unknown>).longitude as number,
+      isActive: (locationData as Record<string, unknown>).is_active as boolean
     }
   };
 }

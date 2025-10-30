@@ -5,7 +5,7 @@
  * Provides a retry mechanism to recover from errors.
  */
 
-import React, { Component } from 'react';
+import { Component } from 'react';
 import type { ReactNode, ErrorInfo } from 'react';
 import { AlertTriangle } from 'lucide-react';
 

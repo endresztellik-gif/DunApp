@@ -17,7 +17,7 @@ interface UseGroundwaterDataReturn {
   well: GroundwaterWell | null;
   isLoading: boolean;
   error: Error | null;
-  refetch: () => void;
+  refetch: () => Promise<unknown>;
 }
 
 /**
@@ -50,23 +50,23 @@ async function fetchGroundwaterData(wellId: string) {
 
   return {
     groundwaterData: {
-      wellId: groundwaterData.well_id,
-      waterLevelMeters: groundwaterData.water_level_meters,
-      waterLevelMasl: groundwaterData.water_level_masl,
-      waterTemperature: groundwaterData.water_temperature,
-      timestamp: groundwaterData.timestamp
+      wellId: (groundwaterData as Record<string, unknown>).well_id as string,
+      waterLevelMeters: (groundwaterData as Record<string, unknown>).water_level_meters as number,
+      waterLevelMasl: (groundwaterData as Record<string, unknown>).water_level_masl as number,
+      waterTemperature: (groundwaterData as Record<string, unknown>).water_temperature as number,
+      timestamp: (groundwaterData as Record<string, unknown>).timestamp as string
     },
     well: {
-      id: wellData.id,
-      wellName: wellData.well_name,
-      wellCode: wellData.well_code,
-      county: wellData.county,
-      cityName: wellData.city_name,
-      latitude: wellData.latitude,
-      longitude: wellData.longitude,
-      depthMeters: wellData.depth_meters,
-      wellType: wellData.well_type,
-      isActive: wellData.is_active
+      id: (wellData as Record<string, unknown>).id as string,
+      wellName: (wellData as Record<string, unknown>).well_name as string,
+      wellCode: (wellData as Record<string, unknown>).well_code as string,
+      county: (wellData as Record<string, unknown>).county as string,
+      cityName: (wellData as Record<string, unknown>).city_name as string,
+      latitude: (wellData as Record<string, unknown>).latitude as number,
+      longitude: (wellData as Record<string, unknown>).longitude as number,
+      depthMeters: (wellData as Record<string, unknown>).depth_meters as number,
+      wellType: (wellData as Record<string, unknown>).well_type as string,
+      isActive: (wellData as Record<string, unknown>).is_active as boolean
     }
   };
 }

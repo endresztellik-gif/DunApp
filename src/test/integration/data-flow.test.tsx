@@ -228,7 +228,7 @@ describe('Integration: Meteorology Data Flow', () => {
 
     (supabaseModule.supabase.from as any) = mockFrom;
 
-    const { result, rerender } = renderHook(() => useWeatherData('city-123'), {
+    const { result } = renderHook(() => useWeatherData('city-123'), {
       wrapper: createWrapper()
     });
 

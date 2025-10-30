@@ -28,7 +28,7 @@ export type MockFetchOptions = {
 export function createMockFetch(options: MockFetchOptions = {}) {
   const { shouldFail = false, statusCode = 200, delay = 0 } = options;
 
-  return async (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
+  return async (url: string | URL | Request, _init?: RequestInit): Promise<Response> => {
     // Add delay if specified
     if (delay > 0) {
       await new Promise(resolve => setTimeout(resolve, delay));
@@ -111,7 +111,7 @@ export function createMockFetch(options: MockFetchOptions = {}) {
 export function createMockFetchWithError(errorType: keyof typeof mockApiErrorResponses) {
   const error = mockApiErrorResponses[errorType];
 
-  return async (url: string | URL | Request): Promise<Response> => {
+  return async (_url: string | URL | Request): Promise<Response> => {
     return new Response(JSON.stringify(error), {
       status: error.code,
       headers: { 'Content-Type': 'application/json' }

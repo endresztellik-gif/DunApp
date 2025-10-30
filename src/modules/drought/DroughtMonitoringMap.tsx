@@ -79,7 +79,7 @@ export const DroughtMonitoringMap: React.FC<DroughtMonitoringMapProps> = ({
   }
 
   // Mock parameter values (will be replaced with real data)
-  const getLocationParamValue = (locationId: string, param: DroughtParameterType): number | null => {
+  const getLocationParamValue = (_locationId: string, param: DroughtParameterType): number | null => {
     if (param === 'droughtIndex') return 2 + Math.random() * 6;
     if (param === 'soilMoisture') return 20 + Math.random() * 40;
     if (param === 'waterDeficit') return 10 + Math.random() * 50;

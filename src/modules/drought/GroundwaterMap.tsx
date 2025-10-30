@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { divIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { EmptyState } from '../../components/UI/EmptyState';
@@ -68,7 +68,7 @@ export const GroundwaterMap: React.FC<GroundwaterMapProps> = ({
   }
 
   // Mock water levels for display (will be replaced with real data)
-  const getWellWaterLevel = (wellId: string): number | null => {
+  const getWellWaterLevel = (_wellId: string): number | null => {
     return 3 + Math.random() * 4; // Random between 3-7m
   };
 

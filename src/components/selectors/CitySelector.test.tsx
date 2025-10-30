@@ -5,7 +5,7 @@
  * This selector MUST have exactly 4 cities for the Meteorology module
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CitySelector } from './CitySelector';
@@ -358,10 +358,10 @@ describe('CitySelector - Styling', () => {
   });
 
   it('accepts custom className prop', () => {
-    const { container } = render(
+    render(
       <CitySelector {...props} className="custom-test-class" />
     );
-    const dropdown = container.querySelector('.selector-dropdown');
+    const dropdown = document.querySelector('.selector-dropdown');
     expect(dropdown).toHaveClass('custom-test-class');
   });
 });

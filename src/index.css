@@ -16,7 +16,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import custom component classes */
+/* Import custom component classes after Tailwind */
 @import './styles/components.css';
 
 /* ========================================
@@ -38,59 +38,115 @@
 
   /* Body element */
   body {
-    @apply m-0 min-h-screen;
+    @apply min-h-screen;
+    margin: 0;
     background-color: var(--color-bg-main);
     color: var(--color-text-primary);
   }
 
   /* Headings */
   h1 {
-    @apply text-4xl md:text-5xl font-bold text-gray-900;
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  @media (min-width: 768px) {
+    h1 {
+      font-size: 3rem;
+    }
   }
 
   h2 {
-    @apply text-3xl md:text-4xl font-bold text-gray-900;
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  @media (min-width: 768px) {
+    h2 {
+      font-size: 2.25rem;
+    }
   }
 
   h3 {
-    @apply text-2xl md:text-3xl font-semibold text-gray-800;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  @media (min-width: 768px) {
+    h3 {
+      font-size: 1.875rem;
+    }
   }
 
   h4 {
-    @apply text-xl md:text-2xl font-semibold text-gray-800;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  @media (min-width: 768px) {
+    h4 {
+      font-size: 1.5rem;
+    }
   }
 
   h5 {
-    @apply text-lg md:text-xl font-medium text-gray-700;
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  @media (min-width: 768px) {
+    h5 {
+      font-size: 1.25rem;
+    }
   }
 
   h6 {
-    @apply text-base md:text-lg font-medium text-gray-700;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  @media (min-width: 768px) {
+    h6 {
+      font-size: 1.125rem;
+    }
   }
 
   /* Paragraphs */
   p {
-    @apply text-base text-gray-700;
+    font-size: 1rem;
+    color: #374151;
   }
 
   /* Links */
   a {
-    @apply text-cyan-600 hover:text-cyan-700 transition-colors duration-200;
+    color: #0891b2;
+    transition: color 200ms;
+  }
+
+  a:hover {
+    color: #0e7490;
   }
 
   /* Buttons */
   button {
-    @apply cursor-pointer;
+    cursor: pointer;
   }
 
   /* Focus visible (for keyboard navigation) */
   :focus-visible {
-    @apply outline-none ring-2 ring-offset-2;
+    outline: none;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #3b82f6;
   }
 
   /* Remove default button styles */
   button:focus {
-    @apply outline-none;
+    outline: none;
   }
 }
 
