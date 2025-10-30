@@ -43,3 +43,5 @@ hydroinfo-mcp/
 
 # Test coverage
 coverage/
+.env
+.env.vapid
