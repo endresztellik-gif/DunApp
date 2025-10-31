@@ -7,6 +7,9 @@
  * - Fetch meteorology, water level, and drought data
  * - Subscribe to real-time updates
  * - Manage push notification subscriptions
+ *
+ * Environment variables are injected at BUILD TIME by Vite.
+ * Last rebuild: 2025-10-31 for Netlify production deployment
  */
 
 import { createClient } from '@supabase/supabase-js';
