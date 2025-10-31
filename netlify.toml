@@ -1,19 +1,12 @@
 # Netlify Configuration for DunApp PWA
 # https://docs.netlify.com/configure-builds/file-based-configuration/
 
-[build]
-  # Build command configured in Netlify Dashboard UI (not in toml to avoid cache issues)
-  # Publish directory (output from Vite)
-  publish = "dist"
+# Build settings configured in Netlify Dashboard UI
+# - Build command: npm ci && npm run build
+# - Publish directory: dist
+# - Node version: 20
 
-  # Functions directory (for Edge Functions if needed)
-  functions = "netlify/functions"
-
-[build.environment]
-  # Node.js version
-  NODE_VERSION = "20"
-
-  # NPM config moved to .npmrc file
+# [build] section intentionally removed to force UI config
 
 # SPA redirect rule - serve index.html for all routes
 [[redirects]]
