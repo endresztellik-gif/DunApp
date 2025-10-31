@@ -15,8 +15,7 @@
   # Node.js version
   NODE_VERSION = "20"
 
-  # NPM config
-  NPM_FLAGS = "--legacy-peer-deps"
+  # NPM config moved to .npmrc file
 
 # SPA redirect rule - serve index.html for all routes
 [[redirects]]
