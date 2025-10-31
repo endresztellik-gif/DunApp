@@ -2,9 +2,7 @@
 # https://docs.netlify.com/configure-builds/file-based-configuration/
 
 [build]
-  # Install dependencies first, then build
-  command = "npm ci && npm run build"
-
+  # Build command configured in Netlify Dashboard UI (not in toml to avoid cache issues)
   # Publish directory (output from Vite)
   publish = "dist"
 
