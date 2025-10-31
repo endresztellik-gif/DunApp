@@ -10,14 +10,15 @@
  */
 
 import React, { useState } from 'react';
-import { Waves, TrendingUp, Thermometer } from 'lucide-react';
+import { Waves, TrendingUp, Thermometer, AlertCircle } from 'lucide-react';
 import { StationSelector } from '../../components/selectors/StationSelector';
 import { DataCard } from '../../components/UI/DataCard';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Footer } from '../../components/Layout/Footer';
 import { MultiStationChart } from './MultiStationChart';
 import { DataTable } from './DataTable';
-import type { WaterLevelStation, WaterLevelData, DataSource } from '../../types';
+import { useWaterLevelData } from '../../hooks/useWaterLevelData';
+import type { WaterLevelStation, DataSource } from '../../types';
 
 interface WaterLevelModuleProps {
   stations: WaterLevelStation[];
@@ -31,18 +32,11 @@ export const WaterLevelModule: React.FC<WaterLevelModuleProps> = ({
   const [selectedStation, setSelectedStation] = useState<WaterLevelStation | null>(
     initialStation || stations[0] || null
   );
-  const [isLoading] = useState(false);
 
-  // Placeholder water level data (will be replaced with real data by Data Engineer)
-  const waterLevelData: WaterLevelData | null = selectedStation
-    ? {
-        stationId: selectedStation.id,
-        waterLevelCm: 394,
-        flowRateM3s: 2416,
-        waterTempCelsius: 23,
-        timestamp: new Date().toISOString(),
-      }
-    : null;
+  // Fetch real water level data from Supabase
+  const { waterLevelData, isLoading, error: dataError } = useWaterLevelData(
+    selectedStation?.id || null
+  );
 
   // Data sources for footer
   const dataSources: DataSource[] = [
@@ -72,30 +66,71 @@ export const WaterLevelModule: React.FC<WaterLevelModuleProps> = ({
         />
       </div>
 
+      {/* Error State */}
+      {dataError && (
+        <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-base font-semibold text-red-900 mb-1">
+              Hiba az adatok betöltésekor
+            </h3>
+            <p className="text-sm text-red-700">
+              {dataError.message || 'Nem sikerült betölteni a vízállási adatokat.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* No Station Selected State */}
+      {!selectedStation && !dataError && (
+        <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
+          <Waves className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-blue-700">
+              Válassz ki egy állomást a vízállási adatok megjelenítéséhez.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* No Data Available State */}
+      {selectedStation && !waterLevelData && !isLoading && !dataError && (
+        <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
+          <Waves className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-blue-700">
+              Jelenleg nincs elérhető vízállási adat: <strong>{selectedStation.stationName}</strong>
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Water Level Data Cards - 1x3 Grid */}
-      <div className="grid-water-cards mb-6">
-        <DataCard
-          icon={Waves}
-          label="Vízállás"
-          value={waterLevelData?.waterLevelCm ?? null}
-          unit="cm"
-          moduleColor="water"
-        />
-        <DataCard
-          icon={TrendingUp}
-          label="Vízhozam"
-          value={waterLevelData?.flowRateM3s ?? null}
-          unit="m³/s"
-          moduleColor="water"
-        />
-        <DataCard
-          icon={Thermometer}
-          label="Vízhőmérséklet"
-          value={waterLevelData?.waterTempCelsius ?? null}
-          unit="°C"
-          moduleColor="water"
-        />
-      </div>
+      {waterLevelData && (
+        <div className="grid-water-cards mb-6">
+          <DataCard
+            icon={Waves}
+            label="Vízállás"
+            value={waterLevelData.waterLevelCm}
+            unit="cm"
+            moduleColor="water"
+          />
+          <DataCard
+            icon={TrendingUp}
+            label="Vízhozam"
+            value={waterLevelData.flowRateM3s}
+            unit="m³/s"
+            moduleColor="water"
+          />
+          <DataCard
+            icon={Thermometer}
+            label="Vízhőmérséklet"
+            value={waterLevelData.waterTempCelsius}
+            unit="°C"
+            moduleColor="water"
+          />
+        </div>
+      )}
 
       {/* Multi-Station Comparison Chart */}
       <div className="mb-6">

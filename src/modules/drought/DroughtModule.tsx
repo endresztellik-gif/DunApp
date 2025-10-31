@@ -12,8 +12,11 @@
  */
 
 import React, { useState } from 'react';
+import { AlertCircle } from 'lucide-react';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Footer } from '../../components/Layout/Footer';
+import { useDroughtData } from '../../hooks/useDroughtData';
+import { useGroundwaterData } from '../../hooks/useGroundwaterData';
 import { DroughtIndexCard } from './DroughtIndexCard';
 import { SoilMoistureCard } from './SoilMoistureCard';
 import { WaterDeficitCard } from './WaterDeficitCard';
@@ -44,7 +47,21 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
   const [selectedWell, setSelectedWell] = useState<GroundwaterWell | null>(
     initialWell || wells[0] || null
   );
-  const [isLoading] = useState(false);
+
+  // Fetch real drought and groundwater data from Supabase
+  const {
+    droughtData,
+    isLoading: isDroughtLoading,
+    error: droughtError
+  } = useDroughtData(selectedLocation?.id || null);
+
+  const {
+    groundwaterData,
+    isLoading: isGroundwaterLoading,
+    error: groundwaterError
+  } = useGroundwaterData(selectedWell?.id || null);
+
+  const isLoading = isDroughtLoading || isGroundwaterLoading;
 
   // Data sources for footer
   const dataSources: DataSource[] = [
@@ -73,6 +90,83 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
   return (
     <div className="main-container">
+      {/* Drought Data Error State */}
+      {droughtError && (
+        <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-base font-semibold text-red-900 mb-1">
+              Hiba az aszálymonitoring adatok betöltésekor
+            </h3>
+            <p className="text-sm text-red-700">
+              {droughtError.message || 'Nem sikerült betölteni az aszály adatokat.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Groundwater Data Error State */}
+      {groundwaterError && (
+        <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-base font-semibold text-red-900 mb-1">
+              Hiba a talajvíz adatok betöltésekor
+            </h3>
+            <p className="text-sm text-red-700">
+              {groundwaterError.message || 'Nem sikerült betölteni a talajvíz adatokat.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* No Location Selected State */}
+      {!selectedLocation && !droughtError && (
+        <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-blue-700">
+              Válassz ki egy helyszínt az aszálymonitoring adatok megjelenítéséhez.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* No Well Selected State */}
+      {!selectedWell && !groundwaterError && (
+        <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-blue-700">
+              Válassz ki egy kutat a talajvíz adatok megjelenítéséhez.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* No Data Available States */}
+      {selectedLocation && !droughtData && !isDroughtLoading && !droughtError && (
+        <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-blue-700">
+              Jelenleg nincs elérhető aszály adat: <strong>{selectedLocation.locationName}</strong>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {selectedWell && !groundwaterData && !isGroundwaterLoading && !groundwaterError && (
+        <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-blue-700">
+              Jelenleg nincs elérhető talajvíz adat: <strong>{selectedWell.wellName}</strong>
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Data Cards with Embedded Selectors - 2x2 Grid */}
       <div className="grid-drought-cards mb-6">
         <DroughtIndexCard
