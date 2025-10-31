@@ -2,8 +2,8 @@
 # https://docs.netlify.com/configure-builds/file-based-configuration/
 
 [build]
-  # Build command
-  command = "npm run build"
+  # Install dependencies first, then build
+  command = "npm ci && npm run build"
 
   # Publish directory (output from Vite)
   publish = "dist"
