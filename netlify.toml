@@ -136,24 +136,7 @@
   NODE_ENV = "production"
 
 # Plugin configurations
-[[plugins]]
-  package = "@netlify/plugin-lighthouse"
-
-  [plugins.inputs]
-    # Performance thresholds
-    performance = 0.85
-    accessibility = 0.95
-    best-practices = 0.90
-    seo = 0.95
-    pwa = 0.90
-
-[[plugins]]
-  package = "netlify-plugin-submit-sitemap"
-
-  [plugins.inputs]
-    baseUrl = "https://dunapp.netlify.app"
-    sitemapPath = "/sitemap.xml"
-    providers = [
-      "google",
-      "bing"
-    ]
+# Plugins disabled temporarily for initial deployment
+# TODO: Install plugins and re-enable:
+# - @netlify/plugin-lighthouse (performance monitoring)
+# - netlify-plugin-submit-sitemap (SEO optimization)
