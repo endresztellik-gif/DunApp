@@ -17,33 +17,52 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { EmptyState } from '../../components/UI/EmptyState';
-import { Calendar } from 'lucide-react';
+import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
+import { Calendar, AlertCircle } from 'lucide-react';
+import { useForecastData } from '../../hooks/useForecastData';
 
 interface ForecastChartProps {
   cityId: string;
 }
 
-// Placeholder forecast data (will be replaced with real data)
-const generateMockForecastData = () => {
-  const data = [];
-  const now = new Date();
+export const ForecastChart: React.FC<ForecastChartProps> = ({ cityId }) => {
+  // Fetch forecast data using the new hook
+  const { forecasts, isLoading, error } = useForecastData(cityId);
 
-  for (let i = 0; i < 12; i++) {
-    // 12 data points (6-hour intervals for 3 days)
-    const date = new Date(now.getTime() + i * 6 * 60 * 60 * 1000);
-    data.push({
-      time: date.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric', hour: '2-digit' }),
-      temperature: 10 + Math.random() * 10,
-      precipitation: Math.random() * 5,
-    });
+  // Transform forecast data for Recharts
+  const forecastData = forecasts.map((forecast) => ({
+    time: new Date(forecast.forecastTime).toLocaleDateString('hu-HU', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+    }),
+    temperature: forecast.temperature,
+    precipitation: forecast.precipitationAmount,
+  }));
+
+  // Loading State
+  if (isLoading) {
+    return (
+      <div className="chart-container-standard">
+        <LoadingSpinner message="Előrejelzés betöltése..." />
+      </div>
+    );
   }
 
-  return data;
-};
-
-export const ForecastChart: React.FC<ForecastChartProps> = ({ cityId }) => {
-  // Placeholder data - will be fetched from API
-  const forecastData = cityId ? generateMockForecastData() : [];
+  // Error State
+  if (error) {
+    return (
+      <div className="flex items-start gap-3 rounded-lg border-2 border-red-200 bg-red-50 p-4">
+        <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" />
+        <div>
+          <h3 className="mb-1 text-base font-semibold text-red-900">
+            Hiba az előrejelzés betöltésekor
+          </h3>
+          <p className="text-sm text-red-700">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!cityId || forecastData.length === 0) {
     return (

@@ -3,19 +3,30 @@
  *
  * PURPOSE:
  * - Fetches current weather data for 4 cities (Szekszárd, Baja, Dunaszekcső, Mohács)
- * - Stores data in meteorology_data table
+ * - Fetches 3-day forecast data (72 hours, 6-hour intervals) from Yr.no
+ * - Stores current data in meteorology_data table
+ * - Stores forecast data in meteorology_forecasts table
  * - Called by cron job every 20 minutes
  *
  * IMPLEMENTATION:
+ * Current Weather:
  * - OpenWeatherMap API integration (primary source)
  * - Meteoblue API fallback
  * - Yr.no fallback
+ *
+ * Forecast:
+ * - Yr.no API (3-day forecast, 6-hour intervals)
+ * - Upsert strategy: deletes old forecasts before inserting new ones
+ *
+ * Features:
  * - Retry logic with exponential backoff
  * - Error logging and handling
+ * - User-Agent header for Yr.no (REQUIRED by API)
  *
  * API Keys needed (set in Supabase dashboard):
  * - OPENWEATHER_API_KEY
  * - METEOBLUE_API_KEY
+ * - YR_NO_USER_AGENT (optional, defaults to 'DunApp PWA/1.0 (contact@dunapp.hu)')
  * - SUPABASE_URL
  * - SUPABASE_SERVICE_ROLE_KEY
  */
@@ -197,6 +208,82 @@ async function fetchFromYrNo(city: { name: string; lat: number; lon: number }) {
 }
 
 /**
+ * Fetch 3-day forecast from Yr.no API
+ * Returns forecast data with 6-hour intervals for the next 72 hours
+ */
+async function fetchYrNoForecast(city: { name: string; lat: number; lon: number }) {
+  const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${city.lat}&lon=${city.lon}`;
+
+  console.log(`Fetching Yr.no forecast for ${city.name}...`);
+
+  const response = await fetchWithRetry(() => fetch(url, {
+    headers: {
+      'User-Agent': YR_NO_USER_AGENT
+    }
+  }));
+
+  if (!response.ok) {
+    throw new Error(`Yr.no API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const timeseries = data.properties?.timeseries || [];
+
+  if (timeseries.length === 0) {
+    throw new Error('No forecast data available from Yr.no');
+  }
+
+  // Filter to next 72 hours and 6-hour intervals
+  const now = new Date();
+  const maxTime = new Date(now.getTime() + 72 * 60 * 60 * 1000); // 72 hours from now
+  const forecasts = [];
+
+  for (let i = 0; i < timeseries.length; i++) {
+    const entry = timeseries[i];
+    const forecastTime = new Date(entry.time);
+
+    // Only include forecasts within next 72 hours
+    if (forecastTime > maxTime) {
+      break;
+    }
+
+    // Only include every 6th hour (approximately - Yr.no provides hourly data)
+    // We want roughly: 0h, 6h, 12h, 18h, 24h, 30h, etc.
+    const hoursDiff = (forecastTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    if (hoursDiff < 0 || hoursDiff % 6 > 1) {
+      continue; // Skip if not close to a 6-hour interval
+    }
+
+    const instant = entry.data?.instant?.details;
+    const next6h = entry.data?.next_6_hours;
+    const next12h = entry.data?.next_12_hours;
+
+    // Use next_6_hours if available, otherwise next_12_hours
+    const precipitationData = next6h?.details || next12h?.details;
+    const symbolData = next6h?.summary || next12h?.summary;
+
+    forecasts.push({
+      forecast_time: forecastTime.toISOString(),
+      temperature: instant?.air_temperature ?? null,
+      precipitation_amount: precipitationData?.precipitation_amount ?? null,
+      wind_speed: instant?.wind_speed ?? null,
+      wind_direction: instant?.wind_from_direction ?? null,
+      humidity: instant?.relative_humidity ?? null,
+      pressure: instant?.air_pressure_at_sea_level ?? null,
+      clouds_percent: instant?.cloud_area_fraction ?? null,
+      weather_symbol: symbolData?.symbol_code ?? null
+    });
+
+    // Limit to reasonable number of forecast points (12 points = 72 hours / 6 hour intervals)
+    if (forecasts.length >= 12) {
+      break;
+    }
+  }
+
+  return forecasts;
+}
+
+/**
  * Fetch weather data with fallback hierarchy
  */
 async function fetchWeatherData(city: { name: string; lat: number; lon: number }) {
@@ -226,6 +313,99 @@ async function fetchWeatherData(city: { name: string; lat: number; lon: number }
   }
 }
 
+/**
+ * Fetch and store forecasts for all cities
+ */
+async function fetchAndStoreForecastsForAllCities(supabase: any) {
+  console.log('📊 Starting forecast fetch for all cities...');
+
+  const forecastResults = [];
+  let forecastSuccessCount = 0;
+  let forecastFailureCount = 0;
+
+  for (const city of CITIES) {
+    try {
+      console.log(`Fetching forecast for ${city.name}...`);
+
+      // Fetch forecast from Yr.no
+      const forecastData = await fetchYrNoForecast(city);
+
+      if (forecastData.length === 0) {
+        throw new Error('No forecast data received');
+      }
+
+      // Get city_id from database
+      const { data: cityData, error: cityError } = await supabase
+        .from('meteorology_cities')
+        .select('id')
+        .eq('name', city.name)
+        .single();
+
+      if (cityError || !cityData) {
+        throw new Error(`City not found in database: ${city.name}`);
+      }
+
+      // Delete old forecasts for this city (upsert strategy)
+      const { error: deleteError } = await supabase
+        .from('meteorology_forecasts')
+        .delete()
+        .eq('city_id', cityData.id);
+
+      if (deleteError) {
+        console.warn(`Warning: Failed to delete old forecasts for ${city.name}:`, deleteError.message);
+      }
+
+      // Insert new forecasts
+      const forecastsToInsert = forecastData.map(f => ({
+        city_id: cityData.id,
+        forecast_time: f.forecast_time,
+        temperature: f.temperature,
+        precipitation_amount: f.precipitation_amount,
+        wind_speed: f.wind_speed,
+        wind_direction: f.wind_direction,
+        humidity: f.humidity,
+        pressure: f.pressure,
+        clouds_percent: f.clouds_percent,
+        weather_symbol: f.weather_symbol
+      }));
+
+      const { error: insertError } = await supabase
+        .from('meteorology_forecasts')
+        .insert(forecastsToInsert);
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      forecastSuccessCount++;
+      forecastResults.push({
+        city: city.name,
+        status: 'success',
+        forecastCount: forecastData.length
+      });
+
+      console.log(`✅ Forecast success: ${city.name} (${forecastData.length} forecast points)`);
+    } catch (error) {
+      forecastFailureCount++;
+      forecastResults.push({
+        city: city.name,
+        status: 'error',
+        error: error.message
+      });
+      console.error(`❌ Forecast error for ${city.name}:`, error.message);
+    }
+  }
+
+  return {
+    results: forecastResults,
+    summary: {
+      total: CITIES.length,
+      success: forecastSuccessCount,
+      failed: forecastFailureCount
+    }
+  };
+}
+
 serve(async (req) => {
   try {
     console.log('🌤️  Fetch Meteorology Edge Function - Starting');
@@ -237,14 +417,19 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const results = [];
-    let successCount = 0;
-    let failureCount = 0;
+    // ========================================
+    // PART 1: Fetch CURRENT weather for all cities
+    // ========================================
+    console.log('🌡️  Fetching current weather data...');
+
+    const currentResults = [];
+    let currentSuccessCount = 0;
+    let currentFailureCount = 0;
 
     // Fetch weather data for each city
     for (const city of CITIES) {
       try {
-        console.log(`Processing ${city.name}...`);
+        console.log(`Processing current weather for ${city.name}...`);
 
         // Fetch weather data
         const weatherData = await fetchWeatherData(city);
@@ -289,38 +474,56 @@ serve(async (req) => {
           throw insertError;
         }
 
-        successCount++;
-        results.push({
+        currentSuccessCount++;
+        currentResults.push({
           city: city.name,
           status: 'success',
           source: weatherData.source,
           temperature: weatherData.temperature
         });
 
-        console.log(`✅ Success: ${city.name} (${weatherData.source})`);
+        console.log(`✅ Current weather success: ${city.name} (${weatherData.source})`);
       } catch (error) {
-        failureCount++;
-        results.push({
+        currentFailureCount++;
+        currentResults.push({
           city: city.name,
           status: 'error',
           error: error.message
         });
-        console.error(`❌ Error for ${city.name}:`, error.message);
+        console.error(`❌ Current weather error for ${city.name}:`, error.message);
       }
     }
 
-    console.log(`✅ Fetch Meteorology Edge Function - Completed: ${successCount} success, ${failureCount} failed`);
+    // ========================================
+    // PART 2: Fetch FORECASTS for all cities
+    // ========================================
+    console.log('📊 Fetching forecast data...');
+
+    const forecastResponse = await fetchAndStoreForecastsForAllCities(supabase);
+
+    // ========================================
+    // FINAL RESPONSE
+    // ========================================
+    console.log(`✅ Fetch Meteorology Edge Function - Completed`);
+    console.log(`   Current weather: ${currentSuccessCount} success, ${currentFailureCount} failed`);
+    console.log(`   Forecasts: ${forecastResponse.summary.success} success, ${forecastResponse.summary.failed} failed`);
 
     return new Response(
       JSON.stringify({
         success: true,
         timestamp: new Date().toISOString(),
-        summary: {
-          total: CITIES.length,
-          success: successCount,
-          failed: failureCount
+        current: {
+          summary: {
+            total: CITIES.length,
+            success: currentSuccessCount,
+            failed: currentFailureCount
+          },
+          results: currentResults
         },
-        results
+        forecast: {
+          summary: forecastResponse.summary,
+          results: forecastResponse.results
+        }
       }),
       {
         headers: { 'Content-Type': 'application/json' },
