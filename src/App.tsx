@@ -13,11 +13,12 @@
 import { useState } from 'react';
 import { Header } from './components/Layout/Header';
 import { InstallPrompt } from './components/InstallPrompt';
+import { LoadingSpinner } from './components/UI/LoadingSpinner';
 import { MeteorologyModule } from './modules/meteorology/MeteorologyModule';
 import { WaterLevelModule } from './modules/water-level/WaterLevelModule';
 import { DroughtModule } from './modules/drought/DroughtModule';
+import { useCities } from './hooks/useCities';
 import {
-  MOCK_CITIES,
   MOCK_STATIONS,
   MOCK_DROUGHT_LOCATIONS,
   MOCK_GROUNDWATER_WELLS,
@@ -37,6 +38,36 @@ function App() {
 
   const [activeModule, setActiveModule] = useState<ModuleType>('meteorology');
 
+  // Fetch real cities from Supabase
+  const { cities, isLoading: citiesLoading, error: citiesError } = useCities();
+
+  // Show loading spinner while cities are loading (only for meteorology module)
+  if (activeModule === 'meteorology' && citiesLoading) {
+    return (
+      <div className="min-h-screen bg-bg-main">
+        <Header currentModule={activeModule} onModuleChange={setActiveModule} />
+        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">
+          <LoadingSpinner message="Városok betöltése..." />
+        </main>
+      </div>
+    );
+  }
+
+  // Show error if cities failed to load
+  if (activeModule === 'meteorology' && citiesError) {
+    return (
+      <div className="min-h-screen bg-bg-main">
+        <Header currentModule={activeModule} onModuleChange={setActiveModule} />
+        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">
+          <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 text-red-900">
+            <h3 className="font-semibold">Hiba a városok betöltésekor</h3>
+            <p className="text-sm">{citiesError.message}</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-bg-main">
       {/* Header with Module Navigation */}
@@ -44,8 +75,8 @@ function App() {
 
       {/* Main Content - Render Active Module */}
       <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">
-        {activeModule === 'meteorology' && (
-          <MeteorologyModule cities={MOCK_CITIES} initialCity={MOCK_CITIES[0]} />
+        {activeModule === 'meteorology' && cities.length > 0 && (
+          <MeteorologyModule cities={cities} initialCity={cities[0]} />
         )}
         {activeModule === 'water-level' && (
           <WaterLevelModule stations={MOCK_STATIONS} initialStation={MOCK_STATIONS[0]} />
