@@ -1,23 +1,19 @@
 /**
  * DunApp PWA Main Stylesheet
  *
- * Import order:
- * 1. Design tokens (CSS custom properties)
- * 2. Tailwind base layer
- * 3. Tailwind components layer (includes custom component classes)
- * 4. Tailwind utilities layer
+ * Import order (Tailwind 4.0):
+ * 1. Tailwind framework (required for @apply directive)
+ * 2. Design tokens
+ * 3. Custom components
  */
 
-/* Import design tokens first */
+/* Tailwind 4.0 - MUST be first for @apply to work */
+@import "tailwindcss";
+
+/* Import custom CSS files */
 @import './styles/design-tokens.css';
-
-/* Tailwind layers */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Import custom component classes after Tailwind */
-@import './styles/components.css';
+/* TEMPORARILY DISABLED - Tailwind 4.0 @apply circular references */
+/* @import './styles/components.css'; */
 
 /* ========================================
    BASE STYLES

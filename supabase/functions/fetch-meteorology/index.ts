@@ -267,10 +267,10 @@ async function fetchYrNoForecast(city: { name: string; lat: number; lon: number 
       temperature: instant?.air_temperature ?? null,
       precipitation_amount: precipitationData?.precipitation_amount ?? null,
       wind_speed: instant?.wind_speed ?? null,
-      wind_direction: instant?.wind_from_direction ?? null,
-      humidity: instant?.relative_humidity ?? null,
+      wind_direction: instant?.wind_from_direction ? Math.round(instant.wind_from_direction) : null,
+      humidity: instant?.relative_humidity ? Math.round(instant.relative_humidity) : null,
       pressure: instant?.air_pressure_at_sea_level ?? null,
-      clouds_percent: instant?.cloud_area_fraction ?? null,
+      clouds_percent: instant?.cloud_area_fraction ? Math.round(instant.cloud_area_fraction) : null,
       weather_symbol: symbolData?.symbol_code ?? null
     });
 

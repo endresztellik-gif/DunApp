@@ -13,7 +13,7 @@
      ======================================== */
 
   .data-card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-5 min-h-[140px] transition-shadow duration-200 hover:shadow-md;
+    @apply bg-white rounded-lg shadow-sm border-2 border-gray-300 p-5 min-h-[140px] transition-shadow duration-200 hover:shadow-md;
   }
 
   .data-card-header {
@@ -40,9 +40,10 @@
      DATA CARD WITH DROPDOWN (DROUGHT MODULE)
      ======================================== */
 
-  .data-card-dropdown {
+  /* TEMPORARILY DISABLED - Tailwind 4.0 @apply limitation */
+  /* .data-card-dropdown {
     @apply data-card;
-  }
+  } */
 
   .data-card-dropdown-selector {
     @apply w-full px-3 py-2 border border-orange-400 rounded-lg text-sm font-medium text-gray-900 bg-white transition-colors duration-200 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2;
@@ -264,7 +265,7 @@
      ======================================== */
 
   .grid-meteorology-cards {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+    @apply grid grid-cols-2 gap-4 md:gap-5;
   }
 
   .grid-water-cards {

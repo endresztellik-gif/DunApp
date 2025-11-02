@@ -43,7 +43,7 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({ cityId }) => {
   // Loading State
   if (isLoading) {
     return (
-      <div className="chart-container-standard">
+      <div className="w-full h-96 bg-white rounded-lg shadow-sm border-2 border-gray-200 p-4 flex items-center justify-center">
         <LoadingSpinner message="Előrejelzés betöltése..." />
       </div>
     );
@@ -75,7 +75,7 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({ cityId }) => {
   }
 
   return (
-    <div className="chart-container-standard">
+    <div className="w-full h-96 bg-white rounded-lg shadow-sm border-2 border-gray-200 p-4">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={forecastData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ed" />
