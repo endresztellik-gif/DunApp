@@ -9,7 +9,6 @@ import React from 'react';
 import {
   LineChart,
   Line,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -35,10 +34,9 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({ cityId }) => {
     time: new Date(forecast.forecastTime).toLocaleDateString('hu-HU', {
       month: 'short',
       day: 'numeric',
+      hour: '2-digit',
     }),
     temperature: forecast.temperature,
-    temperatureMin: forecast.temperatureMin,
-    temperatureMax: forecast.temperatureMax,
     precipitation: forecast.precipitationAmount,
   }));
 
@@ -111,8 +109,6 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({ cityId }) => {
             }}
             formatter={(value: number, name: string) => {
               if (name === 'temperature') return [`${value.toFixed(1)}°C`, 'Hőmérséklet'];
-              if (name === 'temperatureMax') return [`${value.toFixed(1)}°C`, 'Max'];
-              if (name === 'temperatureMin') return [`${value.toFixed(1)}°C`, 'Min'];
               if (name === 'precipitation') return [`${value.toFixed(1)} mm`, 'Csapadék'];
               return value;
             }}
@@ -122,35 +118,11 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({ cityId }) => {
             height={36}
             formatter={(value) => {
               if (value === 'temperature') return 'Hőmérséklet';
-              if (value === 'temperatureMax') return 'Max hőmérséklet';
-              if (value === 'temperatureMin') return 'Min hőmérséklet';
               if (value === 'precipitation') return 'Csapadék';
               return value;
             }}
           />
-          {/* Min temperature line */}
-          <Line
-            yAxisId="temp"
-            type="monotone"
-            dataKey="temperatureMin"
-            stroke="#00a8cc"
-            strokeWidth={1}
-            strokeDasharray="3 3"
-            dot={false}
-            opacity={0.5}
-          />
-          {/* Max temperature line */}
-          <Line
-            yAxisId="temp"
-            type="monotone"
-            dataKey="temperatureMax"
-            stroke="#00a8cc"
-            strokeWidth={1}
-            strokeDasharray="3 3"
-            dot={false}
-            opacity={0.5}
-          />
-          {/* Main temperature line */}
+          {/* Temperature line */}
           <Line
             yAxisId="temp"
             type="monotone"

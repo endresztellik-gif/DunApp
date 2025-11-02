@@ -378,8 +378,8 @@ async function fetchAndStoreForecastsForAllCities(supabase: any) {
     try {
       console.log(`Fetching forecast for ${city.name}...`);
 
-      // Fetch forecast from Meteoblue (daily with min/max)
-      const forecastData = await fetchMeteoblueForecast(city);
+      // Fetch forecast from Yr.no (6-hourly intervals, 12 points for 3 days)
+      const forecastData = await fetchYrNoForecast(city);
 
       if (forecastData.length === 0) {
         throw new Error('No forecast data received');
@@ -411,8 +411,6 @@ async function fetchAndStoreForecastsForAllCities(supabase: any) {
         city_id: cityData.id,
         forecast_time: f.forecast_time,
         temperature: f.temperature,
-        temperature_min: f.temperature_min,
-        temperature_max: f.temperature_max,
         precipitation_amount: f.precipitation_amount,
         wind_speed: f.wind_speed,
         wind_direction: f.wind_direction,
