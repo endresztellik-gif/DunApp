@@ -208,7 +208,56 @@ async function fetchFromYrNo(city: { name: string; lat: number; lon: number }) {
 }
 
 /**
- * Fetch 3-day forecast from Yr.no API
+ * Fetch 3-day forecast from Meteoblue API
+ * Returns daily forecast data with min/max temperature
+ */
+async function fetchMeteoblueForecast(city: { name: string; lat: number; lon: number }) {
+  if (!METEOBLUE_API_KEY) {
+    throw new Error('METEOBLUE_API_KEY not configured');
+  }
+
+  const url = `https://my.meteoblue.com/packages/basic-day?apikey=${METEOBLUE_API_KEY}&lat=${city.lat}&lon=${city.lon}&format=json`;
+
+  console.log(`Fetching Meteoblue forecast for ${city.name}...`);
+
+  const response = await fetchWithRetry(() => fetch(url));
+
+  if (!response.ok) {
+    throw new Error(`Meteoblue API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const forecasts = [];
+
+  // Get next 3 days of forecast (today + 2 more days)
+  const daysToFetch = Math.min(3, data.data_day?.time?.length || 0);
+
+  for (let i = 0; i < daysToFetch; i++) {
+    // Parse date string (format: "YYYY-MM-DD")
+    const dateStr = data.data_day.time[i];
+    const forecastDate = new Date(dateStr + 'T12:00:00Z'); // Set to noon UTC
+
+    forecasts.push({
+      forecast_time: forecastDate.toISOString(),
+      temperature: data.data_day.temperature_mean?.[i] ?? null,
+      temperature_min: data.data_day.temperature_min?.[i] ?? null,
+      temperature_max: data.data_day.temperature_max?.[i] ?? null,
+      precipitation_amount: data.data_day.precipitation?.[i] ?? null,
+      wind_speed: data.data_day.windspeed_mean?.[i] ?? null,
+      wind_direction: data.data_day.winddirection?.[i] ? Math.round(data.data_day.winddirection[i]) : null,
+      humidity: data.data_day.relativehumidity_mean?.[i] ? Math.round(data.data_day.relativehumidity_mean[i]) : null,
+      pressure: data.data_day.sealevelpressure_mean?.[i] ?? null,
+      clouds_percent: null, // Not available in basic-day package
+      weather_symbol: data.data_day.pictocode?.[i]?.toString() ?? null
+    });
+  }
+
+  console.log(`✅ Meteoblue forecast for ${city.name}: ${forecasts.length} days`);
+  return forecasts;
+}
+
+/**
+ * Fetch 3-day forecast from Yr.no API (DEPRECATED - replaced by Meteoblue)
  * Returns forecast data with 6-hour intervals for the next 72 hours
  */
 async function fetchYrNoForecast(city: { name: string; lat: number; lon: number }) {
@@ -265,6 +314,8 @@ async function fetchYrNoForecast(city: { name: string; lat: number; lon: number 
     forecasts.push({
       forecast_time: forecastTime.toISOString(),
       temperature: instant?.air_temperature ?? null,
+      temperature_min: precipitationData?.air_temperature_min ?? null,
+      temperature_max: precipitationData?.air_temperature_max ?? null,
       precipitation_amount: precipitationData?.precipitation_amount ?? null,
       wind_speed: instant?.wind_speed ?? null,
       wind_direction: instant?.wind_from_direction ? Math.round(instant.wind_from_direction) : null,
@@ -327,8 +378,8 @@ async function fetchAndStoreForecastsForAllCities(supabase: any) {
     try {
       console.log(`Fetching forecast for ${city.name}...`);
 
-      // Fetch forecast from Yr.no
-      const forecastData = await fetchYrNoForecast(city);
+      // Fetch forecast from Meteoblue (daily with min/max)
+      const forecastData = await fetchMeteoblueForecast(city);
 
       if (forecastData.length === 0) {
         throw new Error('No forecast data received');
@@ -360,6 +411,8 @@ async function fetchAndStoreForecastsForAllCities(supabase: any) {
         city_id: cityData.id,
         forecast_time: f.forecast_time,
         temperature: f.temperature,
+        temperature_min: f.temperature_min,
+        temperature_max: f.temperature_max,
         precipitation_amount: f.precipitation_amount,
         wind_speed: f.wind_speed,
         wind_direction: f.wind_direction,

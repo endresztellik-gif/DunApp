@@ -110,7 +110,7 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
       {/* Weather Data Cards - 2x3 Grid - Only show when we have data */}
       {weatherData && (
         <>
-          <div className="grid-meteorology-cards mb-6">
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <DataCard
               icon={Thermometer}
               label="Hőmérséklet"

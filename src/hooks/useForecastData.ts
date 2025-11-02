@@ -20,6 +20,8 @@ export interface ForecastPoint {
   cityId: string;
   forecastTime: string; // ISO timestamp
   temperature: number | null;
+  temperatureMin: number | null;
+  temperatureMax: number | null;
   precipitationAmount: number | null;
   windSpeed: number | null;
   windDirection: number | null;
@@ -72,6 +74,8 @@ async function fetchForecastData(cityId: string): Promise<ForecastPoint[]> {
     cityId: f.city_id as string,
     forecastTime: f.forecast_time as string,
     temperature: f.temperature as number | null,
+    temperatureMin: f.temperature_min as number | null,
+    temperatureMax: f.temperature_max as number | null,
     precipitationAmount: f.precipitation_amount as number | null,
     windSpeed: f.wind_speed as number | null,
     windDirection: f.wind_direction as number | null,
