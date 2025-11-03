@@ -33,7 +33,6 @@ const DroughtModule = lazy(() =>
   }))
 );
 import {
-  MOCK_STATIONS,
   MOCK_DROUGHT_LOCATIONS,
   MOCK_GROUNDWATER_WELLS,
   validateMockData,
@@ -94,7 +93,7 @@ function App() {
             <MeteorologyModule cities={cities} initialCity={cities[0]} />
           )}
           {activeModule === 'water-level' && (
-            <WaterLevelModule stations={MOCK_STATIONS} initialStation={MOCK_STATIONS[0]} />
+            <WaterLevelModule />
           )}
           {activeModule === 'drought' && (
             <DroughtModule

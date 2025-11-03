@@ -82,7 +82,7 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
       >
         <MapPin className="h-5 w-5" aria-hidden="true" />
         <span className="text-base font-medium">
-          {selectedStation?.stationName || 'Válassz állomást'}
+          {selectedStation?.name || 'Válassz állomást'}
         </span>
         <ChevronDown
           className={`h-4 w-4 transition-transform duration-200 ${
@@ -116,17 +116,16 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
               >
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-900">
-                    {station.stationName}
+                    {station.name}
                   </span>
                   <span className="text-xs text-gray-600">
-                    {station.riverName} - {station.cityName}
+                    {station.river} ({station.riverKm ? `${station.riverKm} fkm` : 'N/A'})
                   </span>
                   {/* Critical levels tooltip */}
                   <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
                     <Info className="h-3 w-3" aria-hidden="true" />
                     <span>
-                      LNV: {station.lnvLevel}cm | KKV: {station.kkvLevel}cm | NV:{' '}
-                      {station.nvLevel}cm
+                      LNV: {station.lowWaterLevelCm ?? 'N/A'}cm | KKV: {station.highWaterLevelCm ?? 'N/A'}cm
                     </span>
                   </div>
                 </div>
