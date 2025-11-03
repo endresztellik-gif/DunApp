@@ -42,10 +42,29 @@ async function fetchGroundwaterData(wellId: string) {
     .eq('well_id', wellId)
     .order('timestamp', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (groundwaterError) {
     throw new Error(`Failed to fetch groundwater data: ${groundwaterError.message}`);
+  }
+
+  // If no data exists yet, return null for groundwaterData
+  if (!groundwaterData) {
+    return {
+      groundwaterData: null,
+      well: {
+        id: (wellData as Record<string, unknown>).id as string,
+        wellName: (wellData as Record<string, unknown>).well_name as string,
+        wellCode: (wellData as Record<string, unknown>).well_code as string,
+        county: (wellData as Record<string, unknown>).county as string,
+        cityName: (wellData as Record<string, unknown>).city_name as string,
+        latitude: (wellData as Record<string, unknown>).latitude as number,
+        longitude: (wellData as Record<string, unknown>).longitude as number,
+        depthMeters: (wellData as Record<string, unknown>).depth_meters as number,
+        wellType: (wellData as Record<string, unknown>).well_type as string,
+        isActive: (wellData as Record<string, unknown>).is_active as boolean
+      }
+    };
   }
 
   return {

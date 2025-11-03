@@ -42,10 +42,26 @@ async function fetchDroughtData(locationId: string) {
     .eq('location_id', locationId)
     .order('timestamp', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
-  if (droughtError || !droughtData) {
-    throw new Error(`Failed to fetch drought data: ${droughtError?.message || 'No data found'}`);
+  if (droughtError) {
+    throw new Error(`Failed to fetch drought data: ${droughtError.message}`);
+  }
+
+  // If no data exists yet, return null for droughtData
+  if (!droughtData) {
+    return {
+      droughtData: null,
+      location: {
+        id: (locationData as Record<string, unknown>).id as string,
+        locationName: (locationData as Record<string, unknown>).location_name as string,
+        locationType: (locationData as Record<string, unknown>).location_type as string,
+        county: (locationData as Record<string, unknown>).county as string,
+        latitude: (locationData as Record<string, unknown>).latitude as number,
+        longitude: (locationData as Record<string, unknown>).longitude as number,
+        isActive: (locationData as Record<string, unknown>).is_active as boolean
+      }
+    };
   }
 
   return {
