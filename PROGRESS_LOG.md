@@ -34,8 +34,8 @@ Mac újraindult, session megszakadt Phase 3 után. Folytatás Phase 4-től (API 
   - Public Key: `BGU-xuubTzjN5AFb8aEaapyuoBINLd5qUeIocIi1p_ohsBTAsQFpXxByDTatp_19tbvk2DehTighbzIpufhDKdU`
   - Private Key: `dysnyO0A961F3BdcSMNVH-fNceUwB-FJ9XdclTDaUF8` (sensitive!)
 - ✅ Létrehozva: `.env` file with API keys
-  - OpenWeatherMap: `cd125c5eeeda398551503129fc08636d`
-  - Meteoblue: `M3VCztJiO2Gn7jsS`
+  - OpenWeatherMap: `YOUR_OPENWEATHER_API_KEY_HERE`
+  - Meteoblue: `YOUR_METEOBLUE_API_KEY_HERE`
   - VAPID keys configured
 - ✅ Létrehozva: `.env.vapid` (sensitive, not committed)
 - ✅ Frissítve: `.gitignore` to protect environment files

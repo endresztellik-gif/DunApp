@@ -185,8 +185,8 @@ Security Analyst Agent:
 
 ```
 Meteorológia:
-├─ OpenWeather API ✅ (cd125c5eeeda398551503129fc08636d)
-├─ Meteoblue API ✅ (M3VCztJiO2Gn7jsS)
+├─ OpenWeather API ✅ (YOUR_OPENWEATHER_API_KEY_HERE)
+├─ Meteoblue API ✅ (YOUR_METEOBLUE_API_KEY_HERE)
 ├─ Yr.no API (ingyenes)
 └─ RainViewer (radar)
 
@@ -276,8 +276,8 @@ supabase functions new fetch-meteorology
 # Copy-paste production-ready kód
 
 # 3. Environment változók
-supabase secrets set OPENWEATHER_API_KEY=cd125c5eeeda398551503129fc08636d
-supabase secrets set METEOBLUE_API_KEY=M3VCztJiO2Gn7jsS
+supabase secrets set OPENWEATHER_API_KEY=YOUR_OPENWEATHER_API_KEY_HERE
+supabase secrets set METEOBLUE_API_KEY=YOUR_METEOBLUE_API_KEY_HERE
 
 # 4. Deploy
 supabase functions deploy fetch-meteorology

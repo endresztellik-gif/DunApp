@@ -4,7 +4,7 @@ METEOROLÓGIA MD
 
 Meteorológiai Adatforrások és Tervezési Terv
 1. Előrejelzési Adatok
-Meteoblue API: M3VCztJiO2Gn7jsS
+Meteoblue API: YOUR_METEOBLUE_API_KEY_HERE
 * Hourly és daily előrejelzések, 14 napra előre, JSON/CSV formátumban MeteoblueMeteoblue- Különböző csomagok: basic, clouds, wind, air stb. Meteoarena- Földrajzi koordináták alapján lekérdezés Meteoblue- ✅ Előny: Professzionális, precíz, már van API kulcsod
 * ⚠️ Hátrány: Fizetős, de trial elérhető
 Yr.no (Norvég Meteorológiai Intézet):
@@ -62,10 +62,10 @@ const cities = {
 └── 🗺️ RadarMap (élő radar Magyarországra)
     └── RainViewer Leaflet integráció  🔧 Implementációs Lépések
 1. API kulcsok beszerzése:
-    * ✅ Meteoblue PAI kulcs: M3VCztJiO2Gn7jsS
+    * ✅ Meteoblue PAI kulcs: YOUR_METEOBLUE_API_KEY_HERE
     * 🔑 OpenWeatherMap regisztráció
 name: DunApp
-Api Kulcsár: cd125c5eeeda398551503129fc08636d
+Api Kulcsár: YOUR_OPENWEATHER_API_KEY_HERE
 dokumentáció: https://openweathermap.org/api/one-call-3#access_api
  API key:
 

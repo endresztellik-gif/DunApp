@@ -40,7 +40,7 @@
 
 **API Kulcsok:**
 ```
-Primary Key:   cd125c5eeeda398551503129fc08636d
+Primary Key:   YOUR_OPENWEATHER_API_KEY_HERE
 Backup Key:    511dd4343465049c67dfbaca353c83e6
 ```
 
@@ -120,7 +120,7 @@ const cities = {
 
 **API Kulcs:**
 ```
-API Key: M3VCztJiO2Gn7jsS
+API Key: YOUR_METEOBLUE_API_KEY_HERE
 ```
 
 **Endpoint:**
@@ -1254,8 +1254,8 @@ Teljes (Production):        $54-103/hó
 
 ```env
 # .env.production
-OPENWEATHER_API_KEY=cd125c5eeeda398551503129fc08636d
-METEOBLUE_API_KEY=M3VCztJiO2Gn7jsS
+OPENWEATHER_API_KEY=YOUR_OPENWEATHER_API_KEY_HERE
+METEOBLUE_API_KEY=YOUR_METEOBLUE_API_KEY_HERE
 VITE_VAPID_PUBLIC_KEY=BEl62iU...
 VAPID_PRIVATE_KEY=xxxxx
 SUPABASE_URL=https://your-project.supabase.co

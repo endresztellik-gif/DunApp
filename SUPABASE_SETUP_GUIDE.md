@@ -72,8 +72,8 @@ These secrets are needed for Edge Functions to access external APIs:
 
 ```bash
 # API Keys
-supabase secrets set OPENWEATHER_API_KEY=cd125c5eeeda398551503129fc08636d
-supabase secrets set METEOBLUE_API_KEY=M3VCztJiO2Gn7jsS
+supabase secrets set OPENWEATHER_API_KEY=YOUR_OPENWEATHER_API_KEY_HERE
+supabase secrets set METEOBLUE_API_KEY=YOUR_METEOBLUE_API_KEY_HERE
 supabase secrets set YR_NO_USER_AGENT="DunApp PWA/1.0 (contact@dunapp.hu)"
 
 # VAPID Keys (for push notifications)

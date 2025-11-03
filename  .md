@@ -935,7 +935,7 @@ Feladat:
 5. Error handling (fallback: Meteoblue vagy Yr.no)
 6. Cache: 20 perc
 
-API kulcs: cd125c5eeeda398551503129fc08636d (env variable!)
+API kulcs: YOUR_OPENWEATHER_API_KEY_HERE (env variable!)
 Referencia: DATA_SOURCES.md → Meteorológia szekció
 
 Futtass Semgrep-et: ellenőrizd hogy nincs hardcoded API kulcs!

@@ -56,8 +56,8 @@ https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={lat}&lon={lon}
 ```
 
 **Environment Variables Needed:**
-- `OPENWEATHER_API_KEY` (cd125c5eeeda398551503129fc08636d)
-- `METEOBLUE_API_KEY` (M3VCztJiO2Gn7jsS)
+- `OPENWEATHER_API_KEY` (YOUR_OPENWEATHER_API_KEY_HERE)
+- `METEOBLUE_API_KEY` (YOUR_METEOBLUE_API_KEY_HERE)
 - `YR_NO_USER_AGENT` (DunApp PWA/1.0 contact@dunapp.hu)
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
@@ -261,13 +261,13 @@ if (waterLevel >= 400 cm) {
 #### Already Configured (from DATA_SOURCES.md)
 
 **OpenWeatherMap:**
-- Primary Key: `cd125c5eeeda398551503129fc08636d`
+- Primary Key: `YOUR_OPENWEATHER_API_KEY_HERE`
 - Backup Key: `511dd4343465049c67dfbaca353c83e6`
 - Rate Limit: 1,000 calls/day (free tier)
 - Status: ACTIVE
 
 **Meteoblue:**
-- API Key: `M3VCztJiO2Gn7jsS`
+- API Key: `YOUR_METEOBLUE_API_KEY_HERE`
 - Rate Limit: 2,000 calls/month (trial), 10,000+ (paid)
 - Status: ACTIVE
 - Cost: $0/month (trial), $29+/month (production)
@@ -290,8 +290,8 @@ Must be set in Supabase Dashboard → Project Settings → Edge Functions → Se
 
 ```bash
 # API Keys
-OPENWEATHER_API_KEY=cd125c5eeeda398551503129fc08636d
-METEOBLUE_API_KEY=M3VCztJiO2Gn7jsS
+OPENWEATHER_API_KEY=YOUR_OPENWEATHER_API_KEY_HERE
+METEOBLUE_API_KEY=YOUR_METEOBLUE_API_KEY_HERE
 YR_NO_USER_AGENT="DunApp PWA/1.0 (contact@dunapp.hu)"
 
 # Supabase (auto-configured)

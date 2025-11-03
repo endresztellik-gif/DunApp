@@ -51,7 +51,7 @@ rules:
   - id: hardcoded-api-key
     pattern-either:
       - pattern: const API_KEY = "..."
-      - pattern: const $KEY = "cd125c5eeeda398551503129fc08636d"
+      - pattern: const $KEY = "YOUR_OPENWEATHER_API_KEY_HERE"
     message: API key hardcoded! Use environment variable instead.
     severity: ERROR
     languages: [javascript, typescript]
@@ -90,14 +90,14 @@ rules:
 
   - id: openweather-api-key-exposed
     pattern: |
-      cd125c5eeeda398551503129fc08636d
+      YOUR_OPENWEATHER_API_KEY_HERE
     message: OpenWeather API key exposed! Move to .env file.
     severity: CRITICAL
     languages: [javascript, typescript]
 
   - id: meteoblue-api-key-exposed
     pattern: |
-      39d84bdab5234b38b98f04e5feee9b90
+      YOUR_METEOBLUE_API_KEY_HERE
     message: Meteoblue API key exposed! Move to .env file.
     severity: CRITICAL
     languages: [javascript, typescript]
@@ -144,7 +144,7 @@ snyk test && snyk fix
 
 ```typescript
 // ❌ WRONG: Hardcoded API key
-const API_KEY = 'cd125c5eeeda398551503129fc08636d';
+const API_KEY = 'YOUR_OPENWEATHER_API_KEY_HERE';
 
 // ✅ CORRECT: Environment variable
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
@@ -287,8 +287,8 @@ const rateLimiter = new RateLimiter({
 
 ```bash
 # Check for exposed secrets
-grep -r "cd125c5eeeda398551503129fc08636d" .
-grep -r "39d84bdab5234b38b98f04e5feee9b90" .
+grep -r "YOUR_OPENWEATHER_API_KEY_HERE" .
+grep -r "YOUR_METEOBLUE_API_KEY_HERE" .
 grep -r "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" .
 
 # Ensure .env is in .gitignore

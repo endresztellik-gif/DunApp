@@ -32,7 +32,7 @@ Read before starting data tasks:
 
 ```typescript
 // OpenWeatherMap API
-const OPENWEATHER_API_KEY = 'cd125c5eeeda398551503129fc08636d';
+const OPENWEATHER_API_KEY = 'YOUR_OPENWEATHER_API_KEY_HERE';
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
 
 interface OpenWeatherResponse {

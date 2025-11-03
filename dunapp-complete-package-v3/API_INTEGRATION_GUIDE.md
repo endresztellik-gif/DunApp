@@ -56,8 +56,8 @@ supabase functions new check-water-level  # Push notification
 
 ```bash
 # Set secrets
-supabase secrets set OPENWEATHER_API_KEY=cd125c5eeeda398551503129fc08636d
-supabase secrets set METEOBLUE_API_KEY=M3VCztJiO2Gn7jsS
+supabase secrets set OPENWEATHER_API_KEY=YOUR_OPENWEATHER_API_KEY_HERE
+supabase secrets set METEOBLUE_API_KEY=YOUR_METEOBLUE_API_KEY_HERE
 supabase secrets set VAPID_PRIVATE_KEY=your_vapid_private_key
 supabase secrets set VAPID_SUBJECT=mailto:your-email@dunapp.hu
 
@@ -930,8 +930,8 @@ Deno.test('Water Level API - scrape 3 stations', async () => {
 ### API Keys Szükségesek
 
 ```env
-OPENWEATHER_API_KEY=cd125c5eeeda398551503129fc08636d
-METEOBLUE_API_KEY=M3VCztJiO2Gn7jsS
+OPENWEATHER_API_KEY=YOUR_OPENWEATHER_API_KEY_HERE
+METEOBLUE_API_KEY=YOUR_METEOBLUE_API_KEY_HERE
 VAPID_PRIVATE_KEY=xxxxx
 VAPID_SUBJECT=mailto:your-email@dunapp.hu
 ```

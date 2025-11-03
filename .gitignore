@@ -45,3 +45,4 @@ hydroinfo-mcp/
 coverage/
 .env
 .env.vapid
+.claude/settings.local.json

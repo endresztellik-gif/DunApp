@@ -40,8 +40,8 @@
 
 ### Active (from DATA_SOURCES.md)
 ```bash
-OPENWEATHER_API_KEY=cd125c5eeeda398551503129fc08636d
-METEOBLUE_API_KEY=M3VCztJiO2Gn7jsS
+OPENWEATHER_API_KEY=YOUR_OPENWEATHER_API_KEY_HERE
+METEOBLUE_API_KEY=YOUR_METEOBLUE_API_KEY_HERE
 YR_NO_USER_AGENT="DunApp PWA/1.0 (contact@dunapp.hu)"
 ```
 
@@ -58,8 +58,8 @@ web-push generate-vapid-keys
 ### Set in Supabase
 **Dashboard → Project Settings → Edge Functions → Secrets**
 ```bash
-OPENWEATHER_API_KEY=cd125c5eeeda398551503129fc08636d
-METEOBLUE_API_KEY=M3VCztJiO2Gn7jsS
+OPENWEATHER_API_KEY=YOUR_OPENWEATHER_API_KEY_HERE
+METEOBLUE_API_KEY=YOUR_METEOBLUE_API_KEY_HERE
 YR_NO_USER_AGENT="DunApp PWA/1.0 (contact@dunapp.hu)"
 VITE_VAPID_PUBLIC_KEY={your-generated-public-key}
 VAPID_PRIVATE_KEY={your-generated-private-key}

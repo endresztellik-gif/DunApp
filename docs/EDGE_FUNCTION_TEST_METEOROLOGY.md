@@ -210,8 +210,8 @@ supabase functions deploy fetch-meteorology
 Go to Supabase Dashboard → Edge Functions → fetch-meteorology → Settings:
 
 ```
-OPENWEATHER_API_KEY=cd125c5eeeda398551503129fc08636d
-METEOBLUE_API_KEY=M3VCztJiO2Gn7jsS
+OPENWEATHER_API_KEY=YOUR_OPENWEATHER_API_KEY_HERE
+METEOBLUE_API_KEY=YOUR_METEOBLUE_API_KEY_HERE
 YR_NO_USER_AGENT=DunApp PWA/1.0 (contact@dunapp.hu)
 ```
 

@@ -121,8 +121,8 @@ Add these variables:
 
 ```env
 # Meteorology APIs
-OPENWEATHER_API_KEY=cd125c5eeeda398551503129fc08636d
-METEOBLUE_API_KEY=M3VCztJiO2Gn7jsS
+OPENWEATHER_API_KEY=YOUR_OPENWEATHER_API_KEY_HERE
+METEOBLUE_API_KEY=YOUR_METEOBLUE_API_KEY_HERE
 
 # Push Notifications (generate with: npx web-push generate-vapid-keys)
 VAPID_PUBLIC_KEY=your_generated_vapid_public_key

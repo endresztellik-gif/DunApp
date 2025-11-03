@@ -28,8 +28,8 @@ This document provides a **step-by-step implementation plan** for deploying the 
 - [ ] Git configured
 
 ### API Keys Available
-- [x] OpenWeatherMap: `cd125c5eeeda398551503129fc08636d`
-- [x] Meteoblue: `M3VCztJiO2Gn7jsS`
+- [x] OpenWeatherMap: `YOUR_OPENWEATHER_API_KEY_HERE`
+- [x] Meteoblue: `YOUR_METEOBLUE_API_KEY_HERE`
 - [ ] VAPID keys (need to generate)
 
 ---
@@ -71,8 +71,8 @@ Add the following environment variables:
 
 ```bash
 # API Keys
-OPENWEATHER_API_KEY=cd125c5eeeda398551503129fc08636d
-METEOBLUE_API_KEY=M3VCztJiO2Gn7jsS
+OPENWEATHER_API_KEY=YOUR_OPENWEATHER_API_KEY_HERE
+METEOBLUE_API_KEY=YOUR_METEOBLUE_API_KEY_HERE
 YR_NO_USER_AGENT=DunApp PWA/1.0 (contact@dunapp.hu)
 
 # VAPID (for push notifications)
@@ -552,7 +552,7 @@ curl -X POST https://{project-ref}.supabase.co/functions/v1/fetch-meteorology \
 # Expected: Fallback to Meteoblue or Yr.no (should still succeed)
 
 # 4. Restore correct API key
-supabase secrets set OPENWEATHER_API_KEY=cd125c5eeeda398551503129fc08636d
+supabase secrets set OPENWEATHER_API_KEY=YOUR_OPENWEATHER_API_KEY_HERE
 ```
 
 #### Test Rate Limiting
@@ -1021,7 +1021,7 @@ supabase secrets list
 supabase secrets unset OPENWEATHER_API_KEY
 
 # Set correct secret
-supabase secrets set OPENWEATHER_API_KEY=cd125c5eeeda398551503129fc08636d
+supabase secrets set OPENWEATHER_API_KEY=YOUR_OPENWEATHER_API_KEY_HERE
 ```
 
 ---
