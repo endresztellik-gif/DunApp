@@ -17,15 +17,14 @@ CREATE EXTENSION IF NOT EXISTS pg_net;
 
 -- Function to invoke fetch-drought Edge Function
 CREATE OR REPLACE FUNCTION invoke_fetch_drought()
-RETURNS json
+RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 DECLARE
-  response_status INT;
-  response_body TEXT;
-  service_role_key TEXT;
-  response json;
+  request_id bigint;
+  project_url text := 'https://zpwoicpajmvbtmtumsah.supabase.co';
+  service_role_key text;
 BEGIN
   -- Get service role key from Supabase secrets
   -- This should be set in Supabase Dashboard: Settings > Vault
@@ -34,12 +33,7 @@ BEGIN
   WHERE name = 'service_role_key'
   LIMIT 1;
 
-  -- If not in vault, try to get from environment
-  IF service_role_key IS NULL THEN
-    service_role_key := current_setting('app.settings.service_role_key', true);
-  END IF;
-
-  -- If still null, use SUPABASE_SERVICE_ROLE_KEY env var
+  -- If not in vault, try SUPABASE_SERVICE_ROLE_KEY env var
   IF service_role_key IS NULL THEN
     SELECT decrypted_secret INTO service_role_key
     FROM vault.decrypted_secrets
@@ -47,25 +41,18 @@ BEGIN
     LIMIT 1;
   END IF;
 
-  -- Call Edge Function via pg_net with hardcoded project URL
-  SELECT status, content::text INTO response_status, response_body
-  FROM net.http_post(
-    url := 'https://zpwoicpajmvbtmtumsah.supabase.co/functions/v1/fetch-drought',
+  -- Call Edge Function using pg_net.http_post (async execution)
+  SELECT net.http_post(
+    url := project_url || '/functions/v1/fetch-drought',
     headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || COALESCE(service_role_key, '')
+      'Authorization', 'Bearer ' || COALESCE(service_role_key, ''),
+      'Content-Type', 'application/json'
     ),
     body := '{}'::jsonb
-  );
+  ) INTO request_id;
 
-  RAISE NOTICE 'Invoked fetch-drought Edge Function - Status: %', response_status;
-
-  -- Return response for logging
-  RETURN json_build_object(
-    'status', response_status,
-    'body', response_body,
-    'timestamp', NOW()
-  );
+  -- Log the request
+  RAISE NOTICE 'Drought data fetch triggered: request_id=%', request_id;
 END;
 $$;
 
@@ -97,7 +84,7 @@ SELECT cron.schedule(
 -- ============================================================================
 
 -- Add comment
-COMMENT ON FUNCTION invoke_fetch_drought IS 'Invokes fetch-drought Edge Function via pg_net (hardcoded URL)';
+COMMENT ON FUNCTION invoke_fetch_drought IS 'Invokes fetch-drought Edge Function to refresh drought monitoring data (async via pg_net)';
 
 -- Grant execute permission
 GRANT EXECUTE ON FUNCTION invoke_fetch_drought() TO service_role;
