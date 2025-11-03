@@ -1,12 +1,12 @@
 # CLAUDE.md - DunApp PWA Development Reference
 
-> **🎯 KÖZPONTI REFERENCIA DOKUMENTUM**  
-> Ez a fájl tartalmazza a DunApp PWA projekt összes kritikus információját.  
+> **🎯 KÖZPONTI REFERENCIA DOKUMENTUM**
+> Ez a fájl tartalmazza a DunApp PWA projekt összes kritikus információját.
 > Claude Code: MINDIG olvasd el ezt a fájlt ELŐSZÖR minden feladat előtt!
 
-**Utolsó frissítés:** 2025-11-02
-**Verzió:** 1.1 (Phase 9 Complete)
-**Projekt státusz:** Production Ready
+**Utolsó frissítés:** 2025-11-03
+**Verzió:** 1.2 (Phase 5 Drought Module - API Blocker)
+**Projekt státusz:** Production Ready (Phase 5 data integration pending)
 
 ---
 
@@ -106,11 +106,103 @@ VITE_SUPABASE_ANON_KEY  # Public anon key
 - Time to Interactive: ~2.4s (-20% improvement)
 
 ### Következő Lépések
-- ⬜ Testing - E2E tests + 80%+ coverage (deferred until Phase 4-5)
-- ⬜ Phase 4: Water Level Module (HydroInfo API)
-- ⬜ Phase 5: Drought Module (HUGEO + OVF APIs)
+- ⬜ Testing - E2E tests + 80%+ coverage (deferred until Phase 4-5 complete)
+- ✅ Phase 4: Water Level Module (HydroInfo API) - COMPLETE
+- 🔄 Phase 5: Drought Module - IN PROGRESS (API blocker, see below)
 
 ---
 
 *Phase 9 teljesítve: 2025-11-02*
 *Production Hardening teljesítve: 2025-11-03*
+
+---
+
+## 🔄 PHASE 5 (DROUGHT MODULE) CHANGELOG (2025-11-03)
+
+### ⚠️ CRITICAL: API Blocker Identified
+
+**Issue:** `aszalymonitoring.vizugy.hu` REST API non-functional
+- **Status:** HTTP 404 errors for all 5 drought monitoring locations
+- **Locations affected:** Katymár, Dávod, Szederkény, Sükösd, Csávoly
+- **Impact:** Cannot fetch real drought data (HDI, soil moisture, water deficit)
+- **Edge Function:** `fetch-drought` deployed but returns 0 records (5/5 failed)
+
+### ✅ Completed Work
+
+**Backend Implementation:**
+- ✅ Database schema (`drought_data`, `drought_locations`, `groundwater_data`, `groundwater_wells`)
+- ✅ Migration 008-009: Drought and groundwater tables
+- ✅ Edge Function: `fetch-drought` (deployed, awaiting API restoration)
+- ✅ Edge Function: `check-water-level-alerts` (alert system ready)
+- ✅ Edge Function: `send-push-notification` (push notification system)
+- ✅ pg_cron jobs configured (6:00 AM daily refresh)
+
+**Frontend Implementation:**
+- ✅ DroughtModule component with TWO separate selectors (locations + wells)
+- ✅ 4 data cards: DroughtIndexCard, SoilMoistureCard, WaterDeficitCard, GroundwaterLevelCard
+- ✅ 3 maps: GroundwaterMap, DroughtMonitoringMap, WaterDeficitMap
+- ✅ WellListGrid component (15 wells)
+- ✅ API unavailability disclaimer banner (yellow alert)
+- ✅ React hooks: `useDroughtData`, `useGroundwaterData`
+- ✅ Error handling and empty state UI
+
+**MCP Server Setup:**
+- ✅ `aszalymonitoring-mcp` server created (3 tools)
+- ✅ Project-specific MCP config (`.claude/mcp_servers.json`)
+- ✅ Sample data generation (season-aware, realistic values)
+- ✅ Tools: `get_drought_data`, `get_all_drought_data`, `list_locations`
+
+**Documentation:**
+- ✅ SESSION_PROGRESS_2025-11-03.md (comprehensive session log)
+- ✅ PROJECT_CONSTRAINTS.md (NO Netlify deployment constraint)
+- ✅ ASZALYMONITORING_MCP_INSTALLATION_SUMMARY.md (MCP setup guide)
+- ✅ README.md updated with Known Issues section
+- ✅ .claude/README_MCP.md (MCP usage guide)
+
+### 🚧 Blockers and Workarounds
+
+**Primary Blocker:**
+- External API unavailable (not under our control)
+- **Workaround:** MCP server provides sample data for development
+- **Future solution:** Web scraping (`vmservice.vizugy.hu`) or alternative API
+
+**Groundwater Wells:**
+- 15 wells configured but data integration pending
+- **Planned:** VízÜgy data portal integration or web scraping
+
+### 📋 Next Steps for Phase 5
+
+**Option A: Web Scraping (Recommended)**
+- Install Playwright MCP server
+- Implement `vmservice.vizugy.hu` scraper
+- Parse interactive map data
+- **Timeline:** 3-5 days
+
+**Option B: Alternative API Research**
+- Contact aszalymonitoring.vizugy.hu administrators
+- Investigate alternative drought data sources
+- Check for API documentation updates
+
+**Option C: Wait and Retry**
+- API may be temporarily down
+- Retry logic already in Edge Function
+- Monitor API status weekly
+
+### 🎯 Phase 5 Status Summary
+
+**Progress:** ~75% Complete
+- Backend: 100% (schema, functions, cron jobs)
+- Frontend: 100% (UI, components, error handling)
+- Data Integration: 0% (API blocker)
+- Documentation: 100%
+
+**Module Functionality:**
+- ✅ UI fully functional (selectors, maps, cards)
+- ✅ Error states and disclaimers
+- ❌ Real data unavailable (API 404)
+- ✅ Sample data via MCP for development
+
+---
+
+*Phase 5 initiated: 2025-11-03*
+*Status: Awaiting API restoration or alternative data source*

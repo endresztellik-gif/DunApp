@@ -33,6 +33,25 @@ DunApp PWA monitors environmental data for 27 locations across Southern Hungary'
 - ✅ **Offline support** (Service Worker caching)
 - ✅ **Mobile-first PWA** (Installable on mobile devices)
 
+### ⚠️ Known Issues
+
+**Drought Module - API Unavailable**
+
+The Drought Monitoring module is currently affected by an external API issue:
+
+- **Issue:** `aszalymonitoring.vizugy.hu` REST API returns **HTTP 404** for all drought monitoring locations
+- **Affected locations:** Katymár, Dávod, Szederkény, Sükösd, Csávoly (5 locations)
+- **Status:** Investigation ongoing with alternative data sources (web scraping, alternative APIs)
+- **Impact:** Drought index (HDI), soil moisture, and water deficit data not available
+- **Workaround:** Module UI is functional with selectors and maps; awaiting API restoration or alternative implementation
+
+**Groundwater Wells - Data Integration Pending**
+
+- **Status:** 15 groundwater monitoring wells are configured but data integration is pending
+- **Planned:** Integration with VízÜgy data portal or alternative sources
+
+The Meteorology and Water Level modules are fully functional with real-time data.
+
 ---
 
 ## 🚀 Quick Start
@@ -332,12 +351,12 @@ All data sources are properly attributed in the app footer.
 - ✅ **Phase 3:** Base components (Layout, DataCard, Selectors)
 - ✅ **Phase 4:** Meteorology module (current weather + cities)
 - ✅ **Phase 5:** Water level module (Danube stations)
-- ✅ **Phase 6:** Drought module (monitoring + wells + maps)
+- ⚠️ **Phase 6:** Drought module (UI complete, API blocker - see Known Issues)
 - ✅ **Phase 7:** PWA features (Service Worker + manifest)
 - ✅ **Phase 8:** Netlify deployment + GitHub CI/CD
 - ✅ **Phase 9:** Forecast chart + radar map + cron automation
 
-**Current Status:** Phase 9 Complete 🎉
+**Current Status:** Phase 9 Complete 🎉 (Phase 6 data integration pending due to external API issues)
 
 ---
 
