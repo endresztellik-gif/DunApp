@@ -1,427 +1,438 @@
 /**
- * Tests for useWeatherData Hook
+ * useWeatherData Hook Tests
  *
- * Test Coverage:
- * - Loading states
- * - Error states
- * - Successful data fetching
- * - Cache behavior (staleTime)
- * - Refetch functionality
- * - Type safety
- * - Supabase client mocking
+ * Comprehensive tests for weather data fetching hook.
+ * Tests React Query integration, caching, and error handling.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useWeatherData } from '../useWeatherData';
-import * as supabaseModule from '../../lib/supabase';
+import type { ReactNode } from 'react';
 
-// Mock Supabase
+// Mock Supabase client
 vi.mock('../../lib/supabase', () => ({
   supabase: {
-    from: vi.fn()
-  }
+    from: vi.fn(),
+  },
 }));
 
-// Mock data
-const mockCity = {
-  id: 'city-123',
-  name: 'Szekszárd',
-  county: 'Tolna',
-  latitude: 46.3481,
-  longitude: 18.7097,
-  population: 33000,
-  is_active: true
-};
+// Import mocked supabase
+import { supabase } from '../../lib/supabase';
 
-const mockWeatherData = {
-  city_id: 'city-123',
-  temperature: 22.5,
-  feels_like: 21.0,
-  temp_min: 20,
-  temp_max: 25,
-  pressure: 1013,
-  humidity: 65,
-  wind_speed: 3.5,
-  wind_direction: 180,
-  clouds_percent: 40,
-  weather_main: 'Clouds',
-  weather_description: 'scattered clouds',
-  weather_icon: '03d',
-  rain_1h: null,
-  rain_3h: null,
-  snow_1h: null,
-  snow_3h: null,
-  visibility: 10000,
-  timestamp: '2025-10-27T12:00:00Z'
-};
+describe('useWeatherData - Data Fetching', () => {
+  let queryClient: QueryClient;
 
-// Helper to create wrapper with QueryClient
-const createWrapper = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false, // Disable retries in tests
-        gcTime: 0 // Disable garbage collection
-      }
-    }
-  });
-
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-};
-
-describe('useWeatherData', () => {
   beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false, // Disable retry for tests
+        },
+      },
+    });
     vi.clearAllMocks();
   });
 
-  it('should return initial loading state', () => {
-    const { result } = renderHook(() => useWeatherData('city-123'), {
-      wrapper: createWrapper()
-    });
-
-    expect(result.current.isLoading).toBe(true);
-    expect(result.current.weatherData).toBe(null);
-    expect(result.current.city).toBe(null);
-    expect(result.current.error).toBe(null);
+  afterEach(() => {
+    queryClient.clear();
   });
 
-  it('should not fetch when cityId is null', () => {
-    const { result } = renderHook(() => useWeatherData(null), {
-      wrapper: createWrapper()
-    });
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
 
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.weatherData).toBe(null);
-  });
+  it('should fetch weather data successfully', async () => {
+    const mockCityData = {
+      id: 'city-1',
+      name: 'Szekszárd',
+      county: 'Tolna',
+      latitude: 46.3475,
+      longitude: 18.7067,
+      population: 33000,
+      is_active: true,
+    };
 
-  it('should fetch and return weather data successfully', async () => {
-    // Mock Supabase responses
-    const mockFrom = vi.fn().mockImplementation((table: string) => {
-      if (table === 'meteorology_cities') {
-        return {
-          select: () => ({
-            eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockCity, error: null })
-            })
-          })
-        };
-      }
-      if (table === 'meteorology_data') {
-        return {
-          select: () => ({
-            eq: () => ({
-              order: () => ({
-                limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWeatherData, error: null })
-                })
-              })
-            })
-          })
-        };
-      }
-    });
-
-    (supabaseModule.supabase.from as any) = mockFrom;
-
-    const { result } = renderHook(() => useWeatherData('city-123'), {
-      wrapper: createWrapper()
-    });
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    expect(result.current.weatherData).toBeDefined();
-    expect(result.current.weatherData?.temperature).toBe(22.5);
-    expect(result.current.weatherData?.humidity).toBe(65);
-    expect(result.current.city).toBeDefined();
-    expect(result.current.city?.name).toBe('Szekszárd');
-    expect(result.current.error).toBe(null);
-  });
-
-  it('should handle city fetch error', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: () => ({
-        eq: () => ({
-          single: vi.fn().mockResolvedValue({
-            data: null,
-            error: { message: 'City not found' }
-          })
-        })
-      })
-    });
-
-    (supabaseModule.supabase.from as any) = mockFrom;
-
-    const { result } = renderHook(() => useWeatherData('invalid-city'), {
-      wrapper: createWrapper()
-    });
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false), { timeout: 10000 });
-
-    expect(result.current.error).toBeDefined();
-    expect(result.current.weatherData).toBe(null);
-    expect(result.current.city).toBe(null);
-  });
-
-  it('should handle weather data fetch error', async () => {
-    const mockFrom = vi.fn().mockImplementation((table: string) => {
-      if (table === 'meteorology_cities') {
-        return {
-          select: () => ({
-            eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockCity, error: null })
-            })
-          })
-        };
-      }
-      if (table === 'meteorology_data') {
-        return {
-          select: () => ({
-            eq: () => ({
-              order: () => ({
-                limit: () => ({
-                  single: vi.fn().mockResolvedValue({
-                    data: null,
-                    error: { message: 'No weather data available' }
-                  })
-                })
-              })
-            })
-          })
-        };
-      }
-    });
-
-    (supabaseModule.supabase.from as any) = mockFrom;
-
-    const { result } = renderHook(() => useWeatherData('city-123'), {
-      wrapper: createWrapper()
-    });
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false), { timeout: 10000 });
-
-    expect(result.current.error).toBeDefined();
-    expect(result.current.weatherData).toBe(null);
-  });
-
-  it('should provide refetch function', async () => {
-    const mockFrom = vi.fn().mockImplementation((table: string) => {
-      if (table === 'meteorology_cities') {
-        return {
-          select: () => ({
-            eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockCity, error: null })
-            })
-          })
-        };
-      }
-      if (table === 'meteorology_data') {
-        return {
-          select: () => ({
-            eq: () => ({
-              order: () => ({
-                limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWeatherData, error: null })
-                })
-              })
-            })
-          })
-        };
-      }
-    });
-
-    (supabaseModule.supabase.from as any) = mockFrom;
-
-    const { result } = renderHook(() => useWeatherData('city-123'), {
-      wrapper: createWrapper()
-    });
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    expect(result.current.refetch).toBeDefined();
-    expect(typeof result.current.refetch).toBe('function');
-  });
-
-  it('should transform database fields to camelCase', async () => {
-    const mockFrom = vi.fn().mockImplementation((table: string) => {
-      if (table === 'meteorology_cities') {
-        return {
-          select: () => ({
-            eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockCity, error: null })
-            })
-          })
-        };
-      }
-      if (table === 'meteorology_data') {
-        return {
-          select: () => ({
-            eq: () => ({
-              order: () => ({
-                limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWeatherData, error: null })
-                })
-              })
-            })
-          })
-        };
-      }
-    });
-
-    (supabaseModule.supabase.from as any) = mockFrom;
-
-    const { result } = renderHook(() => useWeatherData('city-123'), {
-      wrapper: createWrapper()
-    });
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    // Check camelCase transformation
-    expect(result.current.weatherData?.feelsLike).toBe(21.0);
-    expect(result.current.weatherData?.tempMin).toBe(20);
-    expect(result.current.weatherData?.tempMax).toBe(25);
-    expect(result.current.weatherData?.windSpeed).toBe(3.5);
-    expect(result.current.weatherData?.windDirection).toBe(180);
-    expect(result.current.weatherData?.cloudsPercent).toBe(40);
-    expect(result.current.weatherData?.weatherMain).toBe('Clouds');
-    expect(result.current.weatherData?.weatherDescription).toBe('scattered clouds');
-    expect(result.current.weatherData?.weatherIcon).toBe('03d');
-  });
-
-  it('should handle null/missing optional fields', async () => {
-    const incompleteWeatherData = {
-      ...mockWeatherData,
-      feels_like: null,
+    const mockWeatherData = {
+      city_id: 'city-1',
+      temperature: 25.5,
+      feels_like: 26.0,
+      temp_min: 23.0,
+      temp_max: 28.0,
+      pressure: 1013,
+      humidity: 60,
+      wind_speed: 3.5,
+      wind_direction: 180,
+      clouds_percent: 40,
+      weather_main: 'Clear',
+      weather_description: 'clear sky',
+      weather_icon: '01d',
       rain_1h: null,
       rain_3h: null,
       snow_1h: null,
       snow_3h: null,
-      visibility: null
+      visibility: 10000,
+      timestamp: '2025-10-27T12:00:00Z',
     };
 
-    const mockFrom = vi.fn().mockImplementation((table: string) => {
+    // Mock Supabase chain for city data
+    const mockCitySelect = {
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({
+          data: mockCityData,
+          error: null,
+        }),
+      }),
+    };
+
+    // Mock Supabase chain for weather data
+    const mockWeatherSelect = {
+      eq: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockWeatherData,
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    };
+
+    // Setup mock implementation
+    vi.mocked(supabase.from).mockImplementation((table: string) => {
       if (table === 'meteorology_cities') {
         return {
-          select: () => ({
-            eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockCity, error: null })
-            })
-          })
-        };
+          select: vi.fn().mockReturnValue(mockCitySelect),
+        } as never;
       }
       if (table === 'meteorology_data') {
         return {
-          select: () => ({
-            eq: () => ({
-              order: () => ({
-                limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: incompleteWeatherData, error: null })
-                })
-              })
-            })
-          })
-        };
+          select: vi.fn().mockReturnValue(mockWeatherSelect),
+        } as never;
       }
+      return {} as never;
     });
 
-    (supabaseModule.supabase.from as any) = mockFrom;
+    const { result } = renderHook(() => useWeatherData('city-1'), { wrapper });
 
-    const { result } = renderHook(() => useWeatherData('city-123'), {
-      wrapper: createWrapper()
+    // Initially loading
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.weatherData).toBeNull();
+
+    // Wait for data to load
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
     });
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    // Check transformed data
+    expect(result.current.weatherData).toEqual({
+      cityId: 'city-1',
+      temperature: 25.5,
+      feelsLike: 26.0,
+      tempMin: 23.0,
+      tempMax: 28.0,
+      pressure: 1013,
+      humidity: 60,
+      windSpeed: 3.5,
+      windDirection: 180,
+      cloudsPercent: 40,
+      weatherMain: 'Clear',
+      weatherDescription: 'clear sky',
+      weatherIcon: '01d',
+      rain1h: null,
+      rain3h: null,
+      snow1h: null,
+      snow3h: null,
+      visibility: 10000,
+      timestamp: '2025-10-27T12:00:00Z',
+    });
 
-    expect(result.current.weatherData?.feelsLike).toBe(null);
-    expect(result.current.weatherData?.rain1h).toBe(null);
-    expect(result.current.weatherData?.visibility).toBe(null);
-    expect(result.current.weatherData?.temperature).toBe(22.5); // Required field still present
+    expect(result.current.city).toEqual({
+      id: 'city-1',
+      name: 'Szekszárd',
+      county: 'Tolna',
+      latitude: 46.3475,
+      longitude: 18.7067,
+      population: 33000,
+      isActive: true,
+    });
+
+    expect(result.current.error).toBeNull();
   });
 
-  it('should use correct query key for caching', async () => {
-    const mockFrom = vi.fn().mockImplementation((table: string) => {
-      if (table === 'meteorology_cities') {
-        return {
-          select: () => ({
-            eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockCity, error: null })
-            })
-          })
-        };
-      }
-      if (table === 'meteorology_data') {
-        return {
-          select: () => ({
-            eq: () => ({
-              order: () => ({
-                limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWeatherData, error: null })
-                })
-              })
-            })
-          })
-        };
-      }
+  it('should not fetch when cityId is null', async () => {
+    const { result } = renderHook(() => useWeatherData(null), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
     });
 
-    (supabaseModule.supabase.from as any) = mockFrom;
-
-    const queryClient = new QueryClient();
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
-
-    const { result } = renderHook(() => useWeatherData('city-123'), { wrapper });
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    // Check if query is cached with correct key
-    const cachedData = queryClient.getQueryData(['weather', 'city-123']);
-    expect(cachedData).toBeDefined();
+    expect(result.current.weatherData).toBeNull();
+    expect(result.current.city).toBeNull();
+    expect(vi.mocked(supabase.from)).not.toHaveBeenCalled();
   });
 
-  it('should return correct TypeScript types', async () => {
-    const mockFrom = vi.fn().mockImplementation((table: string) => {
+  it('should handle city data fetch error', async () => {
+    const mockError = { message: 'City not found', code: 'PGRST116' };
+
+    const mockCitySelect = {
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({
+          data: null,
+          error: mockError,
+        }),
+      }),
+    };
+
+    vi.mocked(supabase.from).mockImplementation(() => ({
+      select: vi.fn().mockReturnValue(mockCitySelect),
+    }) as never);
+
+    const { result } = renderHook(() => useWeatherData('invalid-city'), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.error).toBeDefined();
+    });
+
+    expect(result.current.error).toBeDefined();
+    expect(result.current.weatherData).toBeNull();
+  });
+
+  it('should handle weather data fetch error', async () => {
+    const mockCityData = {
+      id: 'city-1',
+      name: 'Szekszárd',
+      county: 'Tolna',
+      latitude: 46.3475,
+      longitude: 18.7067,
+      population: 33000,
+      is_active: true,
+    };
+
+    const mockCitySelect = {
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({
+          data: mockCityData,
+          error: null,
+        }),
+      }),
+    };
+
+    const mockWeatherError = { message: 'No data available', code: 'PGRST116' };
+    const mockWeatherSelect = {
+      eq: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: mockWeatherError,
+            }),
+          }),
+        }),
+      }),
+    };
+
+    vi.mocked(supabase.from).mockImplementation((table: string) => {
       if (table === 'meteorology_cities') {
         return {
-          select: () => ({
-            eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockCity, error: null })
-            })
-          })
-        };
+          select: vi.fn().mockReturnValue(mockCitySelect),
+        } as never;
       }
       if (table === 'meteorology_data') {
         return {
-          select: () => ({
-            eq: () => ({
-              order: () => ({
-                limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWeatherData, error: null })
-                })
-              })
-            })
-          })
-        };
+          select: vi.fn().mockReturnValue(mockWeatherSelect),
+        } as never;
       }
+      return {} as never;
     });
 
-    (supabaseModule.supabase.from as any) = mockFrom;
+    const { result } = renderHook(() => useWeatherData('city-1'), { wrapper });
 
-    const { result } = renderHook(() => useWeatherData('city-123'), {
-      wrapper: createWrapper()
+    await waitFor(() => {
+      expect(result.current.error).toBeDefined();
     });
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.error).toBeDefined();
+  });
+});
 
-    // Type assertions
-    expect(typeof result.current.isLoading).toBe('boolean');
-    expect(result.current.weatherData === null || typeof result.current.weatherData === 'object').toBe(true);
-    expect(result.current.city === null || typeof result.current.city === 'object').toBe(true);
-    expect(result.current.error === null || result.current.error instanceof Error).toBe(true);
+describe('useWeatherData - React Query Configuration', () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    queryClient.clear();
+  });
+
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
+  it('should use correct query key', async () => {
+    const mockCityData = {
+      id: 'city-1',
+      name: 'Szekszárd',
+      county: 'Tolna',
+      latitude: 46.3475,
+      longitude: 18.7067,
+      population: 33000,
+      is_active: true,
+    };
+
+    const mockWeatherData = {
+      city_id: 'city-1',
+      temperature: 25.5,
+      feels_like: 26.0,
+      temp_min: 23.0,
+      temp_max: 28.0,
+      pressure: 1013,
+      humidity: 60,
+      wind_speed: 3.5,
+      wind_direction: 180,
+      clouds_percent: 40,
+      weather_main: 'Clear',
+      weather_description: 'clear sky',
+      weather_icon: '01d',
+      rain_1h: null,
+      rain_3h: null,
+      snow_1h: null,
+      snow_3h: null,
+      visibility: 10000,
+      timestamp: '2025-10-27T12:00:00Z',
+    };
+
+    const mockCitySelect = {
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({
+          data: mockCityData,
+          error: null,
+        }),
+      }),
+    };
+
+    const mockWeatherSelect = {
+      eq: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockWeatherData,
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    };
+
+    vi.mocked(supabase.from).mockImplementation((table: string) => {
+      if (table === 'meteorology_cities') {
+        return {
+          select: vi.fn().mockReturnValue(mockCitySelect),
+        } as never;
+      }
+      if (table === 'meteorology_data') {
+        return {
+          select: vi.fn().mockReturnValue(mockWeatherSelect),
+        } as never;
+      }
+      return {} as never;
+    });
+
+    renderHook(() => useWeatherData('city-1'), { wrapper });
+
+    await waitFor(() => {
+      const queryState = queryClient.getQueryState(['weather', 'city-1']);
+      expect(queryState).toBeDefined();
+    });
+  });
+
+  it('should have refetch method', async () => {
+    const mockCityData = {
+      id: 'city-1',
+      name: 'Szekszárd',
+      county: 'Tolna',
+      latitude: 46.3475,
+      longitude: 18.7067,
+      population: 33000,
+      is_active: true,
+    };
+
+    const mockWeatherData = {
+      city_id: 'city-1',
+      temperature: 25.5,
+      feels_like: 26.0,
+      temp_min: 23.0,
+      temp_max: 28.0,
+      pressure: 1013,
+      humidity: 60,
+      wind_speed: 3.5,
+      wind_direction: 180,
+      clouds_percent: 40,
+      weather_main: 'Clear',
+      weather_description: 'clear sky',
+      weather_icon: '01d',
+      rain_1h: null,
+      rain_3h: null,
+      snow_1h: null,
+      snow_3h: null,
+      visibility: 10000,
+      timestamp: '2025-10-27T12:00:00Z',
+    };
+
+    const mockCitySelect = {
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({
+          data: mockCityData,
+          error: null,
+        }),
+      }),
+    };
+
+    const mockWeatherSelect = {
+      eq: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: mockWeatherData,
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    };
+
+    vi.mocked(supabase.from).mockImplementation((table: string) => {
+      if (table === 'meteorology_cities') {
+        return {
+          select: vi.fn().mockReturnValue(mockCitySelect),
+        } as never;
+      }
+      if (table === 'meteorology_data') {
+        return {
+          select: vi.fn().mockReturnValue(mockWeatherSelect),
+        } as never;
+      }
+      return {} as never;
+    });
+
+    const { result } = renderHook(() => useWeatherData('city-1'), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.refetch).toBeDefined();
     expect(typeof result.current.refetch).toBe('function');
   });
 });

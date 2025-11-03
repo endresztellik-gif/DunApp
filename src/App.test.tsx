@@ -8,45 +8,75 @@
  * - Mock data integration
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from 'react';
 import App from './App';
 import * as mockData from './data/mockData';
+import type { ReactNode } from 'react';
+
+// Mock useCities hook to return mock cities
+vi.mock('./hooks/useCities', () => ({
+  useCities: () => ({
+    cities: mockData.MOCK_CITIES,
+    isLoading: false,
+    error: null,
+  }),
+}));
 
 // Mock the module components to avoid complex dependencies
 vi.mock('./modules/meteorology/MeteorologyModule', () => ({
-  MeteorologyModule: () => <div data-testid="meteorology-module">Meteorology Module</div>,
+  MeteorologyModule: vi.fn(() => <div data-testid="meteorology-module">Meteorology Module</div>),
 }));
 
 vi.mock('./modules/water-level/WaterLevelModule', () => ({
-  WaterLevelModule: () => <div data-testid="water-level-module">Water Level Module</div>,
+  WaterLevelModule: vi.fn(() => <div data-testid="water-level-module">Water Level Module</div>),
 }));
 
 vi.mock('./modules/drought/DroughtModule', () => ({
-  DroughtModule: () => <div data-testid="drought-module">Drought Module</div>,
+  DroughtModule: vi.fn(() => <div data-testid="drought-module">Drought Module</div>),
 }));
 
+// Custom render with QueryClientProvider
+let queryClient: QueryClient;
+
+function renderWithQueryClient(ui: ReactNode) {
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+  );
+}
+
 describe('App Component', () => {
+  beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+  });
   describe('Initial Render', () => {
     it('renders without crashing', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
       expect(screen.getByRole('banner')).toBeInTheDocument();
     });
 
     it('renders the Header component', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
       const header = screen.getByRole('banner');
       expect(header).toBeInTheDocument();
     });
 
     it('renders the DunApp logo', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
       expect(screen.getByText(/Dun/i)).toBeInTheDocument();
       expect(screen.getByText(/App/i)).toBeInTheDocument();
     });
 
     it('displays Meteorology module by default', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
       expect(screen.getByTestId('meteorology-module')).toBeInTheDocument();
       expect(screen.queryByTestId('water-level-module')).not.toBeInTheDocument();
       expect(screen.queryByTestId('drought-module')).not.toBeInTheDocument();
@@ -55,7 +85,7 @@ describe('App Component', () => {
 
   describe('Module Navigation', () => {
     it('renders all three module tabs', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
       const navigation = screen.getByRole('navigation', { name: /modul navigáció/i });
 
       expect(within(navigation).getByLabelText(/meteorológiai modul/i)).toBeInTheDocument();
@@ -64,7 +94,7 @@ describe('App Component', () => {
     });
 
     it('switches to Water Level module when tab is clicked', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
       const waterLevelTab = screen.getByLabelText(/vízállás modul/i);
 
       fireEvent.click(waterLevelTab);
@@ -75,7 +105,7 @@ describe('App Component', () => {
     });
 
     it('switches to Drought module when tab is clicked', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
       const droughtTab = screen.getByLabelText(/aszály modul/i);
 
       fireEvent.click(droughtTab);
@@ -86,7 +116,7 @@ describe('App Component', () => {
     });
 
     it('can switch back to Meteorology module', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
       const waterLevelTab = screen.getByLabelText(/vízállás modul/i);
       const meteorologyTab = screen.getByLabelText(/meteorológiai modul/i);
 
@@ -99,7 +129,7 @@ describe('App Component', () => {
     });
 
     it('highlights the active module tab', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
       const meteorologyTab = screen.getByLabelText(/meteorológiai modul/i);
       const waterLevelTab = screen.getByLabelText(/vízállás modul/i);
 
@@ -147,12 +177,12 @@ describe('App Component', () => {
 
   describe('Accessibility', () => {
     it('has a main landmark', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
       expect(screen.getByRole('main')).toBeInTheDocument();
     });
 
     it('has proper ARIA labels on module tabs', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
       const navigation = screen.getByRole('navigation', { name: /modul navigáció/i });
 
       const meteorologyTab = within(navigation).getByLabelText(/meteorológiai modul/i);
@@ -165,7 +195,7 @@ describe('App Component', () => {
     });
 
     it('has proper role attributes for tabs', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
       const tablist = screen.getByRole('tablist');
       expect(tablist).toBeInTheDocument();
 
@@ -176,13 +206,13 @@ describe('App Component', () => {
 
   describe('Responsive Design', () => {
     it('applies responsive padding classes to main content', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
       const main = screen.getByRole('main');
       expect(main).toHaveClass('px-4', 'py-6', 'md:py-8');
     });
 
     it('applies min-h-screen to root container', () => {
-      const { container } = render(<App />);
+      const { container } = renderWithQueryClient(<App />);
       const rootDiv = container.firstChild as HTMLElement;
       expect(rootDiv).toHaveClass('min-h-screen');
     });
@@ -190,7 +220,7 @@ describe('App Component', () => {
 
   describe('Module-Specific Selectors', () => {
     it('does NOT render any global location selectors in App component', () => {
-      const { container } = render(<App />);
+      const { container } = renderWithQueryClient(<App />);
       const appHtml = container.innerHTML;
 
       // App.tsx should NOT contain any selectors - they are module-specific
@@ -199,7 +229,7 @@ describe('App Component', () => {
     });
 
     it('passes correct data to each module', () => {
-      render(<App />);
+      renderWithQueryClient(<App />);
 
       // Meteorology should receive 4 cities
       const meteorologyModule = screen.getByTestId('meteorology-module');
