@@ -1,20 +1,25 @@
 /**
- * DunApp PWA - Fetch Drought Data Edge Function (PRODUCTION)
+ * DunApp PWA - Fetch Drought Data Edge Function (PRODUCTION v2.0)
  *
  * PURPOSE:
  * - Fetches drought monitoring data from aszalymonitoring.vizugy.hu API
  * - Stores data for 5 locations in southern Hungary
  * - Called by cron job daily at 6:00 AM
  *
- * API ENDPOINTS:
- * 1. Search: https://aszalymonitoring.vizugy.hu/api/search?settlement={name}
- * 2. Data: https://aszalymonitoring.vizugy.hu/api/station/{id}/data?from={date}&to={date}
+ * OFFICIAL API DOCUMENTATION:
+ * - URL: https://aszalymonitoring.vizugy.hu/api.php (POST only)
+ * - Endpoints: getstations, getvariables, getmeas
+ * - Response: HTML-encoded JSON
+ * - Documentation: https://aszalymonitoring.vizugy.hu/makings/api.docx
  *
  * ENVIRONMENT VARIABLES:
  * - SUPABASE_URL
  * - SUPABASE_SERVICE_ROLE_KEY
  *
  * CRON SCHEDULE: 0 6 * * * (daily at 6:00 AM)
+ *
+ * VERSION: 2.0 (Upgraded to official API)
+ * LAST UPDATED: 2025-11-03
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -27,18 +32,65 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-const MAX_RETRIES = 3;
-const INITIAL_RETRY_DELAY = 1000; // ms
-const REQUEST_TIMEOUT = 10000; // 10 seconds
+const API_URL = 'https://aszalymonitoring.vizugy.hu/api.php';
+const MAX_RETRIES = 2;
+const REQUEST_TIMEOUT = 20000; // 20 seconds (slow server)
 
-// Drought monitoring locations (from mockData.ts)
+// Drought monitoring locations with station UUIDs
 const DROUGHT_LOCATIONS = [
-  { name: 'Katymár', lat: 46.2167, lon: 19.5667, county: 'Bács-Kiskun' },
-  { name: 'Dávod', lat: 46.4167, lon: 18.7667, county: 'Tolna' },
-  { name: 'Szederkény', lat: 46.3833, lon: 19.2500, county: 'Bács-Kiskun' },
-  { name: 'Sükösd', lat: 46.2833, lon: 19.0000, county: 'Bács-Kiskun' },
-  { name: 'Csávoly', lat: 46.4500, lon: 19.2833, county: 'Bács-Kiskun' }
+  {
+    name: 'Katymár',
+    lat: 46.2167,
+    lon: 19.5667,
+    county: 'Bács-Kiskun',
+    uuid: 'F5D851F8-27B9-4C70-96C2-CD6906F91D5B'
+  },
+  {
+    name: 'Dávod',
+    lat: 46.4167,
+    lon: 18.7667,
+    county: 'Tolna',
+    uuid: 'E07DCC61-B817-4BFF-AB8C-3D4BB35EB7E1'
+  },
+  {
+    name: 'Szederkény',
+    lat: 46.3833,
+    lon: 19.2500,
+    county: 'Bács-Kiskun',
+    uuid: 'BAEE61BE-51FA-41BC-AFAF-6AD99E2598AE'
+  },
+  {
+    name: 'Sükösd',
+    lat: 46.2833,
+    lon: 19.0000,
+    county: 'Bács-Kiskun',
+    uuid: 'EC63ACE6-990E-40BD-BEE7-CC8581F908B8'
+  },
+  {
+    name: 'Csávoly',
+    lat: 46.4500,
+    lon: 19.2833,
+    county: 'Bács-Kiskun',
+    uuid: '16FFA799-C5E4-42EE-B08F-FA51E8720815'
+  }
 ];
+
+// Parameter IDs (varid) from getvariables API
+const PARAM_IDS = {
+  drought_index: 16,          // Aszályindex (HDI) - daily, computed
+  water_deficit_35cm: 17,     // Vízhiány 35 cm - daily, computed
+  water_deficit_80cm: 18,     // Vízhiány 80 cm - daily, computed
+  soil_moisture_10cm: 8,      // Talajnedvesség 10 cm - hourly, measured
+  soil_moisture_20cm: 9,      // Talajnedvesség 20 cm - hourly, measured
+  soil_moisture_30cm: 10,     // Talajnedvesség 30 cm - hourly, measured
+  soil_moisture_45cm: 11,     // Talajnedvesség 45 cm (not 50)
+  soil_moisture_60cm: 12,     // Talajnedvesség 60 cm (not 70)
+  soil_moisture_75cm: 13,     // Talajnedvesség 75 cm (not 100)
+  air_temperature: 1,         // Levegőhőmérséklet - hourly, measured
+  soil_temperature_10cm: 2,   // Talajhőmérséklet 10 cm - hourly, measured
+  humidity: 14,               // Relatív páratartalom - hourly, measured
+  precipitation: 15           // Csapadek60 - hourly, measured
+};
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -49,35 +101,32 @@ interface DroughtLocation {
   lat: number;
   lon: number;
   county: string;
+  uuid: string;
 }
 
-interface NearestStation {
-  stationId: string;
-  stationName: string;
-  distance: number;
+interface Measurement {
+  value: string | null;
+  date: string;
 }
 
 interface DroughtDataRecord {
-  date: string;
-  droughtIndex: number | null;
-  waterDeficitIndex: number | null;
-  soilMoisture10cm: number | null;
-  soilMoisture20cm: number | null;
-  soilMoisture30cm: number | null;
-  soilMoisture50cm: number | null;
-  soilMoisture70cm: number | null;
-  soilMoisture100cm: number | null;
-  soilTemperature: number | null;
-  airTemperature: number | null;
+  drought_index: number | null;
+  water_deficit_index: number | null;
+  soil_moisture_10cm: number | null;
+  soil_moisture_20cm: number | null;
+  soil_moisture_30cm: number | null;
+  soil_moisture_50cm: number | null;  // Map from 45cm
+  soil_moisture_70cm: number | null;  // Map from 60cm
+  soil_moisture_100cm: number | null; // Map from 75cm
+  soil_temperature: number | null;
+  air_temperature: number | null;
   precipitation: number | null;
-  relativeHumidity: number | null;
+  relative_humidity: number | null;
 }
 
 interface ProcessResult {
   location: string;
   status: 'success' | 'error';
-  station?: string;
-  distance?: number;
   droughtIndex?: number | null;
   error?: string;
 }
@@ -87,64 +136,33 @@ interface ProcessResult {
 // ============================================================================
 
 /**
- * Fetch with timeout support
+ * Decode HTML entities (equivalent to Python's html.unescape())
  */
-async function fetchWithTimeout(
-  url: string,
-  timeout: number = REQUEST_TIMEOUT
-): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+function decodeHtmlEntities(text: string): string {
+  const entities: Record<string, string> = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&nbsp;': ' '
+  };
 
-  try {
-    const response = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    throw error;
-  }
+  return text.replace(/&[a-z]+;|&#\d+;/g, (match) => {
+    return entities[match] || match;
+  });
 }
 
 /**
- * Fetch with retry logic (exponential backoff)
+ * Get date range (today and N days back)
  */
-async function fetchWithRetry(
-  fetchFn: () => Promise<Response>,
-  retries = MAX_RETRIES,
-  delay = INITIAL_RETRY_DELAY
-): Promise<Response> {
-  try {
-    const response = await fetchFn();
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    return response;
-  } catch (error) {
-    if (retries === 0) {
-      throw error;
-    }
-
-    console.warn(`Fetch failed, retrying in ${delay}ms... (${retries} retries left)`);
-    console.warn(`Error: ${error.message}`);
-
-    await new Promise(resolve => setTimeout(resolve, delay));
-    return fetchWithRetry(fetchFn, retries - 1, delay * 2);
-  }
-}
-
-/**
- * Get date range (last 60 days)
- */
-function getDateRange(): { startDate: string; endDate: string } {
-  const endDate = new Date();
-  const startDate = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+function getDateRange(daysBack: number): { fromDate: string; toDate: string } {
+  const today = new Date();
+  const from = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
 
   return {
-    startDate: startDate.toISOString().split('T')[0],
-    endDate: endDate.toISOString().split('T')[0]
+    fromDate: from.toISOString().split('T')[0],
+    toDate: today.toISOString().split('T')[0]
   };
 }
 
@@ -153,99 +171,142 @@ function getDateRange(): { startDate: string; endDate: string } {
 // ============================================================================
 
 /**
- * Search for nearest drought monitoring station by settlement name
+ * Fetch measurements from aszalymonitoring.vizugy.hu API
  *
- * API: https://aszalymonitoring.vizugy.hu/api/search?settlement={name}
+ * API expects POST request with form data:
+ * - view: 'getmeas'
+ * - statid: station UUID
+ * - varid: parameter ID
+ * - fromdate: start date (YYYY-MM-DD)
+ * - todate: end date (YYYY-MM-DD)
+ *
+ * Returns: HTML-encoded JSON with structure {"entries": [[{value, date}, ...]]}
  */
-async function searchDroughtStation(settlement: string): Promise<NearestStation> {
-  const url = `https://aszalymonitoring.vizugy.hu/api/search?settlement=${encodeURIComponent(settlement)}`;
+async function fetchMeasurementsFromApi(
+  statid: string,
+  varid: number,
+  daysBack: number = 7
+): Promise<Measurement[] | null> {
+  const { fromDate, toDate } = getDateRange(daysBack);
 
-  console.log(`  → Searching for station near ${settlement}...`);
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
-  const response = await fetchWithRetry(() => fetchWithTimeout(url));
-  const data = await response.json();
+      const formData = new URLSearchParams({
+        view: 'getmeas',
+        statid: statid,
+        varid: String(varid),
+        fromdate: fromDate,
+        todate: toDate
+      });
 
-  if (!data.nearestStation) {
-    throw new Error(`No station found near ${settlement}`);
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'DunApp PWA/1.0 (https://dunapp-pwa.netlify.app)'
+        },
+        body: formData.toString(),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.status === 200) {
+        const text = await response.text();
+
+        // Decode HTML entities
+        const decoded = decodeHtmlEntities(text);
+
+        // Parse JSON
+        const data = JSON.parse(decoded);
+
+        // API returns: {"entries": [[{value, date}, ...]]}
+        const entries = data.entries || [];
+        if (Array.isArray(entries) && entries.length > 0 && Array.isArray(entries[0])) {
+          return entries[0]; // Return the measurements array
+        }
+
+        return null; // No data
+      }
+
+      return null;
+
+    } catch (error) {
+      if (attempt < MAX_RETRIES - 1) {
+        console.warn(`  ⚠️  Attempt ${attempt + 1} failed, retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        continue;
+      }
+      return null; // Give up after retries
+    }
   }
 
-  return {
-    stationId: data.nearestStation.id,
-    stationName: data.nearestStation.name,
-    distance: data.nearestStation.distance || 0
-  };
+  return null;
 }
 
 /**
- * Fetch drought monitoring data for a station (last 60 days)
- *
- * API: https://aszalymonitoring.vizugy.hu/api/station/{id}/data?from={date}&to={date}
+ * Get most recent value from measurements array
  */
-async function fetchDroughtStationData(stationId: string): Promise<DroughtDataRecord> {
-  const { startDate, endDate } = getDateRange();
-  const url = `https://aszalymonitoring.vizugy.hu/api/station/${stationId}/data?from=${startDate}&to=${endDate}`;
-
-  console.log(`  → Fetching data for station ${stationId}...`);
-
-  const response = await fetchWithRetry(() => fetchWithTimeout(url));
-  const data = await response.json();
-
-  if (!Array.isArray(data) || data.length === 0) {
-    console.warn(`  ⚠️  No data returned for station ${stationId}`);
-    // Return null values instead of throwing
-    return {
-      date: new Date().toISOString().split('T')[0],
-      droughtIndex: null,
-      waterDeficitIndex: null,
-      soilMoisture10cm: null,
-      soilMoisture20cm: null,
-      soilMoisture30cm: null,
-      soilMoisture50cm: null,
-      soilMoisture70cm: null,
-      soilMoisture100cm: null,
-      soilTemperature: null,
-      airTemperature: null,
-      precipitation: null,
-      relativeHumidity: null
-    };
+function getLatestValue(measurements: Measurement[] | null): number | null {
+  if (!measurements || measurements.length === 0) {
+    return null;
   }
 
-  // Get the latest data point (last element)
-  const latest = data[data.length - 1];
+  const latest = measurements[measurements.length - 1];
+  const value = latest?.value;
 
-  return {
-    date: latest.date,
-    droughtIndex: latest.HDI ?? null,
-    waterDeficitIndex: latest.HDIS ?? null,
-    soilMoisture10cm: latest.soilMoisture_10cm ?? null,
-    soilMoisture20cm: latest.soilMoisture_20cm ?? null,
-    soilMoisture30cm: latest.soilMoisture_30cm ?? null,
-    soilMoisture50cm: latest.soilMoisture_50cm ?? null,
-    soilMoisture70cm: latest.soilMoisture_70cm ?? null,
-    soilMoisture100cm: latest.soilMoisture_100cm ?? null,
-    soilTemperature: latest.soilTemp ?? null,
-    airTemperature: latest.airTemp ?? null,
-    precipitation: latest.precipitation ?? null,
-    relativeHumidity: latest.relativeHumidity ?? null
-  };
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  const parsed = parseFloat(value);
+  return isNaN(parsed) ? null : parsed;
 }
 
 /**
- * Fetch drought data for a location (search + data fetch)
+ * Fetch drought data for a location from official API
  */
-async function fetchDroughtData(location: DroughtLocation): Promise<DroughtDataRecord & { stationName: string; distance: number }> {
-  // Search for nearest station
-  const station = await searchDroughtStation(location.name);
-  console.log(`  ✓ Found station: ${station.stationName} (${station.distance}m away)`);
+async function fetchDroughtData(location: DroughtLocation): Promise<DroughtDataRecord> {
+  const statid = location.uuid;
 
-  // Fetch station data
-  const data = await fetchDroughtStationData(station.stationId);
-  console.log(`  ✓ Fetched data for ${location.name}`);
+  console.log(`  → Fetching HDI (drought index)...`);
+  const hdiData = await fetchMeasurementsFromApi(statid, PARAM_IDS.drought_index, 3);
+  const droughtIndex = getLatestValue(hdiData);
+
+  console.log(`  → Fetching water deficit...`);
+  const wdData = await fetchMeasurementsFromApi(statid, PARAM_IDS.water_deficit_35cm, 3);
+  const waterDeficit = getLatestValue(wdData);
+
+  console.log(`  → Fetching soil moisture (6 depths)...`);
+  const sm10Data = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_moisture_10cm, 1);
+  const sm20Data = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_moisture_20cm, 1);
+  const sm30Data = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_moisture_30cm, 1);
+  const sm45Data = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_moisture_45cm, 1);
+  const sm60Data = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_moisture_60cm, 1);
+  const sm75Data = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_moisture_75cm, 1);
+
+  console.log(`  → Fetching temperature & humidity...`);
+  const airTempData = await fetchMeasurementsFromApi(statid, PARAM_IDS.air_temperature, 1);
+  const soilTempData = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_temperature_10cm, 1);
+  const humidityData = await fetchMeasurementsFromApi(statid, PARAM_IDS.humidity, 1);
+  const precipData = await fetchMeasurementsFromApi(statid, PARAM_IDS.precipitation, 1);
 
   return {
-    ...data,
-    stationName: station.stationName,
-    distance: station.distance
+    drought_index: droughtIndex,
+    water_deficit_index: waterDeficit,
+    soil_moisture_10cm: getLatestValue(sm10Data),
+    soil_moisture_20cm: getLatestValue(sm20Data),
+    soil_moisture_30cm: getLatestValue(sm30Data),
+    soil_moisture_50cm: getLatestValue(sm45Data),  // Map 45cm → 50cm
+    soil_moisture_70cm: getLatestValue(sm60Data),  // Map 60cm → 70cm
+    soil_moisture_100cm: getLatestValue(sm75Data), // Map 75cm → 100cm
+    soil_temperature: getLatestValue(soilTempData),
+    air_temperature: getLatestValue(airTempData),
+    precipitation: getLatestValue(precipData),
+    relative_humidity: getLatestValue(humidityData)
   };
 }
 
@@ -282,18 +343,18 @@ async function insertDroughtData(
     .from('drought_data')
     .insert({
       location_id: locationId,
-      drought_index: data.droughtIndex,
-      water_deficit_index: data.waterDeficitIndex,
-      soil_moisture_10cm: data.soilMoisture10cm,
-      soil_moisture_20cm: data.soilMoisture20cm,
-      soil_moisture_30cm: data.soilMoisture30cm,
-      soil_moisture_50cm: data.soilMoisture50cm,
-      soil_moisture_70cm: data.soilMoisture70cm,
-      soil_moisture_100cm: data.soilMoisture100cm,
-      soil_temperature: data.soilTemperature,
-      air_temperature: data.airTemperature,
+      drought_index: data.drought_index,
+      water_deficit_index: data.water_deficit_index,
+      soil_moisture_10cm: data.soil_moisture_10cm,
+      soil_moisture_20cm: data.soil_moisture_20cm,
+      soil_moisture_30cm: data.soil_moisture_30cm,
+      soil_moisture_50cm: data.soil_moisture_50cm,
+      soil_moisture_70cm: data.soil_moisture_70cm,
+      soil_moisture_100cm: data.soil_moisture_100cm,
+      soil_temperature: data.soil_temperature,
+      air_temperature: data.air_temperature,
       precipitation: data.precipitation,
-      relative_humidity: data.relativeHumidity,
+      relative_humidity: data.relative_humidity,
       timestamp: new Date().toISOString()
     });
 
@@ -310,8 +371,9 @@ serve(async (req) => {
   const startTime = Date.now();
 
   try {
-    console.log('🏜️  Fetch Drought Data Edge Function - Starting');
+    console.log('🏜️  Fetch Drought Data Edge Function v2.0 - Starting');
     console.log(`   Date: ${new Date().toISOString()}`);
+    console.log(`   API: ${API_URL} (Official aszalymonitoring.vizugy.hu API)`);
 
     // Validate environment variables
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -329,9 +391,14 @@ serve(async (req) => {
     for (const location of DROUGHT_LOCATIONS) {
       try {
         console.log(`\n📍 Processing ${location.name} (${location.county})...`);
+        console.log(`   Station UUID: ${location.uuid}`);
 
-        // Fetch drought data from API
+        // Fetch drought data from official API
         const droughtData = await fetchDroughtData(location);
+
+        console.log(`  ✓ Fetched data from API`);
+        console.log(`    HDI: ${droughtData.drought_index ?? 'N/A'}`);
+        console.log(`    Soil Moisture (10cm): ${droughtData.soil_moisture_10cm ?? 'N/A'}%`);
 
         // Get location_id from database
         const locationId = await getLocationId(supabase, location.name);
@@ -345,9 +412,7 @@ serve(async (req) => {
         results.push({
           location: location.name,
           status: 'success',
-          station: droughtData.stationName,
-          distance: droughtData.distance,
-          droughtIndex: droughtData.droughtIndex
+          droughtIndex: droughtData.drought_index
         });
 
         console.log(`✅ Success: ${location.name}`);
@@ -370,12 +435,14 @@ serve(async (req) => {
     console.log(`✅ Fetch Drought Data Edge Function - Completed`);
     console.log(`   Success: ${successCount}/${DROUGHT_LOCATIONS.length}`);
     console.log(`   Failed: ${failureCount}/${DROUGHT_LOCATIONS.length}`);
-    console.log(`   Duration: ${duration}ms`);
+    console.log(`   Duration: ${duration}ms (${(duration / 1000).toFixed(1)}s)`);
     console.log(`${'='.repeat(60)}\n`);
 
     return new Response(
       JSON.stringify({
         success: true,
+        version: '2.0',
+        apiSource: 'Official aszalymonitoring.vizugy.hu REST API',
         timestamp: new Date().toISOString(),
         duration,
         summary: {
@@ -385,9 +452,10 @@ serve(async (req) => {
         },
         results,
         notes: [
-          'Groundwater well data (15 wells) requires manual CSV upload or external scraping service',
-          'vmservice.vizugy.hu requires browser automation which is not feasible in Edge Functions',
-          'See IMPLEMENTATION_PLAN.md for Phase 2 groundwater implementation options'
+          'Using official API documented at https://aszalymonitoring.vizugy.hu/makings/api.docx',
+          'API endpoints: getstations, getvariables, getmeas',
+          'Upgraded from web scraping to real API (v2.0)',
+          'Groundwater well data (15 wells) requires separate implementation'
         ]
       }),
       {

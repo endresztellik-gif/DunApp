@@ -18,12 +18,23 @@
 ✅ **Real Data Flowing** - HDI, soil moisture, temperature, humidity from live API
 ✅ **MCP Server Tested** - Successfully fetching real measurements
 
-### Test Results (Katymár - 2025-11-03)
+### Test Results (2025-11-03)
+
+**MCP Server (Python) - Katymár:**
 - Drought Index (HDI): **2.03** ✅
 - Soil Moisture (10 cm): **26.20%** ✅
 - Air Temperature: **10.2°C** ✅
 - Soil Temperature: **12.2°C** ✅
 - Humidity: **78.0%** ✅
+
+**Edge Function (TypeScript/Deno) - All 5 Locations:**
+- Katymár: **HDI 2.03** ✅
+- Dávod: **HDI 1.71** ✅
+- Szederkény: **HDI 1.62** ✅
+- Sükösd: **HDI 1.67** ✅
+- Csávoly: **HDI 1.95** ✅
+- **Success Rate:** 5/5 (100%) ✅
+- **Duration:** 5.4 seconds ✅
 
 ---
 
@@ -172,15 +183,24 @@ for location in LOCATIONS.keys():
 
 ## 🚧 Current Status
 
-### ✅ Completed
+### ✅ Completed (Phase 1 & 2)
 
-- UUID discovery and integration
-- Retry logic implementation
-- Timeout handling
-- Fallback system
-- MCP server testing
+**Phase 1: MCP Server (Python)**
+- ✅ UUID discovery and integration
+- ✅ Retry logic implementation
+- ✅ Timeout handling
+- ✅ Fallback system
+- ✅ MCP server tested with real API
 
-### 🔄 TODO (Future Enhancement)
+**Phase 2: Edge Function (TypeScript/Deno)**
+- ✅ Ported Python implementation to TypeScript
+- ✅ Deployed to Supabase (v2.0)
+- ✅ Tested successfully: 5/5 locations
+- ✅ Real HDI values fetched (2.03, 1.71, 1.62, 1.67, 1.95)
+- ✅ Database integration working
+- ✅ Duration: 5.4s for all locations
+
+### 🔄 TODO (Frontend Integration)
 
 **HTML Parsing for Real Data Extraction:**
 
@@ -258,11 +278,13 @@ OR fallback to sample data
 - 3 tools: get_drought_data, get_all_drought_data, list_locations
 - Used by Claude Code for development
 
-### 2. Edge Function (TODO)
-- `supabase/functions/fetch-drought/index.ts`
-- Should use same scraping approach
-- Deno/TypeScript equivalent of Python scraping
-- Alternative: Call Python scraper from Edge Function
+### 2. Edge Function (✅ COMPLETED)
+- `supabase/functions/fetch-drought/index.ts` ✅
+- **v2.0 deployed** - Using official API (not web scraping)
+- TypeScript/Deno port of Python implementation
+- Successfully tested: 5/5 locations working with real data
+- Duration: ~5.4 seconds for all 5 locations
+- Deployed to production: 2025-11-03
 
 ### 3. Frontend (Already Working)
 - `src/modules/drought/DroughtModule.tsx`
