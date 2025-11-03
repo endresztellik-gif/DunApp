@@ -6,15 +6,14 @@ Provides tools to access drought monitoring data from aszalymonitoring.vizugy.hu
 for 5 locations in southern Hungary: Katymár, Dávod, Szederkény, Sükösd, Csávoly.
 """
 
-import re
 import requests
-from bs4 import BeautifulSoup
 from mcp.server.models import InitializationOptions
 from mcp.server import Server
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict
 import json
-from datetime import datetime
+import html
+from datetime import datetime, timedelta
 
 # Initialize the server
 server = Server("aszalymonitoring-mcp-server")
@@ -53,9 +52,26 @@ LOCATIONS = {
     }
 }
 
-BASE_URL = "https://aszalymonitoring.vizugy.hu"
+API_URL = "https://aszalymonitoring.vizugy.hu/api.php"
 TIMEOUT_SECONDS = 20  # Longer timeout for slow server
 MAX_RETRIES = 2  # Retry failed requests
+
+# Parameter IDs (varid) from getvariables API
+PARAM_IDS = {
+    'drought_index': 16,  # Aszályindex (HDI) - daily, computed
+    'water_deficit_35cm': 17,  # Vízhiány 35 cm - daily, computed
+    'water_deficit_80cm': 18,  # Vízhiány 80 cm - daily, computed
+    'soil_moisture_10cm': 8,  # Talajnedvesség 10 cm - hourly, measured
+    'soil_moisture_20cm': 9,  # Talajnedvesség 20 cm - hourly, measured
+    'soil_moisture_30cm': 10,  # Talajnedvesség 30 cm - hourly, measured
+    'soil_moisture_45cm': 11,  # Talajnedvesség 45 cm (not 50)
+    'soil_moisture_60cm': 12,  # Talajnedvesség 60 cm (not 70)
+    'soil_moisture_75cm': 13,  # Talajnedvesség 75 cm (not 100)
+    'air_temperature': 1,  # Levegőhőmérséklet - hourly, measured
+    'soil_temperature_10cm': 2,  # Talajhőmérséklet 10 cm - hourly, measured
+    'humidity': 14,  # Relatív páratartalom - hourly, measured
+    'precipitation': 15,  # Csapadek60 - hourly, measured
+}
 
 
 class SoilMoisture(BaseModel):
@@ -78,49 +94,50 @@ class DroughtData(BaseModel):
     timestamp: str
 
 
-def scrape_drought_data_from_vizugy(uuid: str, location: str) -> Optional[dict]:
+def fetch_measurements_from_api(statid: str, varid: int, days_back: int = 7) -> Optional[List[Dict]]:
     """
-    Attempt to scrape real drought data from aszalymonitoring.vizugy.hu
-    using the station UUID.
+    Fetch measurements from aszalymonitoring.vizugy.hu API.
 
-    Returns None if scraping fails (timeout, 404, etc.)
+    Args:
+        statid: Station ID (UUID)
+        varid: Parameter ID (from PARAM_IDS)
+        days_back: Number of days to fetch (default: 7)
+
+    Returns:
+        List of measurements [{"value": "1.89727", "date": "2025-10-27"}, ...]
+        or None if API call fails
     """
     try:
-        # Try to fetch station page with UUID
-        url = f"{BASE_URL}/?view=info&id={uuid}"
+        today = datetime.now()
+        fromdate = (today - timedelta(days=days_back)).strftime('%Y-%m-%d')
+        todate = today.strftime('%Y-%m-%d')
 
         for attempt in range(MAX_RETRIES):
             try:
-                response = requests.get(
-                    url,
-                    headers={
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                response = requests.post(
+                    API_URL,
+                    data={
+                        'view': 'getmeas',
+                        'statid': statid,
+                        'varid': str(varid),
+                        'fromdate': fromdate,
+                        'todate': todate
                     },
+                    headers={'User-Agent': 'Mozilla/5.0'},
                     timeout=TIMEOUT_SECONDS
                 )
 
-                if response.status_code == 200 and len(response.text) > 500:
-                    soup = BeautifulSoup(response.text, 'html.parser')
+                if response.status_code == 200:
+                    # Parse HTML-encoded JSON
+                    decoded = html.unescape(response.text)
+                    data = json.loads(decoded)
 
-                    # Try to extract data from HTML/JavaScript
-                    # This is a simplified parser - would need refinement
-                    # based on actual page structure
+                    # API returns: {"entries": [[{...}, {...}]]}
+                    entries = data.get('entries', [])
+                    if entries and len(entries) > 0 and isinstance(entries[0], list):
+                        return entries[0]  # Return the measurements list
 
-                    text = soup.get_text().lower()
-
-                    # Check if page contains drought data keywords
-                    has_data = any(kw in text for kw in ['aszály', 'talajnedvesség', 'hdi'])
-
-                    if has_data:
-                        # Page loaded with data - could extract here
-                        # For now, return indication that real data exists
-                        return {
-                            "source": "real_scraping",
-                            "station_name": f"{location} monitoring állomás",
-                            "has_real_data": True
-                        }
-
-                break  # Success or non-retryable error
+                return None  # No data or unexpected format
 
             except (requests.Timeout, requests.ConnectionError) as e:
                 if attempt < MAX_RETRIES - 1:
@@ -131,72 +148,82 @@ def scrape_drought_data_from_vizugy(uuid: str, location: str) -> Optional[dict]:
         return None
 
     except Exception as e:
-        return None  # Scraping failed, use fallback
+        return None  # API call failed
 
 
 def fetch_drought_data_for_location(location: str) -> DroughtData:
     """
-    Fetch drought data for a specific location.
+    Fetch real drought data from API for a specific location.
 
-    Attempts web scraping first, falls back to sample data if unavailable.
+    Uses aszalymonitoring.vizugy.hu API to fetch real measurements.
+    Falls back to None values if API is unavailable.
     """
     if location not in LOCATIONS:
         raise ValueError(f"Unknown location: {location}")
 
     loc_info = LOCATIONS[location]
-    uuid = loc_info["uuid"]
+    statid = loc_info["uuid"]
 
     try:
-        # Try to scrape real data
-        scraped_data = scrape_drought_data_from_vizugy(uuid, location)
+        # Fetch key measurements from API
+        # HDI (daily, most recent value)
+        hdi_data = fetch_measurements_from_api(statid, PARAM_IDS['drought_index'], days_back=3)
+        drought_index = float(hdi_data[-1]['value']) if hdi_data and len(hdi_data) > 0 and hdi_data[-1].get('value') is not None else None
 
-        if scraped_data and scraped_data.get("has_real_data"):
-            # Successfully scraped - would parse actual values here
-            # For now, mark as "real" but use sample values
-            # TODO: Implement actual HTML parsing for drought metrics
-            station_name = scraped_data.get("station_name", f"{location} monitoring állomás")
-            data_source = "scraped (sample values - parsing TODO)"
-        else:
-            # Scraping failed or unavailable - use sample data
-            station_name = f"{location} monitoring állomás (sample data)"
-            data_source = "sample"
+        # Water deficit 35cm (daily, most recent)
+        wd_data = fetch_measurements_from_api(statid, PARAM_IDS['water_deficit_35cm'], days_back=3)
+        water_deficit = float(wd_data[-1]['value']) if wd_data and len(wd_data) > 0 and wd_data[-1].get('value') is not None else None
 
-        # Generate realistic sample drought data
-        # (Would be replaced by actual scraped values when parsing is implemented)
-        current_month = datetime.now().month
+        # Soil moisture at different depths (hourly, most recent)
+        soil_moisture_data = []
+        for depth, varid_key in [
+            (10, 'soil_moisture_10cm'),
+            (20, 'soil_moisture_20cm'),
+            (30, 'soil_moisture_30cm'),
+            (45, 'soil_moisture_45cm'),  # Note: API has 45, not 50
+            (60, 'soil_moisture_60cm'),  # Note: API has 60, not 70
+            (75, 'soil_moisture_75cm')   # Note: API has 75, not 100
+        ]:
+            sm_data = fetch_measurements_from_api(statid, PARAM_IDS[varid_key], days_back=1)
+            value = float(sm_data[-1]['value']) if sm_data and len(sm_data) > 0 and sm_data[-1].get('value') is not None else None
+            soil_moisture_data.append(SoilMoisture(depth_cm=depth, value=value))
 
-        # Summer months (Jun-Aug) typically have lower soil moisture
-        is_summer = 6 <= current_month <= 8
-        base_moisture = 25.0 if is_summer else 35.0
+        # Air temperature (hourly, most recent)
+        temp_data = fetch_measurements_from_api(statid, PARAM_IDS['air_temperature'], days_back=1)
+        air_temp = float(temp_data[-1]['value']) if temp_data and len(temp_data) > 0 and temp_data[-1].get('value') is not None else None
 
-        soil_moisture_data = [
-            SoilMoisture(depth_cm=10, value=base_moisture - 5),
-            SoilMoisture(depth_cm=20, value=base_moisture),
-            SoilMoisture(depth_cm=30, value=base_moisture + 3),
-            SoilMoisture(depth_cm=50, value=base_moisture + 5),
-            SoilMoisture(depth_cm=70, value=base_moisture + 7),
-            SoilMoisture(depth_cm=100, value=base_moisture + 10)
-        ]
+        # Soil temperature at 10cm (hourly, most recent)
+        soil_temp_data = fetch_measurements_from_api(statid, PARAM_IDS['soil_temperature_10cm'], days_back=1)
+        soil_temp = float(soil_temp_data[-1]['value']) if soil_temp_data and len(soil_temp_data) > 0 and soil_temp_data[-1].get('value') is not None else None
 
+        # Humidity (hourly, most recent)
+        humidity_data = fetch_measurements_from_api(statid, PARAM_IDS['humidity'], days_back=1)
+        humidity = float(humidity_data[-1]['value']) if humidity_data and len(humidity_data) > 0 and humidity_data[-1].get('value') is not None else None
+
+        # Precipitation (hourly, most recent)
+        precip_data = fetch_measurements_from_api(statid, PARAM_IDS['precipitation'], days_back=1)
+        precip = float(precip_data[-1]['value']) if precip_data and len(precip_data) > 0 and precip_data[-1].get('value') is not None else None
+
+        # Build DroughtData with real API values
         drought_data = DroughtData(
             location=location,
             county=loc_info["county"],
-            station_name=station_name,
-            station_distance_km=5.0,  # Would be scraped
-            drought_index=32.5 if is_summer else 45.0,  # HDI (0-100) - sample
-            water_deficit_index=15.2 if is_summer else 8.5,  # HDIS - sample
+            station_name=f"{location} monitoring állomás",
+            station_distance_km=0.0,  # Station itself
+            drought_index=drought_index,
+            water_deficit_index=water_deficit,
             soil_moisture=soil_moisture_data,
-            soil_temperature=18.5 + (5.0 if is_summer else -2.0),
-            air_temperature=22.0 + (8.0 if is_summer else -5.0),
-            precipitation=0.5 if is_summer else 2.5,
-            relative_humidity=55.0 if is_summer else 72.0,
+            soil_temperature=soil_temp,
+            air_temperature=air_temp,
+            precipitation=precip,
+            relative_humidity=humidity,
             timestamp=datetime.now().isoformat()
         )
 
         return drought_data
 
     except Exception as e:
-        raise Exception(f"Failed to fetch drought data: {str(e)}")
+        raise Exception(f"Failed to fetch drought data from API: {str(e)}")
 
 
 def format_drought_data_markdown(data: DroughtData) -> str:
