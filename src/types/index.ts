@@ -74,46 +74,57 @@ export interface ForecastData {
 // ============================================================================
 // WATER LEVEL MODULE TYPES
 // ============================================================================
+// Updated: 2025-11-03 (Phase 4.5)
+// Compatible with Migration 008 + 009
 
 /**
  * WaterLevelStation
- * Represents a water level monitoring station
+ * Represents a water level monitoring station on the Danube river
  */
 export interface WaterLevelStation {
-  id: string;
-  stationName: string;
-  riverName: string;
-  cityName: string;
+  id: string; // UUID
+  stationId: string; // External station ID (e.g., "442051" for Nagybajcs)
+  name: string; // Station name (Nagybajcs, Baja, Mohács)
+  river: string; // River name (default: "Duna")
+  riverKm: number | null; // River kilometer marker
   latitude: number;
   longitude: number;
-  lnvLevel: number;  // Legalacsonyabb Navigálható Vízállás (Lowest Navigable Water Level)
-  kkvLevel: number;  // Közepes Kisvíz (Average Low Water)
-  nvLevel: number;   // Nagyvíz (High Water)
+  lowWaterLevelCm: number | null; // LNV - Legalacsonyabb Navigálható Vízállás
+  highWaterLevelCm: number | null; // KKV - Közepes Kisvíz
+  alertLevelCm: number | null; // Alert level (triggers notifications)
+  dangerLevelCm: number | null; // Danger level (flooding risk)
   isActive: boolean;
-  displayInComparison: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
  * WaterLevelData
- * Current water level data for a station
+ * Current water level measurement for a station
  */
 export interface WaterLevelData {
-  stationId: string;
-  waterLevelCm: number;
-  flowRateM3s: number | null;
-  waterTempCelsius: number | null;
-  timestamp: string;
+  id: string; // UUID
+  stationId: string; // UUID reference to station
+  measuredAt: string; // TIMESTAMPTZ
+  waterLevelCm: number; // Water level in centimeters
+  flowRateM3s: number | null; // Flow rate in cubic meters per second
+  waterTempCelsius: number | null; // Water temperature in Celsius
+  source: string; // Data source (vizugy.hu, hydroinfo.hu, manual)
+  createdAt: string;
 }
 
 /**
  * WaterLevelForecast
- * Water level forecast data
+ * Water level forecast data (5-day prediction)
  */
 export interface WaterLevelForecast {
-  stationId: string;
-  forecastDate: string;
-  waterLevelCm: number;
-  forecastDay: number;
+  id: string; // UUID
+  stationId: string; // UUID reference to station
+  forecastDate: string; // DATE (YYYY-MM-DD)
+  issuedAt: string; // TIMESTAMPTZ when forecast was issued
+  forecastedLevelCm: number; // Predicted water level in centimeters
+  source: string; // Data source (hydroinfo.hu, manual)
+  createdAt: string;
 }
 
 // ============================================================================
