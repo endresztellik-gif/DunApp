@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "hydroinfo": {
+      "command": "python3.11",
+      "args": [
+        "/Volumes/Endre_Samsung1T/codeing/dunapp-pwa/hydroinfo-mcp/server.py"
+      ],
+      "env": {}
+    },
+    "aszalymonitoring": {
+      "command": "python3.11",
+      "args": [
+        "/Volumes/Endre_Samsung1T/codeing/dunapp-pwa/aszalymonitoring-mcp/server.py"
+      ],
+      "env": {}
+    }
+  }
+}

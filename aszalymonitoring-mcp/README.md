@@ -25,15 +25,44 @@ cd aszalymonitoring-mcp
 pip install -r requirements.txt
 ```
 
-## Claude Desktop Konfiguráció
+## Konfiguráció
 
-Add hozzá az `~/.config/claude/claude_desktop_config.json` fájlhoz:
+### Projekt-specifikus MCP (Ajánlott)
+
+A DunApp PWA projekt már tartalmaz egy MCP konfigurációs fájlt:
+
+**Fájl:** `.claude/mcp_servers.json`
+
+```json
+{
+  "mcpServers": {
+    "hydroinfo": {
+      "command": "python3.11",
+      "args": [
+        "/Volumes/Endre_Samsung1T/codeing/dunapp-pwa/hydroinfo-mcp/server.py"
+      ]
+    },
+    "aszalymonitoring": {
+      "command": "python3.11",
+      "args": [
+        "/Volumes/Endre_Samsung1T/codeing/dunapp-pwa/aszalymonitoring-mcp/server.py"
+      ]
+    }
+  }
+}
+```
+
+✅ **Már konfigurálva!** Nincs további teendő.
+
+### Alternatív: Claude Desktop Globális Konfiguráció
+
+Ha szeretnéd globálisan használni (minden projektben), add hozzá az `~/Library/Application Support/Claude/claude_desktop_config.json` fájlhoz (macOS):
 
 ```json
 {
   "mcpServers": {
     "aszalymonitoring": {
-      "command": "python3",
+      "command": "python3.11",
       "args": [
         "/Volumes/Endre_Samsung1T/codeing/dunapp-pwa/aszalymonitoring-mcp/server.py"
       ]
