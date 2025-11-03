@@ -90,6 +90,21 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
   return (
     <div className="main-container">
+      {/* API Unavailability Disclaimer Banner */}
+      <div className="mb-6 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg flex items-start gap-3">
+        <AlertCircle className="h-6 w-6 text-yellow-700 flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <h3 className="text-base font-semibold text-yellow-900 mb-1">
+            ⚠️ Aszály adatok átmenetileg nem elérhetők
+          </h3>
+          <p className="text-sm text-yellow-800 leading-relaxed">
+            A <strong>aszalymonitoring.vizugy.hu</strong> API jelenleg nem működik (404 hiba).
+            Dolgozunk a probléma megoldásán és alternatív adatforrások integrálásán.
+            A helyszínválasztók és térképek továbbra is használhatók, de valós adatok jelenleg nem érhetők el.
+          </p>
+        </div>
+      </div>
+
       {/* Drought Data Error State */}
       {droughtError && (
         <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg flex items-start gap-3">
