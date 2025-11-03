@@ -13,7 +13,7 @@
      ======================================== */
 
   .data-card {
-    @apply bg-white rounded-lg shadow-sm border-2 border-gray-300 p-5 min-h-[140px] transition-shadow duration-200 hover:shadow-md;
+    @apply bg-white rounded-lg shadow-sm border-2 border-gray-300 p-5 min-h-[140px] transition-shadow duration-200 hover:shadow-md flex flex-col;
   }
 
   .data-card-header {
