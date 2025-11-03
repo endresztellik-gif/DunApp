@@ -9,6 +9,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      strategies: 'injectManifest', // Use custom service worker
+      srcDir: 'src',
+      filename: 'sw.ts',
       includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
       manifest: {
         name: 'DunApp PWA - Meteorológiai és Vízállás Monitoring',
@@ -34,52 +37,8 @@ export default defineConfig({
           }
         ]
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'supabase-api-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 // 1 hour
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/api\.openweathermap\.org\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'weather-api-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 30 // 30 minutes
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/tile\.openstreetmap\.org\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'osm-tiles-cache',
-              expiration: {
-                maxEntries: 500,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/]
       },
