@@ -17,10 +17,10 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Footer } from '../../components/Layout/Footer';
 import { useDroughtData } from '../../hooks/useDroughtData';
 import { useGroundwaterData } from '../../hooks/useGroundwaterData';
+import { DroughtLocationSelector } from '../../components/Selectors/DroughtLocationSelector';
 import { DroughtIndexCard } from './DroughtIndexCard';
 import { SoilMoistureCard } from './SoilMoistureCard';
 import { WaterDeficitCard } from './WaterDeficitCard';
-import { GroundwaterLevelCard } from './GroundwaterLevelCard';
 import { GroundwaterMap } from './GroundwaterMap';
 import { DroughtMonitoringMap } from './DroughtMonitoringMap';
 import { WaterDeficitMap } from './WaterDeficitMap';
@@ -132,18 +132,6 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
         </div>
       )}
 
-      {/* No Well Selected State */}
-      {!selectedWell && !groundwaterError && (
-        <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm text-blue-700">
-              Válassz ki egy kutat a talajvíz adatok megjelenítéséhez.
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* No Data Available States */}
       {selectedLocation && !droughtData && !isDroughtLoading && !droughtError && (
         <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
@@ -156,38 +144,27 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
         </div>
       )}
 
-      {selectedWell && !groundwaterData && !isGroundwaterLoading && !groundwaterError && (
-        <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm text-blue-700">
-              Jelenleg nincs elérhető talajvíz adat: <strong>{selectedWell.wellName}</strong>
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Data Cards with Embedded Selectors - 2x2 Grid */}
-      <div className="grid-drought-cards mb-6">
-        <DroughtIndexCard
+      {/* Aszály Adatok Section Header with Location Selector */}
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h2 className="section-title">Aszály Adatok</h2>
+        <DroughtLocationSelector
           locations={locations}
           selectedLocation={selectedLocation}
           onLocationChange={setSelectedLocation}
+          className="w-full sm:w-auto"
+        />
+      </div>
+
+      {/* Data Cards WITHOUT Embedded Selectors - 3 Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <DroughtIndexCard
+          selectedLocation={selectedLocation}
         />
         <SoilMoistureCard
-          locations={locations}
           selectedLocation={selectedLocation}
-          onLocationChange={setSelectedLocation}
         />
         <WaterDeficitCard
-          locations={locations}
           selectedLocation={selectedLocation}
-          onLocationChange={setSelectedLocation}
-        />
-        <GroundwaterLevelCard
-          wells={wells}
-          selectedWell={selectedWell}
-          onWellChange={setSelectedWell}
         />
       </div>
 

@@ -1,20 +1,17 @@
 /**
  * DroughtIndexCard Component
  *
- * Data card with embedded DroughtLocationSelector.
- * Displays drought index value for the selected location.
+ * Data card displaying drought index value for the selected location.
+ * No embedded selector - uses global location selector.
  */
 
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { DataCard } from '../../components/UI/DataCard';
-import { DroughtLocationSelector } from '../../components/selectors/DroughtLocationSelector';
 import type { DroughtLocation, DroughtCategory } from '../../types';
 
 interface DroughtIndexCardProps {
-  locations: DroughtLocation[];
   selectedLocation: DroughtLocation | null;
-  onLocationChange: (location: DroughtLocation) => void;
 }
 
 // Helper to get drought category
@@ -40,9 +37,7 @@ const getCategoryLabel = (category: DroughtCategory): string => {
 };
 
 export const DroughtIndexCard: React.FC<DroughtIndexCardProps> = ({
-  locations,
   selectedLocation,
-  onLocationChange,
 }) => {
   // Placeholder data (will be replaced with real data)
   const droughtIndex: number | null = selectedLocation ? 2.3 : null;
@@ -57,17 +52,9 @@ export const DroughtIndexCard: React.FC<DroughtIndexCardProps> = ({
       unit="/10"
       moduleColor="drought"
     >
-      {/* Embedded Selector */}
-      <DroughtLocationSelector
-        locations={locations}
-        selectedLocation={selectedLocation}
-        onLocationChange={onLocationChange}
-        className="w-full"
-      />
-
       {/* Category Status */}
       {droughtIndex !== null && (
-        <p className="text-sm text-orange-600 font-medium mt-2">({categoryLabel})</p>
+        <p className="text-sm text-orange-600 font-medium">({categoryLabel})</p>
       )}
     </DataCard>
   );
