@@ -340,6 +340,34 @@ serve(async (req) => {
     console.log(`   Success: ${successCount} / ${STATIONS.length}`);
     console.log(`   Failed: ${failureCount} / ${STATIONS.length}`);
 
+    // Step: Call check-water-level-alert to check Mohács threshold
+    console.log('\n🚨 Calling check-water-level-alert...');
+    try {
+      const alertResponse = await fetch(`${SUPABASE_URL}/functions/v1/check-water-level-alert`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+      });
+
+      const alertResult = await alertResponse.json();
+
+      if (alertResponse.ok) {
+        console.log('✅ Alert check completed');
+        if (alertResult.alert_sent) {
+          console.log(`   🔔 Alert sent! Level: ${alertResult.current_level} cm`);
+        } else {
+          console.log(`   ℹ️  No alert needed: ${alertResult.reason || 'N/A'}`);
+        }
+      } else {
+        console.error('❌ Alert check failed:', alertResult.error);
+      }
+    } catch (alertError) {
+      console.error('❌ Failed to call check-water-level-alert:', alertError.message);
+      // Don't fail the main function if alert check fails
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

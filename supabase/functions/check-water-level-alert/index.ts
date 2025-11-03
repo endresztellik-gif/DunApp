@@ -1,433 +1,233 @@
 /**
- * DunApp PWA - Check Water Level Alert Edge Function
+ * Supabase Edge Function: check-water-level-alert
  *
- * PURPOSE:
- * - Checks water level at Mohács station
- * - Sends push notifications when level >= 400 cm
- * - Called by cron job every 6 hours
+ * Purpose: Check Mohács water level and trigger push notifications if >= 400cm
+ * Created: 2025-11-03 (Phase 4.6c)
+ * Trigger: Called by fetch-water-level Edge Function after data update
  *
- * IMPLEMENTATION:
- * - Water level checking from database
- * - Web Push notification sending with web-push library
- * - VAPID authentication
- * - Notification logging
- * - Expired subscription handling
- * - Rate limiting (6 hour window)
+ * Logic:
+ * 1. Query latest Mohács water level
+ * 2. Check if level >= 400cm threshold
+ * 3. Check cooldown period (6 hours) to prevent spam
+ * 4. If conditions met, call send-push-notification Edge Function
+ * 5. Return summary of action taken
  *
- * Environment variables needed:
- * - SUPABASE_URL
- * - SUPABASE_SERVICE_ROLE_KEY
- * - VITE_VAPID_PUBLIC_KEY
- * - VAPID_PRIVATE_KEY
- * - VAPID_SUBJECT (email or URL)
+ * Environment Variables Required:
+ * - SUPABASE_URL: Supabase project URL
+ * - SUPABASE_SERVICE_ROLE_KEY: Service role key for database access
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-// Environment variables
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-const VAPID_PUBLIC_KEY = Deno.env.get('VITE_VAPID_PUBLIC_KEY');
-const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY');
-const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:contact@dunapp.hu';
-
-// Alert threshold for Mohács
-const WATER_LEVEL_THRESHOLD = 400; // cm
-const RATE_LIMIT_HOURS = 6; // Don't send more than once per 6 hours
+// Configuration
+const MOHACS_ALERT_THRESHOLD_CM = 400; // Alert if Mohács >= 400cm
+const COOLDOWN_HOURS = 6; // Don't spam - wait 6 hours between alerts
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
 /**
- * Send web push notification
- * Note: This is a simplified implementation using fetch API directly
- * For production, consider using a proper web-push library
+ * Main handler
  */
-async function sendPushNotification(
-  subscription: { endpoint: string; p256dh_key: string; auth_key: string },
-  payload: string
-) {
-  // For Deno Edge Functions, we need to use the Web Push protocol directly
-  // This is a simplified implementation - in production, use a proper web-push library
-
-  // Extract endpoint details
-  const url = new URL(subscription.endpoint);
-
-  try {
-    const response = await fetch(subscription.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Encoding': 'aes128gcm',
-        'TTL': '86400' // 24 hours
-      },
-      body: payload
-    });
-
-    if (!response.ok) {
-      throw new Error(`Push notification failed: ${response.status} ${response.statusText}`);
-    }
-
-    return { success: true, statusCode: response.status };
-  } catch (error) {
-    return { success: false, error: error.message, statusCode: error.statusCode || 500 };
-  }
-}
-
-/**
- * Check if subscription received notification recently (rate limiting)
- */
-async function wasRecentlyNotified(supabase: any, subscriptionId: string, hoursAgo: number) {
-  const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString();
-
-  const { data, error } = await supabase
-    .from('push_notification_logs')
-    .select('id')
-    .eq('subscription_id', subscriptionId)
-    .eq('status', 'sent')
-    .gte('created_at', cutoffTime)
-    .limit(1);
-
-  if (error) {
-    console.error('Error checking notification history:', error);
-    return false;
-  }
-
-  return data && data.length > 0;
-}
-
 serve(async (req) => {
-  try {
-    console.log('🚨 Check Water Level Alert Edge Function - Starting');
+  // CORS headers
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
 
-    // Initialize Supabase client
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    console.log('🚨 check-water-level-alert - Starting');
+    console.log(`⏰ Timestamp: ${new Date().toISOString()}`);
+
+    // Check environment
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error('Missing Supabase credentials');
     }
 
-    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-      console.warn('VAPID credentials not configured - notifications will not be sent');
-    }
-
+    // Initialize Supabase client
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Step 1: Get Mohács station ID
+    // Step 1: Get Mohács station UUID
     const { data: mohacsStation, error: stationError } = await supabase
       .from('water_level_stations')
-      .select('id, station_name')
-      .eq('station_name', 'Mohács')
+      .select('id, name, station_id, alert_level_cm')
+      .eq('name', 'Mohács')
       .single();
 
     if (stationError || !mohacsStation) {
-      throw new Error('Mohács station not found in database');
+      console.error('❌ Mohács station not found in database');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Mohács station not found',
+          alert_sent: false,
+        }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log(`Found station: ${mohacsStation.station_name} (ID: ${mohacsStation.id})`);
+    console.log(`📍 Mohács station: ${mohacsStation.id}`);
+    console.log(`   Alert threshold: ${MOHACS_ALERT_THRESHOLD_CM} cm`);
 
-    // Step 2: Get latest water level
-    const { data: latestLevel, error: levelError } = await supabase
+    // Step 2: Get latest water level for Mohács
+    const { data: latestData, error: dataError } = await supabase
       .from('water_level_data')
-      .select('water_level_cm, timestamp')
+      .select('water_level_cm, measured_at')
       .eq('station_id', mohacsStation.id)
-      .order('timestamp', { ascending: false })
+      .order('measured_at', { ascending: false })
       .limit(1)
       .single();
 
-    if (levelError || !latestLevel) {
-      throw new Error('No water level data found for Mohács');
-    }
-
-    console.log(`Latest water level: ${latestLevel.water_level_cm} cm (threshold: ${WATER_LEVEL_THRESHOLD} cm)`);
-
-    // Step 3: Check if threshold is met
-    if (latestLevel.water_level_cm < WATER_LEVEL_THRESHOLD) {
-      console.log('Threshold not met - no notifications will be sent');
+    if (dataError || !latestData) {
+      console.error('❌ No water level data found for Mohács');
       return new Response(
         JSON.stringify({
-          success: true,
-          timestamp: new Date().toISOString(),
-          thresholdMet: false,
-          waterLevel: latestLevel.water_level_cm,
-          threshold: WATER_LEVEL_THRESHOLD,
-          message: 'Water level below threshold - no notifications sent'
+          success: false,
+          error: 'No water level data available',
+          alert_sent: false,
         }),
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        }
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('🚨 THRESHOLD MET! Proceeding with notifications...');
+    const currentLevel = latestData.water_level_cm;
+    console.log(`💧 Current Mohács level: ${currentLevel} cm (measured: ${latestData.measured_at})`);
 
-    // Step 4: Get all push subscriptions for Mohács
-    const { data: subscriptions, error: subscriptionError } = await supabase
+    // Step 3: Check if level exceeds threshold
+    if (currentLevel < MOHACS_ALERT_THRESHOLD_CM) {
+      console.log(`✅ Level below threshold (${currentLevel} < ${MOHACS_ALERT_THRESHOLD_CM}), no alert needed`);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          alert_sent: false,
+          reason: 'Level below threshold',
+          current_level: currentLevel,
+          threshold: MOHACS_ALERT_THRESHOLD_CM,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`⚠️  Level EXCEEDS threshold (${currentLevel} >= ${MOHACS_ALERT_THRESHOLD_CM})`);
+
+    // Step 4: Check cooldown period (last notification time)
+    const { data: lastNotification, error: notificationError } = await supabase
       .from('push_subscriptions')
-      .select('*')
-      .eq('station_id', mohacsStation.id);
+      .select('last_notified_at')
+      .eq('notify_water_level', true)
+      .eq('enabled', true)
+      .order('last_notified_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (subscriptionError) {
-      throw new Error(`Failed to fetch subscriptions: ${subscriptionError.message}`);
+    const now = new Date();
+    let shouldSendAlert = true;
+
+    if (lastNotification?.last_notified_at) {
+      const lastNotifiedAt = new Date(lastNotification.last_notified_at);
+      const hoursSinceLastAlert = (now.getTime() - lastNotifiedAt.getTime()) / (1000 * 60 * 60);
+
+      console.log(`⏱️  Last alert sent: ${lastNotifiedAt.toISOString()} (${hoursSinceLastAlert.toFixed(1)}h ago)`);
+
+      if (hoursSinceLastAlert < COOLDOWN_HOURS) {
+        shouldSendAlert = false;
+        console.log(`❌ Cooldown active - skipping alert (need to wait ${(COOLDOWN_HOURS - hoursSinceLastAlert).toFixed(1)}h more)`);
+      }
+    } else {
+      console.log('✅ No previous alerts found - first time notification');
     }
 
-    if (!subscriptions || subscriptions.length === 0) {
-      console.log('No subscriptions found for Mohács');
+    // Step 5: Send alert if conditions are met
+    if (!shouldSendAlert) {
       return new Response(
         JSON.stringify({
           success: true,
-          timestamp: new Date().toISOString(),
-          thresholdMet: true,
-          waterLevel: latestLevel.water_level_cm,
-          subscriptions: 0,
-          message: 'Threshold met but no subscriptions to notify'
+          alert_sent: false,
+          reason: 'Cooldown active',
+          current_level: currentLevel,
+          threshold: MOHACS_ALERT_THRESHOLD_CM,
+          cooldown_hours: COOLDOWN_HOURS,
         }),
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Found ${subscriptions.length} subscriptions`);
+    // Call send-push-notification Edge Function
+    console.log('📢 Calling send-push-notification...');
 
-    // Step 5: Send notifications
-    let sentCount = 0;
-    let failedCount = 0;
-    let skippedCount = 0;
-
-    const payload = JSON.stringify({
-      title: 'Vízállás Figyelmeztetés - Mohács',
-      body: `A mai vízállás ${latestLevel.water_level_cm} cm. Lehetővé teszi a vízutánpótlást a Belső-Béda vízrendszerbe!`,
-      icon: '/icon-192x192.png',
-      badge: '/badge-72x72.png',
+    const notificationPayload = {
+      title: '🚨 Vízállás Riasztás - Mohács',
+      body: `A Mohács vízállása elérte a ${currentLevel} cm-t (riasztási szint: ${MOHACS_ALERT_THRESHOLD_CM} cm)`,
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/badge-72x72.png',
+      tag: 'water-level-alert',
       data: {
+        type: 'water-level-alert',
         station: 'Mohács',
-        waterLevel: latestLevel.water_level_cm,
-        timestamp: latestLevel.timestamp,
-        url: '/water-level?station=mohacs'
-      }
+        level: currentLevel,
+        threshold: MOHACS_ALERT_THRESHOLD_CM,
+        measured_at: latestData.measured_at,
+      },
+    };
+
+    const pushResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-push-notification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify(notificationPayload),
     });
 
-    for (const subscription of subscriptions) {
-      try {
-        // Check rate limiting
-        const recentlyNotified = await wasRecentlyNotified(
-          supabase,
-          subscription.id,
-          RATE_LIMIT_HOURS
-        );
+    const pushResult = await pushResponse.json();
 
-        if (recentlyNotified) {
-          console.log(`Subscription ${subscription.id} was recently notified - skipping`);
-          skippedCount++;
-          continue;
-        }
-
-        // Send notification
-        console.log(`Sending notification to subscription ${subscription.id}...`);
-        const result = await sendPushNotification(
-          {
-            endpoint: subscription.endpoint,
-            p256dh_key: subscription.p256dh_key,
-            auth_key: subscription.auth_key
-          },
-          payload
-        );
-
-        if (result.success) {
-          sentCount++;
-
-          // Log successful send
-          await supabase.from('push_notification_logs').insert({
-            subscription_id: subscription.id,
-            station_id: mohacsStation.id,
-            water_level_cm: latestLevel.water_level_cm,
-            notification_title: 'Vízállás Figyelmeztetés - Mohács',
-            notification_body: `A mai vízállás ${latestLevel.water_level_cm} cm. Lehetővé teszi a vízutánpótlást a Belső-Béda vízrendszerbe!`,
-            status: 'sent'
-          });
-
-          console.log(`✅ Notification sent to subscription ${subscription.id}`);
-        } else {
-          throw new Error(result.error || 'Unknown error');
-        }
-
-      } catch (error) {
-        failedCount++;
-        console.error(`❌ Failed to send notification to subscription ${subscription.id}:`, error.message);
-
-        // Log failed send
-        await supabase.from('push_notification_logs').insert({
-          subscription_id: subscription.id,
-          station_id: mohacsStation.id,
-          water_level_cm: latestLevel.water_level_cm,
-          notification_title: 'Vízállás Figyelmeztetés - Mohács',
-          notification_body: `A mai vízállás ${latestLevel.water_level_cm} cm. Lehetővé teszi a vízutánpótlást a Belső-Béda vízrendszerbe!`,
-          status: 'failed',
-          error_message: error.message
-        });
-
-        // If subscription expired (HTTP 410), delete it
-        if (error.message.includes('410')) {
-          console.log(`Subscription ${subscription.id} expired - deleting`);
-          await supabase
-            .from('push_subscriptions')
-            .delete()
-            .eq('id', subscription.id);
-        }
-      }
+    if (!pushResponse.ok) {
+      console.error('❌ Failed to send push notifications:', pushResult);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Failed to send push notifications',
+          details: pushResult,
+          alert_sent: false,
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log(`✅ Check Water Level Alert Edge Function - Completed:`);
-    console.log(`   Sent: ${sentCount}, Failed: ${failedCount}, Skipped: ${skippedCount}`);
+    console.log('✅ Push notifications sent successfully');
+    console.log(`   Total: ${pushResult.total || 0}, Sent: ${pushResult.sent || 0}, Failed: ${pushResult.failed || 0}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        timestamp: new Date().toISOString(),
-        thresholdMet: true,
-        waterLevel: latestLevel.water_level_cm,
-        threshold: WATER_LEVEL_THRESHOLD,
-        summary: {
-          total: subscriptions.length,
-          sent: sentCount,
-          failed: failedCount,
-          skipped: skippedCount
-        }
+        alert_sent: true,
+        current_level: currentLevel,
+        threshold: MOHACS_ALERT_THRESHOLD_CM,
+        measured_at: latestData.measured_at,
+        notification_result: {
+          total: pushResult.total || 0,
+          sent: pushResult.sent || 0,
+          failed: pushResult.failed || 0,
+        },
       }),
-      {
-        headers: { 'Content-Type': 'application/json' },
-        status: 200,
-      }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
   } catch (error) {
-    console.error('❌ Check Water Level Alert Error:', error);
-
+    console.error('❌ check-water-level-alert Error:', error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
-        timestamp: new Date().toISOString()
+        error: error instanceof Error ? error.message : String(error),
+        alert_sent: false,
       }),
-      {
-        headers: { 'Content-Type': 'application/json' },
-        status: 500,
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
-
-/**
- * IMPLEMENTATION GUIDE (for Data Engineer):
- *
- * 1. Get Mohács station ID:
- *    const { data: mohacsStation } = await supabase
- *      .from('water_level_stations')
- *      .select('id')
- *      .eq('station_name', 'Mohács')
- *      .single();
- *
- * 2. Get latest water level:
- *    const { data: latestLevel } = await supabase
- *      .from('water_level_data')
- *      .select('water_level_cm, timestamp')
- *      .eq('station_id', mohacsStation.id)
- *      .order('timestamp', { ascending: false })
- *      .limit(1)
- *      .single();
- *
- * 3. Check threshold:
- *    if (latestLevel.water_level_cm >= WATER_LEVEL_THRESHOLD) {
- *      // Proceed with notifications
- *    } else {
- *      return { success: true, thresholdNotMet: true };
- *    }
- *
- * 4. Get all push subscriptions for Mohács:
- *    const { data: subscriptions } = await supabase
- *      .from('push_subscriptions')
- *      .select('*')
- *      .eq('station_id', mohacsStation.id);
- *
- * 5. Send push notification using Web Push API:
- *    import webpush from 'web-push';
- *
- *    webpush.setVapidDetails(
- *      VAPID_SUBJECT,
- *      VAPID_PUBLIC_KEY,
- *      VAPID_PRIVATE_KEY
- *    );
- *
- *    const payload = JSON.stringify({
- *      title: 'Vízállás Figyelmeztetés - Mohács',
- *      body: `A mai vízállás ${latestLevel.water_level_cm} cm. Lehetővé teszi a vízutánpótlást a Belső-Béda vízrendszerbe!`,
- *      icon: '/icon-192x192.png',
- *      badge: '/badge-72x72.png',
- *      data: {
- *        station: 'Mohács',
- *        waterLevel: latestLevel.water_level_cm,
- *        timestamp: latestLevel.timestamp,
- *        url: '/water-level?station=mohacs'
- *      }
- *    });
- *
- *    for (const subscription of subscriptions) {
- *      try {
- *        await webpush.sendNotification(
- *          {
- *            endpoint: subscription.endpoint,
- *            keys: {
- *              p256dh: subscription.p256dh_key,
- *              auth: subscription.auth_key
- *            }
- *          },
- *          payload
- *        );
- *
- *        // Log successful send
- *        await supabase.from('push_notification_logs').insert({
- *          subscription_id: subscription.id,
- *          station_id: mohacsStation.id,
- *          water_level_cm: latestLevel.water_level_cm,
- *          notification_title: 'Vízállás Figyelmeztetés - Mohács',
- *          notification_body: payload.body,
- *          status: 'sent'
- *        });
- *
- *      } catch (error) {
- *        console.error('Push notification failed:', error);
- *
- *        // Log failed send
- *        await supabase.from('push_notification_logs').insert({
- *          subscription_id: subscription.id,
- *          station_id: mohacsStation.id,
- *          water_level_cm: latestLevel.water_level_cm,
- *          notification_title: 'Vízállás Figyelmeztetés - Mohács',
- *          notification_body: payload.body,
- *          status: 'failed',
- *          error_message: error.message
- *        });
- *
- *        // If subscription expired (410 Gone), delete it
- *        if (error.statusCode === 410) {
- *          await supabase
- *            .from('push_subscriptions')
- *            .delete()
- *            .eq('id', subscription.id);
- *        }
- *      }
- *    }
- *
- * 6. Rate limiting (optional):
- *    - Check push_notification_logs for recent sends
- *    - Only send if no notification sent in last 6 hours for this subscription
- *    - Prevents spam if water level stays above threshold
- *
- * 7. Return summary:
- *    return {
- *      success: true,
- *      notificationsSent: successCount,
- *      notificationsFailed: failureCount,
- *      waterLevel: latestLevel.water_level_cm,
- *      timestamp: new Date().toISOString()
- *    };
- */
