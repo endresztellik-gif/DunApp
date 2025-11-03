@@ -84,12 +84,12 @@ VITE_SUPABASE_ANON_KEY  # Public anon key
 - ✅ README.md - Production-ready setup guide
 - ✅ docs/API_DOCS.md - Edge Functions & API reference
 - ✅ docs/DEPLOYMENT.md - Netlify deployment checklist
+- ✅ docs/ENV_SETUP.md - Environment variables & API key setup (1111 lines)
 
 ### Következő Lépések
-- ⬜ ENV_SETUP.md - Részletes API key setup
-- ⬜ Testing - Unit + E2E tests
-- ⬜ Performance optimization
-- ⬜ Security audit
+- ⬜ Testing - Unit + E2E tests (76.63% → 80%+ coverage)
+- ⬜ Performance optimization (Lighthouse 90+, bundle <500KB)
+- ⬜ Security audit (npm audit, Semgrep, OWASP)
 
 ---
 
