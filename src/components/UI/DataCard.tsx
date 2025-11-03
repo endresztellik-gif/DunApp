@@ -3,6 +3,9 @@
  *
  * Reusable card component for displaying data values with icon, label, value, and unit.
  * Supports module-specific color schemes.
+ *
+ * PERFORMANCE: Memoized to prevent unnecessary re-renders.
+ * Used 9+ times across modules - high optimization impact.
  */
 
 import React from 'react';
@@ -18,7 +21,7 @@ export interface DataCardProps {
   children?: React.ReactNode; // For embedded dropdowns in drought module
 }
 
-export const DataCard: React.FC<DataCardProps> = ({
+export const DataCard = React.memo<DataCardProps>(({
   icon: Icon,
   label,
   value,
@@ -61,4 +64,6 @@ export const DataCard: React.FC<DataCardProps> = ({
       </div>
     </div>
   );
-};
+});
+
+DataCard.displayName = 'DataCard';

@@ -10,6 +10,9 @@
  * - City marker with popup info
  *
  * API: https://www.rainviewer.com/api.html
+ *
+ * PERFORMANCE: Memoized to prevent re-renders during radar animation.
+ * Leaflet rendering is expensive - memoization has high impact.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -35,7 +38,7 @@ interface RadarMapProps {
   city: City | null;
 }
 
-export const RadarMap: React.FC<RadarMapProps> = ({ city }) => {
+export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
   const [radarFrames, setRadarFrames] = useState<string[]>([]);
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -180,4 +183,6 @@ export const RadarMap: React.FC<RadarMapProps> = ({ city }) => {
       </div>
     </div>
   );
-};
+});
+
+RadarMap.displayName = 'RadarMap';

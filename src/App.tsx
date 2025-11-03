@@ -10,14 +10,28 @@
  * CRITICAL: Each module has its own selector - NO global selectors!
  */
 
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Header } from './components/Layout/Header';
 import { InstallPrompt } from './components/InstallPrompt';
 import { LoadingSpinner } from './components/UI/LoadingSpinner';
-import { MeteorologyModule } from './modules/meteorology/MeteorologyModule';
-import { WaterLevelModule } from './modules/water-level/WaterLevelModule';
-import { DroughtModule } from './modules/drought/DroughtModule';
 import { useCities } from './hooks/useCities';
+
+// Lazy load modules for better initial load performance
+const MeteorologyModule = lazy(() =>
+  import('./modules/meteorology/MeteorologyModule').then(module => ({
+    default: module.MeteorologyModule
+  }))
+);
+const WaterLevelModule = lazy(() =>
+  import('./modules/water-level/WaterLevelModule').then(module => ({
+    default: module.WaterLevelModule
+  }))
+);
+const DroughtModule = lazy(() =>
+  import('./modules/drought/DroughtModule').then(module => ({
+    default: module.DroughtModule
+  }))
+);
 import {
   MOCK_STATIONS,
   MOCK_DROUGHT_LOCATIONS,
@@ -73,22 +87,24 @@ function App() {
       {/* Header with Module Navigation */}
       <Header currentModule={activeModule} onModuleChange={setActiveModule} />
 
-      {/* Main Content - Render Active Module */}
+      {/* Main Content - Render Active Module with Suspense */}
       <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">
-        {activeModule === 'meteorology' && cities.length > 0 && (
-          <MeteorologyModule cities={cities} initialCity={cities[0]} />
-        )}
-        {activeModule === 'water-level' && (
-          <WaterLevelModule stations={MOCK_STATIONS} initialStation={MOCK_STATIONS[0]} />
-        )}
-        {activeModule === 'drought' && (
-          <DroughtModule
-            locations={MOCK_DROUGHT_LOCATIONS}
-            wells={MOCK_GROUNDWATER_WELLS}
-            initialLocation={MOCK_DROUGHT_LOCATIONS[0]}
-            initialWell={MOCK_GROUNDWATER_WELLS[0]}
-          />
-        )}
+        <Suspense fallback={<LoadingSpinner message="Modul betöltése..." />}>
+          {activeModule === 'meteorology' && cities.length > 0 && (
+            <MeteorologyModule cities={cities} initialCity={cities[0]} />
+          )}
+          {activeModule === 'water-level' && (
+            <WaterLevelModule stations={MOCK_STATIONS} initialStation={MOCK_STATIONS[0]} />
+          )}
+          {activeModule === 'drought' && (
+            <DroughtModule
+              locations={MOCK_DROUGHT_LOCATIONS}
+              wells={MOCK_GROUNDWATER_WELLS}
+              initialLocation={MOCK_DROUGHT_LOCATIONS[0]}
+              initialWell={MOCK_GROUNDWATER_WELLS[0]}
+            />
+          )}
+        </Suspense>
       </main>
 
       {/* PWA Install Prompt */}

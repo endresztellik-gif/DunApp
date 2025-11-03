@@ -3,6 +3,9 @@
  *
  * Displays 3-day weather forecast with 6-hour breakdown.
  * Uses Recharts for visualization with temperature and precipitation.
+ *
+ * PERFORMANCE: Memoized to prevent re-renders when cityId hasn't changed.
+ * Recharts rendering is expensive - memoization has high impact.
  */
 
 import React from 'react';
@@ -25,7 +28,7 @@ interface ForecastChartProps {
   cityId: string;
 }
 
-export const ForecastChart: React.FC<ForecastChartProps> = ({ cityId }) => {
+export const ForecastChart = React.memo<ForecastChartProps>(({ cityId }) => {
   // Fetch forecast data using the new hook
   const { forecasts, isLoading, error } = useForecastData(cityId);
 
@@ -146,4 +149,6 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({ cityId }) => {
       </ResponsiveContainer>
     </div>
   );
-};
+});
+
+ForecastChart.displayName = 'ForecastChart';

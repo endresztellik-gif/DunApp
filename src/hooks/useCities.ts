@@ -43,12 +43,17 @@ async function fetchCities(): Promise<City[]> {
 
 /**
  * Custom hook to fetch cities with caching
+ *
+ * PERFORMANCE OPTIMIZATION:
+ * Cities are static data that rarely changes, so we cache for 24 hours.
+ * This reduces API calls and improves offline experience.
  */
 export function useCities(): UseCitiesReturn {
   const { data, isLoading, error } = useQuery({
     queryKey: ['cities'],
     queryFn: fetchCities,
-    staleTime: 60 * 60 * 1000, // Consider data fresh for 1 hour
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours (static data)
+    gcTime: 24 * 60 * 60 * 1000, // Keep in cache for 24 hours
     retry: 3, // Retry failed requests 3 times
   });
 
