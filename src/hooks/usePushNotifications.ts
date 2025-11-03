@@ -134,7 +134,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       // Step 3: Subscribe to push notifications
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
       });
 
       // Step 4: Extract subscription details
@@ -156,7 +156,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           user_agent: navigator.userAgent,
           enabled: true,
           notify_water_level: true, // Enable water level notifications by default
-        },
+        } as any,
         {
           onConflict: 'endpoint',
         }

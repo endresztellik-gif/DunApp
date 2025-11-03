@@ -44,12 +44,14 @@ async function fetchWaterLevelForecast(stationId: string): Promise<WaterLevelFor
     return [];
   }
 
+  const latestIssueAny = latestIssue as any;
+
   // Get all forecasts from the latest issue
   const { data: forecastData, error: forecastError } = await supabase
     .from('water_level_forecasts')
     .select('*')
     .eq('station_id', stationId)
-    .eq('issued_at', latestIssue.issued_at)
+    .eq('issued_at', latestIssueAny.issued_at)
     .gte('forecast_date', new Date().toISOString().split('T')[0]) // Only future/today forecasts
     .order('forecast_date', { ascending: true })
     .limit(5);
@@ -59,7 +61,7 @@ async function fetchWaterLevelForecast(stationId: string): Promise<WaterLevelFor
   }
 
   // Transform to TypeScript interface
-  return (forecastData || []).map((forecast) => ({
+  return ((forecastData as any[]) || []).map((forecast: any) => ({
     id: forecast.id,
     stationId: forecast.station_id,
     forecastDate: forecast.forecast_date,

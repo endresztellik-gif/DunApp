@@ -151,8 +151,8 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
                 borderRadius: '8px',
                 boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
               }}
-              formatter={(value: number | null) =>
-                value !== null ? `${value.toFixed(0)} cm` : 'N/A'
+              formatter={(value: any) =>
+                value !== null && value !== undefined ? `${Number(value).toFixed(0)} cm` : 'N/A'
               }
             />
             <Legend

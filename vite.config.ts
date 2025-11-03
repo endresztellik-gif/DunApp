@@ -38,9 +38,7 @@ export default defineConfig({
         ]
       },
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/]
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
       },
       devOptions: {
         enabled: false,

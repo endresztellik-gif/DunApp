@@ -37,8 +37,8 @@ self.addEventListener('push', (event: PushEvent) => {
 
   // Default notification data
   const defaultData = {
-    title: 'DunApp Értesítés',
-    body: 'Új üzenet érkezett.',
+    title: 'DunApp ï¿½rtesï¿½tï¿½s',
+    body: 'ï¿½j ï¿½zenet ï¿½rkezett.',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/badge-72x72.png',
     tag: 'dunapp-notification',
@@ -63,19 +63,18 @@ self.addEventListener('push', (event: PushEvent) => {
     badge: notificationData.badge,
     tag: notificationData.tag,
     data: notificationData.data,
-    vibrate: [200, 100, 200],
     requireInteraction: true,
     actions: [
       {
         action: 'open',
-        title: 'Megnyitás',
+        title: 'Megnyitï¿½s',
       },
       {
         action: 'close',
-        title: 'Bezárás',
+        title: 'Bezï¿½rï¿½s',
       },
     ],
-  });
+  } as any);
 
   event.waitUntil(promiseChain);
 });
@@ -95,7 +94,7 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   notification.close();
 
   if (action === 'close') {
-    // User clicked "Bezárás" - do nothing
+    // User clicked "Bezï¿½rï¿½s" - do nothing
     return;
   }
 
@@ -103,7 +102,7 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   let targetUrl = '/';
   if (notification.data && notification.data.url) {
     targetUrl = notification.data.url;
-  } else if (notification.data && notification.data.station === 'Mohács') {
+  } else if (notification.data && notification.data.station === 'Mohï¿½cs') {
     targetUrl = '/?module=water-level';
   }
 
@@ -140,16 +139,19 @@ self.addEventListener('pushsubscriptionchange', (event: PushSubscriptionChangeEv
   console.log('[Service Worker] Push subscription changed:', event);
 
   const promiseChain = self.registration.pushManager
-    .subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: self.registration.pushManager.getSubscription().then((subscription) => {
-        if (subscription) {
-          const rawKey = subscription.options.applicationServerKey;
-          return rawKey;
-        }
-        // Fallback: get VAPID key from environment (injected during build)
-        return import.meta.env.VITE_VAPID_PUBLIC_KEY;
-      }),
+    .getSubscription()
+    .then((oldSubscription) => {
+      let vapidKey: BufferSource | null = null;
+
+      if (oldSubscription && oldSubscription.options.applicationServerKey) {
+        vapidKey = oldSubscription.options.applicationServerKey as BufferSource;
+      }
+
+      // Attempt to resubscribe with the same VAPID key
+      return self.registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: vapidKey,
+      } as any);
     })
     .then((newSubscription) => {
       console.log('[Service Worker] Resubscribed:', newSubscription);
@@ -162,7 +164,7 @@ self.addEventListener('pushsubscriptionchange', (event: PushSubscriptionChangeEv
       console.error('[Service Worker] Resubscription failed:', error);
     });
 
-  event.waitUntil(promiseChain);
+  event.waitUntil(promiseChain as Promise<any>);
 });
 
 console.log('[Service Worker] Loaded and ready for push notifications!');

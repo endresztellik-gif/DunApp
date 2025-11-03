@@ -52,34 +52,36 @@ async function fetchWaterLevelData(stationId: string) {
   }
 
   // Transform station data to match TypeScript interface
+  const stationDataAny = stationData as any;
   const station: WaterLevelStation = {
-    id: stationData.id,
-    stationId: stationData.station_id,
-    name: stationData.name,
-    river: stationData.river,
-    riverKm: stationData.river_km,
-    latitude: stationData.latitude,
-    longitude: stationData.longitude,
-    lowWaterLevelCm: stationData.low_water_level_cm,
-    highWaterLevelCm: stationData.high_water_level_cm,
-    alertLevelCm: stationData.alert_level_cm,
-    dangerLevelCm: stationData.danger_level_cm,
-    isActive: stationData.is_active,
-    createdAt: stationData.created_at,
-    updatedAt: stationData.updated_at,
+    id: stationDataAny.id,
+    stationId: stationDataAny.station_id,
+    name: stationDataAny.name,
+    river: stationDataAny.river,
+    riverKm: stationDataAny.river_km,
+    latitude: stationDataAny.latitude,
+    longitude: stationDataAny.longitude,
+    lowWaterLevelCm: stationDataAny.low_water_level_cm,
+    highWaterLevelCm: stationDataAny.high_water_level_cm,
+    alertLevelCm: stationDataAny.alert_level_cm,
+    dangerLevelCm: stationDataAny.danger_level_cm,
+    isActive: stationDataAny.is_active,
+    createdAt: stationDataAny.created_at,
+    updatedAt: stationDataAny.updated_at,
   };
 
   // Transform water level data if it exists
-  const currentData: WaterLevelData | null = waterLevelData
+  const waterLevelDataAny = waterLevelData as any;
+  const currentData: WaterLevelData | null = waterLevelDataAny
     ? {
-        id: waterLevelData.id,
-        stationId: waterLevelData.station_id,
-        measuredAt: waterLevelData.measured_at,
-        waterLevelCm: waterLevelData.water_level_cm,
-        flowRateM3s: waterLevelData.flow_rate_m3s,
-        waterTempCelsius: waterLevelData.water_temp_celsius,
-        source: waterLevelData.source,
-        createdAt: waterLevelData.created_at,
+        id: waterLevelDataAny.id,
+        stationId: waterLevelDataAny.station_id,
+        measuredAt: waterLevelDataAny.measured_at,
+        waterLevelCm: waterLevelDataAny.water_level_cm,
+        flowRateM3s: waterLevelDataAny.flow_rate_m3s,
+        waterTempCelsius: waterLevelDataAny.water_temp_celsius,
+        source: waterLevelDataAny.source,
+        createdAt: waterLevelDataAny.created_at,
       }
     : null;
 

@@ -33,7 +33,7 @@ async function fetchStations(): Promise<WaterLevelStation[]> {
   }
 
   // Transform database fields to match WaterLevelStation type
-  return (data || []).map((station) => ({
+  return ((data as any[]) || []).map((station: any) => ({
     id: station.id,
     stationId: station.station_id,
     name: station.name,
