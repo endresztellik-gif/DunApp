@@ -2,8 +2,9 @@
  * DunApp PWA - Fetch Water Level Data Edge Function
  *
  * PURPOSE:
- * - Scrapes current water level data for 3 stations (Baja, Mohács, Nagybajcs)
+ * - Scrapes current water level data for 3 stations (Nagybajcs, Baja, Mohács)
  * - Stores data in water_level_data table
+ * - Fetches forecasts and stores in water_level_forecasts table
  * - Called by cron job every hour
  *
  * IMPLEMENTATION:
@@ -16,6 +17,9 @@
  * Environment variables needed:
  * - SUPABASE_URL
  * - SUPABASE_SERVICE_ROLE_KEY
+ *
+ * Updated: 2025-11-03 (Phase 4.2)
+ * Compatible with Migration 008 + 009 schema
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -26,11 +30,23 @@ import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-// Stations to scrape
+// Station configuration (matches database seed data)
 const STATIONS = [
-  { name: 'Baja', hydroinfoCode: 'baja' },
-  { name: 'Mohács', hydroinfoCode: 'mohacs' },
-  { name: 'Nagybajcs', hydroinfoCode: 'nagybajcs' }
+  {
+    name: 'Nagybajcs',
+    stationId: '442051', // External station ID from vizugy.hu/hydroinfo.hu
+    hydroinfoCode: 'nagybajcs'
+  },
+  {
+    name: 'Baja',
+    stationId: '442027',
+    hydroinfoCode: 'baja'
+  },
+  {
+    name: 'Mohács',
+    stationId: '442010',
+    hydroinfoCode: 'mohacs'
+  }
 ];
 
 // Retry configuration
@@ -63,6 +79,7 @@ async function fetchWithRetry(
 
 /**
  * Scrape water level data from vizugy.hu
+ * Returns: { stationName: { waterLevel: number, flowRate?: number, waterTemp?: number } }
  */
 async function scrapeVizugyActual() {
   const url = 'https://www.vizugy.hu/index.php?module=content&programelemid=138';
@@ -80,39 +97,45 @@ async function scrapeVizugyActual() {
     throw new Error('Failed to parse HTML from vizugy.hu');
   }
 
-  const waterLevels: Record<string, number> = {};
+  const waterLevelData: Record<string, {
+    waterLevel: number;
+    flowRate?: number;
+    waterTemp?: number
+  }> = {};
 
   // Find all table rows
   const rows = doc.querySelectorAll('table tr');
 
   for (const row of rows) {
     const cells = row.querySelectorAll('td');
-    if (cells.length === 0) continue;
+    if (cells.length < 2) continue;
 
     const stationText = cells[0]?.textContent?.trim() || '';
 
     // Check if this row contains one of our stations
     for (const station of STATIONS) {
       if (stationText.includes(station.name)) {
-        // Water level is typically in the last column
+        // Extract water level (typically in cm)
+        // Pattern: look for numbers in the last few columns
         const lastCell = cells[cells.length - 1];
         const waterLevelText = lastCell?.textContent?.trim() || '';
-        const waterLevel = parseInt(waterLevelText);
+        const waterLevel = parseInt(waterLevelText.replace(/[^\d-]/g, ''));
 
         if (!isNaN(waterLevel)) {
-          waterLevels[station.name] = waterLevel;
-          console.log(`Scraped ${station.name}: ${waterLevel} cm`);
+          waterLevelData[station.name] = { waterLevel };
+          console.log(`✅ Scraped ${station.name}: ${waterLevel} cm`);
         }
         break;
       }
     }
   }
 
-  return waterLevels;
+  return waterLevelData;
 }
 
 /**
  * Scrape water level forecast from hydroinfo.hu
+ * Returns: { stationName: [{ day: 1-5, waterLevel: number, date: string }] }
  */
 async function scrapeHydroinfoForecast() {
   const url = 'http://www.hydroinfo.hu/Html/hidelo/duna.html';
@@ -156,7 +179,7 @@ async function scrapeHydroinfoForecast() {
           // Extract 5-day forecast (next 5 cells)
           for (let i = 1; i <= 5 && i < cells.length; i++) {
             const forecastText = cells[i]?.textContent?.trim() || '';
-            const forecastLevel = parseInt(forecastText);
+            const forecastLevel = parseInt(forecastText.replace(/[^\d-]/g, ''));
 
             if (!isNaN(forecastLevel)) {
               const forecastDate = new Date();
@@ -165,14 +188,14 @@ async function scrapeHydroinfoForecast() {
               stationForecasts.push({
                 day: i,
                 waterLevel: forecastLevel,
-                date: forecastDate.toISOString().split('T')[0]
+                date: forecastDate.toISOString().split('T')[0] // YYYY-MM-DD
               });
             }
           }
 
           if (stationForecasts.length > 0) {
             forecasts[station.name] = stationForecasts;
-            console.log(`Scraped forecast for ${station.name}: ${stationForecasts.length} days`);
+            console.log(`✅ Scraped forecast for ${station.name}: ${stationForecasts.length} days`);
           }
           break;
         }
@@ -186,6 +209,7 @@ async function scrapeHydroinfoForecast() {
 serve(async (req) => {
   try {
     console.log('💧 Fetch Water Level Edge Function - Starting');
+    console.log(`⏰ Timestamp: ${new Date().toISOString()}`);
 
     // Initialize Supabase client
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -199,88 +223,105 @@ serve(async (req) => {
     let failureCount = 0;
 
     // Scrape actual water levels from vizugy.hu
-    console.log('Scraping actual water levels from vizugy.hu...');
-    let waterLevels: Record<string, number> = {};
+    console.log('🌐 Scraping actual water levels from vizugy.hu...');
+    let waterLevelData: Record<string, { waterLevel: number; flowRate?: number; waterTemp?: number }> = {};
 
     try {
-      waterLevels = await scrapeVizugyActual();
+      waterLevelData = await scrapeVizugyActual();
+      console.log(`✅ Scraped ${Object.keys(waterLevelData).length} stations from vizugy.hu`);
     } catch (error) {
-      console.error('Failed to scrape vizugy.hu:', error.message);
+      console.error('❌ Failed to scrape vizugy.hu:', error.message);
       // Continue anyway - we might still have forecast data
     }
 
     // Scrape forecasts from hydroinfo.hu
-    console.log('Scraping forecasts from hydroinfo.hu...');
+    console.log('🌐 Scraping forecasts from hydroinfo.hu...');
     let forecasts: Record<string, Array<{ day: number; waterLevel: number; date: string }>> = {};
 
     try {
       forecasts = await scrapeHydroinfoForecast();
+      console.log(`✅ Scraped forecasts for ${Object.keys(forecasts).length} stations from hydroinfo.hu`);
     } catch (error) {
-      console.error('Failed to scrape hydroinfo.hu:', error.message);
+      console.error('❌ Failed to scrape hydroinfo.hu:', error.message);
       // Continue anyway - we might have actual data
     }
 
     // Process each station
     for (const station of STATIONS) {
       try {
-        console.log(`Processing ${station.name}...`);
+        console.log(`\n📍 Processing ${station.name}...`);
 
-        // Get station_id from database
+        // Get station UUID from database using station_id (TEXT)
         const { data: stationData, error: stationError } = await supabase
           .from('water_level_stations')
           .select('id')
-          .eq('station_name', station.name)
+          .eq('station_id', station.stationId) // Use external station_id
           .single();
 
         if (stationError || !stationData) {
-          throw new Error(`Station not found in database: ${station.name}`);
+          throw new Error(`Station not found in database: ${station.name} (station_id: ${station.stationId})`);
         }
 
+        const stationUUID = stationData.id;
+        console.log(`  Station UUID: ${stationUUID}`);
+
         // Insert actual water level if available
-        if (waterLevels[station.name]) {
+        if (waterLevelData[station.name]) {
+          const data = waterLevelData[station.name];
+
           const { error: insertError } = await supabase
             .from('water_level_data')
             .insert({
-              station_id: stationData.id,
-              water_level_cm: waterLevels[station.name],
-              flow_rate_m3s: null, // Not available from scraping
-              water_temp_celsius: null, // Not available from scraping
-              timestamp: new Date().toISOString()
+              station_id: stationUUID,
+              measured_at: new Date().toISOString(), // TIMESTAMPTZ
+              water_level_cm: data.waterLevel,
+              flow_rate_m3s: data.flowRate || null,
+              water_temp_celsius: data.waterTemp || null,
+              source: 'vizugy.hu'
             });
 
           if (insertError) {
-            console.error(`Failed to insert water level for ${station.name}:`, insertError.message);
+            console.error(`  ❌ Failed to insert water level:`, insertError.message);
+            throw insertError;
           } else {
-            console.log(`✅ Inserted water level for ${station.name}: ${waterLevels[station.name]} cm`);
+            console.log(`  ✅ Inserted water level: ${data.waterLevel} cm`);
           }
+        } else {
+          console.log(`  ⚠️  No water level data available from vizugy.hu`);
         }
 
         // Insert forecasts if available
         if (forecasts[station.name]) {
-          for (const forecast of forecasts[station.name]) {
+          const forecastData = forecasts[station.name];
+          const issuedAt = new Date().toISOString();
+
+          for (const forecast of forecastData) {
             const { error: forecastError } = await supabase
               .from('water_level_forecasts')
               .upsert({
-                station_id: stationData.id,
-                forecast_date: forecast.date,
-                water_level_cm: forecast.waterLevel,
-                forecast_day: forecast.day
+                station_id: stationUUID,
+                forecast_date: forecast.date, // DATE (YYYY-MM-DD)
+                issued_at: issuedAt, // TIMESTAMPTZ
+                forecasted_level_cm: forecast.waterLevel,
+                source: 'hydroinfo.hu'
               }, {
-                onConflict: 'station_id,forecast_date'
+                onConflict: 'station_id,forecast_date,issued_at'
               });
 
             if (forecastError) {
-              console.error(`Failed to insert forecast for ${station.name} day ${forecast.day}:`, forecastError.message);
+              console.error(`  ❌ Failed to insert forecast for day ${forecast.day}:`, forecastError.message);
             }
           }
-          console.log(`✅ Inserted ${forecasts[station.name].length} forecasts for ${station.name}`);
+          console.log(`  ✅ Inserted ${forecastData.length} forecasts`);
+        } else {
+          console.log(`  ⚠️  No forecast data available from hydroinfo.hu`);
         }
 
         successCount++;
         results.push({
           station: station.name,
           status: 'success',
-          waterLevel: waterLevels[station.name] || null,
+          waterLevel: waterLevelData[station.name]?.waterLevel || null,
           forecastDays: forecasts[station.name]?.length || 0
         });
 
@@ -295,7 +336,9 @@ serve(async (req) => {
       }
     }
 
-    console.log(`✅ Fetch Water Level Edge Function - Completed: ${successCount} success, ${failureCount} failed`);
+    console.log(`\n✅ Fetch Water Level Edge Function - Completed`);
+    console.log(`   Success: ${successCount} / ${STATIONS.length}`);
+    console.log(`   Failed: ${failureCount} / ${STATIONS.length}`);
 
     return new Response(
       JSON.stringify({
