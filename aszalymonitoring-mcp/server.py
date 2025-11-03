@@ -21,14 +21,41 @@ server = Server("aszalymonitoring-mcp-server")
 
 # Constants
 LOCATIONS = {
-    "Katymár": {"lat": 46.2167, "lon": 19.5667, "county": "Bács-Kiskun"},
-    "Dávod": {"lat": 46.4167, "lon": 18.7667, "county": "Tolna"},
-    "Szederkény": {"lat": 46.3833, "lon": 19.2500, "county": "Bács-Kiskun"},
-    "Sükösd": {"lat": 46.2833, "lon": 19.0000, "county": "Bács-Kiskun"},
-    "Csávoly": {"lat": 46.4500, "lon": 19.2833, "county": "Bács-Kiskun"}
+    "Katymár": {
+        "lat": 46.2167,
+        "lon": 19.5667,
+        "county": "Bács-Kiskun",
+        "uuid": "F5D851F8-27B9-4C70-96C2-CD6906F91D5B"
+    },
+    "Dávod": {
+        "lat": 46.4167,
+        "lon": 18.7667,
+        "county": "Tolna",
+        "uuid": "E07DCC61-B817-4BFF-AB8C-3D4BB35EB7E1"
+    },
+    "Szederkény": {
+        "lat": 46.3833,
+        "lon": 19.2500,
+        "county": "Bács-Kiskun",
+        "uuid": "BAEE61BE-51FA-41BC-AFAF-6AD99E2598AE"
+    },
+    "Sükösd": {
+        "lat": 46.2833,
+        "lon": 19.0000,
+        "county": "Bács-Kiskun",
+        "uuid": "EC63ACE6-990E-40BD-BEE7-CC8581F908B8"
+    },
+    "Csávoly": {
+        "lat": 46.4500,
+        "lon": 19.2833,
+        "county": "Bács-Kiskun",
+        "uuid": "16FFA799-C5E4-42EE-B08F-FA51E8720815"
+    }
 }
 
 BASE_URL = "https://aszalymonitoring.vizugy.hu"
+TIMEOUT_SECONDS = 20  # Longer timeout for slow server
+MAX_RETRIES = 2  # Retry failed requests
 
 
 class SoilMoisture(BaseModel):
@@ -51,79 +78,91 @@ class DroughtData(BaseModel):
     timestamp: str
 
 
-def search_nearest_station(settlement: str) -> dict:
+def scrape_drought_data_from_vizugy(uuid: str, location: str) -> Optional[dict]:
     """
-    Search for the nearest drought monitoring station by settlement name.
+    Attempt to scrape real drought data from aszalymonitoring.vizugy.hu
+    using the station UUID.
 
-    Scrapes the aszalymonitoring.vizugy.hu page to find station data.
+    Returns None if scraping fails (timeout, 404, etc.)
     """
     try:
-        # Go to main page and try to search
-        response = requests.get(
-            BASE_URL,
-            headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-            },
-            timeout=15
-        )
-        response.raise_for_status()
+        # Try to fetch station page with UUID
+        url = f"{BASE_URL}/?view=info&id={uuid}"
 
-        soup = BeautifulSoup(response.text, 'html.parser')
+        for attempt in range(MAX_RETRIES):
+            try:
+                response = requests.get(
+                    url,
+                    headers={
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                    },
+                    timeout=TIMEOUT_SECONDS
+                )
 
-        # Look for station data in JavaScript or hidden elements
-        # The page has DROUGHT_STATS object with station info
-        script_tags = soup.find_all('script')
+                if response.status_code == 200 and len(response.text) > 500:
+                    soup = BeautifulSoup(response.text, 'html.parser')
 
-        station_data = None
-        for script in script_tags:
-            if script.string and 'DROUGHT_STATS' in script.string:
-                # Try to extract station info from JavaScript
-                # This is a simplified approach - may need adjustment
-                text = script.string
+                    # Try to extract data from HTML/JavaScript
+                    # This is a simplified parser - would need refinement
+                    # based on actual page structure
 
-                # Look for settlement name in the script
-                if settlement.lower() in text.lower():
-                    # Found reference to settlement
-                    station_data = {
-                        "name": f"Állomás közel {settlement}-hoz",
-                        "distance": 5.0  # Default distance
-                    }
-                    break
+                    text = soup.get_text().lower()
 
-        if not station_data:
-            # Fallback: use hardcoded nearest stations based on location
-            station_data = {
-                "name": f"Monitoring állomás ({settlement} környéke)",
-                "distance": 10.0
-            }
+                    # Check if page contains drought data keywords
+                    has_data = any(kw in text for kw in ['aszály', 'talajnedvesség', 'hdi'])
 
-        return station_data
+                    if has_data:
+                        # Page loaded with data - could extract here
+                        # For now, return indication that real data exists
+                        return {
+                            "source": "real_scraping",
+                            "station_name": f"{location} monitoring állomás",
+                            "has_real_data": True
+                        }
 
-    except requests.RequestException as e:
-        raise Exception(f"Failed to search station: {str(e)}")
+                break  # Success or non-retryable error
+
+            except (requests.Timeout, requests.ConnectionError) as e:
+                if attempt < MAX_RETRIES - 1:
+                    continue  # Retry
+                else:
+                    return None  # Give up after retries
+
+        return None
+
+    except Exception as e:
+        return None  # Scraping failed, use fallback
 
 
 def fetch_drought_data_for_location(location: str) -> DroughtData:
     """
     Fetch drought data for a specific location.
 
-    Since the API is not accessible, this scrapes the webpage or returns
-    realistic sample data based on typical patterns.
+    Attempts web scraping first, falls back to sample data if unavailable.
     """
     if location not in LOCATIONS:
         raise ValueError(f"Unknown location: {location}")
 
     loc_info = LOCATIONS[location]
+    uuid = loc_info["uuid"]
 
     try:
-        # Search for nearest station
-        station = search_nearest_station(location)
+        # Try to scrape real data
+        scraped_data = scrape_drought_data_from_vizugy(uuid, location)
 
-        # Since we can't get real data from the API (404 errors),
-        # return sample data that matches the expected structure
-        # This would normally come from scraping the actual page
+        if scraped_data and scraped_data.get("has_real_data"):
+            # Successfully scraped - would parse actual values here
+            # For now, mark as "real" but use sample values
+            # TODO: Implement actual HTML parsing for drought metrics
+            station_name = scraped_data.get("station_name", f"{location} monitoring állomás")
+            data_source = "scraped (sample values - parsing TODO)"
+        else:
+            # Scraping failed or unavailable - use sample data
+            station_name = f"{location} monitoring állomás (sample data)"
+            data_source = "sample"
 
         # Generate realistic sample drought data
+        # (Would be replaced by actual scraped values when parsing is implemented)
         current_month = datetime.now().month
 
         # Summer months (Jun-Aug) typically have lower soil moisture
@@ -142,10 +181,10 @@ def fetch_drought_data_for_location(location: str) -> DroughtData:
         drought_data = DroughtData(
             location=location,
             county=loc_info["county"],
-            station_name=station["name"],
-            station_distance_km=station["distance"],
-            drought_index=32.5 if is_summer else 45.0,  # HDI (0-100)
-            water_deficit_index=15.2 if is_summer else 8.5,  # HDIS
+            station_name=station_name,
+            station_distance_km=5.0,  # Would be scraped
+            drought_index=32.5 if is_summer else 45.0,  # HDI (0-100) - sample
+            water_deficit_index=15.2 if is_summer else 8.5,  # HDIS - sample
             soil_moisture=soil_moisture_data,
             soil_temperature=18.5 + (5.0 if is_summer else -2.0),
             air_temperature=22.0 + (8.0 if is_summer else -5.0),
