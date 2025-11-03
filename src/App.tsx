@@ -15,6 +15,8 @@ import { Header } from './components/Layout/Header';
 import { InstallPrompt } from './components/InstallPrompt';
 import { LoadingSpinner } from './components/UI/LoadingSpinner';
 import { useCities } from './hooks/useCities';
+import { useDroughtLocations } from './hooks/useDroughtLocations';
+import { useGroundwaterWells } from './hooks/useGroundwaterWells';
 
 // Lazy load modules for better initial load performance
 const MeteorologyModule = lazy(() =>
@@ -32,11 +34,7 @@ const DroughtModule = lazy(() =>
     default: module.DroughtModule
   }))
 );
-import {
-  MOCK_DROUGHT_LOCATIONS,
-  MOCK_GROUNDWATER_WELLS,
-  validateMockData,
-} from './data/mockData';
+import { validateMockData } from './data/mockData';
 import type { ModuleType } from './types';
 
 function App() {
@@ -51,10 +49,12 @@ function App() {
 
   const [activeModule, setActiveModule] = useState<ModuleType>('meteorology');
 
-  // Fetch real cities from Supabase
+  // Fetch real data from Supabase
   const { cities, isLoading: citiesLoading, error: citiesError } = useCities();
+  const { locations: droughtLocations, isLoading: locationsLoading, error: locationsError } = useDroughtLocations();
+  const { wells: groundwaterWells, isLoading: wellsLoading, error: wellsError } = useGroundwaterWells();
 
-  // Show loading spinner while cities are loading (only for meteorology module)
+  // Show loading spinner while data is loading
   if (activeModule === 'meteorology' && citiesLoading) {
     return (
       <div className="min-h-screen bg-bg-main">
@@ -66,7 +66,18 @@ function App() {
     );
   }
 
-  // Show error if cities failed to load
+  if (activeModule === 'drought' && (locationsLoading || wellsLoading)) {
+    return (
+      <div className="min-h-screen bg-bg-main">
+        <Header currentModule={activeModule} onModuleChange={setActiveModule} />
+        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">
+          <LoadingSpinner message="Aszály adatok betöltése..." />
+        </main>
+      </div>
+    );
+  }
+
+  // Show error if data failed to load
   if (activeModule === 'meteorology' && citiesError) {
     return (
       <div className="min-h-screen bg-bg-main">
@@ -75,6 +86,20 @@ function App() {
           <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 text-red-900">
             <h3 className="font-semibold">Hiba a városok betöltésekor</h3>
             <p className="text-sm">{citiesError.message}</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (activeModule === 'drought' && (locationsError || wellsError)) {
+    return (
+      <div className="min-h-screen bg-bg-main">
+        <Header currentModule={activeModule} onModuleChange={setActiveModule} />
+        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">
+          <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 text-red-900">
+            <h3 className="font-semibold">Hiba az aszály adatok betöltésekor</h3>
+            <p className="text-sm">{locationsError?.message || wellsError?.message}</p>
           </div>
         </main>
       </div>
@@ -95,12 +120,12 @@ function App() {
           {activeModule === 'water-level' && (
             <WaterLevelModule />
           )}
-          {activeModule === 'drought' && (
+          {activeModule === 'drought' && droughtLocations.length > 0 && groundwaterWells.length > 0 && (
             <DroughtModule
-              locations={MOCK_DROUGHT_LOCATIONS}
-              wells={MOCK_GROUNDWATER_WELLS}
-              initialLocation={MOCK_DROUGHT_LOCATIONS[0]}
-              initialWell={MOCK_GROUNDWATER_WELLS[0]}
+              locations={droughtLocations}
+              wells={groundwaterWells}
+              initialLocation={droughtLocations[0]}
+              initialWell={groundwaterWells[0]}
             />
           )}
         </Suspense>
