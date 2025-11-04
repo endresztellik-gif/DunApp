@@ -1,16 +1,16 @@
 /**
- * DunApp PWA - Fetch Drought Data Edge Function (PRODUCTION v2.0)
+ * DunApp PWA - Fetch Drought Data Edge Function (PRODUCTION v3.0)
  *
  * PURPOSE:
- * - Fetches drought monitoring data from aszalymonitoring.vizugy.hu API
+ * - Fetches drought monitoring data from aszalymonitoring.vizugy.hu pattern endpoint
  * - Stores data for 5 locations in southern Hungary
  * - Called by cron job daily at 6:00 AM
  *
- * OFFICIAL API DOCUMENTATION:
- * - URL: https://aszalymonitoring.vizugy.hu/api.php (POST only)
- * - Endpoints: getstations, getvariables, getmeas
- * - Response: HTML-encoded JSON
- * - Documentation: https://aszalymonitoring.vizugy.hu/makings/api.docx
+ * OFFICIAL API ENDPOINT:
+ * - URL: https://aszalymonitoring.vizugy.hu/index.php?voa={UUID}&view=pattern&model={MODEL_UUID}
+ * - Method: GET with AJAX header (X-Requested-With: XMLHttpRequest)
+ * - Response: JSON with 7 datasets (temp, soil temp, soil moisture, precip, humidity, drought index, water deficit)
+ * - This is the SAME endpoint the official website uses!
  *
  * ENVIRONMENT VARIABLES:
  * - SUPABASE_URL
@@ -18,8 +18,8 @@
  *
  * CRON SCHEDULE: 0 6 * * * (daily at 6:00 AM)
  *
- * VERSION: 2.0 (Upgraded to official API)
- * LAST UPDATED: 2025-11-03
+ * VERSION: 3.0 (Switched to pattern endpoint - includes water deficit!)
+ * LAST UPDATED: 2025-11-04
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -32,7 +32,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-const API_URL = 'https://aszalymonitoring.vizugy.hu/api.php';
+const API_BASE_URL = 'https://aszalymonitoring.vizugy.hu/index.php';
+const FORECAST_MODEL_UUID = '2904392D-50A3-4DDC-A42E-ED338D78BA78'; // ECMWF model
 const MAX_RETRIES = 2;
 const REQUEST_TIMEOUT = 20000; // 20 seconds (slow server)
 
@@ -75,21 +76,15 @@ const DROUGHT_LOCATIONS = [
   }
 ];
 
-// Parameter IDs (varid) from getvariables API
-const PARAM_IDS = {
-  drought_index: 16,          // Aszályindex (HDI) - daily, computed
-  water_deficit_35cm: 17,     // Vízhiány 35 cm - daily, computed
-  water_deficit_80cm: 18,     // Vízhiány 80 cm - daily, computed
-  soil_moisture_10cm: 8,      // Talajnedvesség 10 cm - hourly, measured
-  soil_moisture_20cm: 9,      // Talajnedvesség 20 cm - hourly, measured
-  soil_moisture_30cm: 10,     // Talajnedvesség 30 cm - hourly, measured
-  soil_moisture_45cm: 11,     // Talajnedvesség 45 cm (not 50)
-  soil_moisture_60cm: 12,     // Talajnedvesség 60 cm (not 70)
-  soil_moisture_75cm: 13,     // Talajnedvesség 75 cm (not 100)
-  air_temperature: 1,         // Levegőhőmérséklet - hourly, measured
-  soil_temperature_10cm: 2,   // Talajhőmérséklet 10 cm - hourly, measured
-  humidity: 14,               // Relatív páratartalom - hourly, measured
-  precipitation: 15           // Csapadek60 - hourly, measured
+// Dataset indexes in the pattern API response
+const DATASET_INDEXES = {
+  temperature: 0,         // Hőmérséklet °C
+  soil_temperature: 1,    // Talajhőmérséklet °C (6 depths)
+  soil_moisture: 2,       // Talajnedvesség V/V % (6 depths)
+  precipitation: 3,       // Csapadék mm
+  humidity: 4,            // Relatív páratartalom %
+  drought_index: 5,       // Aszályindex (HDI)
+  water_deficit: 6        // Vízhiány mm (35cm) - THIS IS WHAT WE NEED!
 };
 
 // ============================================================================
@@ -104,9 +99,24 @@ interface DroughtLocation {
   uuid: string;
 }
 
-interface Measurement {
-  value: string | null;
-  date: string;
+// Pattern API response structure
+interface DataPoint {
+  msec: number;
+  value: string;
+  date?: string;
+}
+
+interface Dataset {
+  data: DataPoint[][];
+  graphtitle: string;
+  unit?: string;
+  [key: string]: unknown;
+}
+
+interface PatternResponse {
+  data: Dataset[];
+  result: boolean;
+  [key: string]: unknown;
 }
 
 interface DroughtDataRecord {
@@ -115,9 +125,9 @@ interface DroughtDataRecord {
   soil_moisture_10cm: number | null;
   soil_moisture_20cm: number | null;
   soil_moisture_30cm: number | null;
-  soil_moisture_50cm: number | null;  // Map from 45cm
-  soil_moisture_70cm: number | null;  // Map from 60cm
-  soil_moisture_100cm: number | null; // Map from 75cm
+  soil_moisture_50cm: number | null;
+  soil_moisture_70cm: number | null;
+  soil_moisture_100cm: number | null;
   soil_temperature: number | null;
   air_temperature: number | null;
   precipitation: number | null;
@@ -128,6 +138,7 @@ interface ProcessResult {
   location: string;
   status: 'success' | 'error';
   droughtIndex?: number | null;
+  waterDeficit?: number | null;
   error?: string;
 }
 
@@ -136,34 +147,34 @@ interface ProcessResult {
 // ============================================================================
 
 /**
- * Decode HTML entities (equivalent to Python's html.unescape())
+ * Get latest NON-NULL value from a dataset array
+ * Returns null if no data available
+ *
+ * NOTE: Some datasets have future dates with null values,
+ * so we need to iterate backwards to find the last valid measurement
  */
-function decodeHtmlEntities(text: string): string {
-  const entities: Record<string, string> = {
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&#39;': "'",
-    '&nbsp;': ' '
-  };
+function getLatestValueFromDataset(dataset: Dataset | undefined, arrayIndex: number = 0): number | null {
+  if (!dataset || !dataset.data || dataset.data.length === 0) {
+    return null;
+  }
 
-  return text.replace(/&[a-z]+;|&#\d+;/g, (match) => {
-    return entities[match] || match;
-  });
-}
+  const dataArray = dataset.data[arrayIndex];
+  if (!dataArray || dataArray.length === 0) {
+    return null;
+  }
 
-/**
- * Get date range (today and N days back)
- */
-function getDateRange(daysBack: number): { fromDate: string; toDate: string } {
-  const today = new Date();
-  const from = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
+  // Find the LAST NON-NULL value (iterate backwards)
+  for (let i = dataArray.length - 1; i >= 0; i--) {
+    const point = dataArray[i];
+    if (point && point.value !== null && point.value !== undefined && point.value !== '') {
+      const parsed = parseFloat(point.value);
+      if (!isNaN(parsed)) {
+        return parsed;
+      }
+    }
+  }
 
-  return {
-    fromDate: from.toISOString().split('T')[0],
-    toDate: today.toISOString().split('T')[0]
-  };
+  return null;
 }
 
 // ============================================================================
@@ -171,142 +182,95 @@ function getDateRange(daysBack: number): { fromDate: string; toDate: string } {
 // ============================================================================
 
 /**
- * Fetch measurements from aszalymonitoring.vizugy.hu API
- *
- * API expects POST request with form data:
- * - view: 'getmeas'
- * - statid: station UUID
- * - varid: parameter ID
- * - fromdate: start date (YYYY-MM-DD)
- * - todate: end date (YYYY-MM-DD)
- *
- * Returns: HTML-encoded JSON with structure {"entries": [[{value, date}, ...]]}
+ * Fetch pattern data from aszalymonitoring.vizugy.hu
+ * This is the SAME endpoint the official website uses!
  */
-async function fetchMeasurementsFromApi(
-  statid: string,
-  varid: number,
-  daysBack: number = 7
-): Promise<Measurement[] | null> {
-  const { fromDate, toDate } = getDateRange(daysBack);
+async function fetchPatternData(locationUUID: string): Promise<PatternResponse> {
+  const url = `${API_BASE_URL}?voa=${locationUUID}&view=pattern&model=${FORECAST_MODEL_UUID}`;
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
-      const formData = new URLSearchParams({
-        view: 'getmeas',
-        statid: statid,
-        varid: String(varid),
-        fromdate: fromDate,
-        todate: toDate
-      });
-
-      const response = await fetch(API_URL, {
-        method: 'POST',
+      const response = await fetch(url, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'DunApp PWA/1.0 (https://dunapp-pwa.netlify.app)'
+          'User-Agent': 'DunApp PWA/1.0 (https://dunapp-pwa.netlify.app)',
+          'X-Requested-With': 'XMLHttpRequest', // Required for JSON response!
+          'Accept': 'application/json'
         },
-        body: formData.toString(),
         signal: controller.signal
       });
 
       clearTimeout(timeoutId);
 
       if (response.status === 200) {
-        const text = await response.text();
-
-        // Decode HTML entities
-        const decoded = decodeHtmlEntities(text);
-
-        // Parse JSON
-        const data = JSON.parse(decoded);
-
-        // API returns: {"entries": [[{value, date}, ...]]}
-        const entries = data.entries || [];
-        if (Array.isArray(entries) && entries.length > 0 && Array.isArray(entries[0])) {
-          return entries[0]; // Return the measurements array
-        }
-
-        return null; // No data
+        const data = await response.json();
+        return data as PatternResponse;
       }
 
-      return null;
-
+      throw new Error(`HTTP ${response.status}`);
     } catch (error) {
       if (attempt < MAX_RETRIES - 1) {
         console.warn(`  ⚠️  Attempt ${attempt + 1} failed, retrying...`);
         await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
         continue;
       }
-      return null; // Give up after retries
+      throw error;
     }
   }
 
-  return null;
+  throw new Error('Failed after max retries');
 }
 
 /**
- * Get most recent value from measurements array
- */
-function getLatestValue(measurements: Measurement[] | null): number | null {
-  if (!measurements || measurements.length === 0) {
-    return null;
-  }
-
-  const latest = measurements[measurements.length - 1];
-  const value = latest?.value;
-
-  if (value === null || value === undefined || value === '') {
-    return null;
-  }
-
-  const parsed = parseFloat(value);
-  return isNaN(parsed) ? null : parsed;
-}
-
-/**
- * Fetch drought data for a location from official API
+ * Fetch drought data for a location from pattern API
  */
 async function fetchDroughtData(location: DroughtLocation): Promise<DroughtDataRecord> {
-  const statid = location.uuid;
+  console.log(`  → Fetching pattern data from official API...`);
+  const pattern = await fetchPatternData(location.uuid);
 
-  console.log(`  → Fetching HDI (drought index)...`);
-  const hdiData = await fetchMeasurementsFromApi(statid, PARAM_IDS.drought_index, 3);
-  const droughtIndex = getLatestValue(hdiData);
+  if (!pattern.data || pattern.data.length < 7) {
+    throw new Error(`Incomplete data: expected 7 datasets, got ${pattern.data?.length || 0}`);
+  }
 
-  console.log(`  → Fetching water deficit...`);
-  const wdData = await fetchMeasurementsFromApi(statid, PARAM_IDS.water_deficit_35cm, 3);
-  const waterDeficit = getLatestValue(wdData);
+  const datasets = pattern.data;
 
-  console.log(`  → Fetching soil moisture (6 depths)...`);
-  const sm10Data = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_moisture_10cm, 1);
-  const sm20Data = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_moisture_20cm, 1);
-  const sm30Data = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_moisture_30cm, 1);
-  const sm45Data = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_moisture_45cm, 1);
-  const sm60Data = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_moisture_60cm, 1);
-  const sm75Data = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_moisture_75cm, 1);
+  console.log(`  → Extracting values from ${datasets.length} datasets...`);
 
-  console.log(`  → Fetching temperature & humidity...`);
-  const airTempData = await fetchMeasurementsFromApi(statid, PARAM_IDS.air_temperature, 1);
-  const soilTempData = await fetchMeasurementsFromApi(statid, PARAM_IDS.soil_temperature_10cm, 1);
-  const humidityData = await fetchMeasurementsFromApi(statid, PARAM_IDS.humidity, 1);
-  const precipData = await fetchMeasurementsFromApi(statid, PARAM_IDS.precipitation, 1);
+  // Extract all values from datasets
+  const airTemp = getLatestValueFromDataset(datasets[DATASET_INDEXES.temperature]);
+  const soilTemp = getLatestValueFromDataset(datasets[DATASET_INDEXES.soil_temperature], 0);
+
+  // Soil moisture - 6 depths (10cm, 20cm, 30cm, 50cm, 70cm, 100cm)
+  const sm10cm = getLatestValueFromDataset(datasets[DATASET_INDEXES.soil_moisture], 0);
+  const sm20cm = getLatestValueFromDataset(datasets[DATASET_INDEXES.soil_moisture], 1);
+  const sm30cm = getLatestValueFromDataset(datasets[DATASET_INDEXES.soil_moisture], 2);
+  const sm50cm = getLatestValueFromDataset(datasets[DATASET_INDEXES.soil_moisture], 3);
+  const sm70cm = getLatestValueFromDataset(datasets[DATASET_INDEXES.soil_moisture], 4);
+  const sm100cm = getLatestValueFromDataset(datasets[DATASET_INDEXES.soil_moisture], 5);
+
+  const precip = getLatestValueFromDataset(datasets[DATASET_INDEXES.precipitation]);
+  const humidity = getLatestValueFromDataset(datasets[DATASET_INDEXES.humidity]);
+  const droughtIndex = getLatestValueFromDataset(datasets[DATASET_INDEXES.drought_index]);
+
+  // THE KEY VALUE WE WERE MISSING! Dataset 6 = Vízhiány mm (35cm depth)
+  const waterDeficit = getLatestValueFromDataset(datasets[DATASET_INDEXES.water_deficit]);
 
   return {
     drought_index: droughtIndex,
-    water_deficit_index: waterDeficit,
-    soil_moisture_10cm: getLatestValue(sm10Data),
-    soil_moisture_20cm: getLatestValue(sm20Data),
-    soil_moisture_30cm: getLatestValue(sm30Data),
-    soil_moisture_50cm: getLatestValue(sm45Data),  // Map 45cm → 50cm
-    soil_moisture_70cm: getLatestValue(sm60Data),  // Map 60cm → 70cm
-    soil_moisture_100cm: getLatestValue(sm75Data), // Map 75cm → 100cm
-    soil_temperature: getLatestValue(soilTempData),
-    air_temperature: getLatestValue(airTempData),
-    precipitation: getLatestValue(precipData),
-    relative_humidity: getLatestValue(humidityData)
+    water_deficit_index: waterDeficit,  // NOW WE GET THE REAL VALUE!
+    soil_moisture_10cm: sm10cm,
+    soil_moisture_20cm: sm20cm,
+    soil_moisture_30cm: sm30cm,
+    soil_moisture_50cm: sm50cm,
+    soil_moisture_70cm: sm70cm,
+    soil_moisture_100cm: sm100cm,
+    soil_temperature: soilTemp,
+    air_temperature: airTemp,
+    precipitation: precip,
+    relative_humidity: humidity
   };
 }
 
@@ -371,9 +335,9 @@ serve(async (req) => {
   const startTime = Date.now();
 
   try {
-    console.log('🏜️  Fetch Drought Data Edge Function v2.0 - Starting');
+    console.log('🏜️  Fetch Drought Data Edge Function v3.0 - Starting');
     console.log(`   Date: ${new Date().toISOString()}`);
-    console.log(`   API: ${API_URL} (Official aszalymonitoring.vizugy.hu API)`);
+    console.log(`   API: ${API_BASE_URL} (Pattern endpoint - includes vízhiány!)`);
 
     // Validate environment variables
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -393,12 +357,13 @@ serve(async (req) => {
         console.log(`\n📍 Processing ${location.name} (${location.county})...`);
         console.log(`   Station UUID: ${location.uuid}`);
 
-        // Fetch drought data from official API
+        // Fetch drought data from pattern API
         const droughtData = await fetchDroughtData(location);
 
-        console.log(`  ✓ Fetched data from API`);
+        console.log(`  ✓ Fetched data from pattern API`);
         console.log(`    HDI: ${droughtData.drought_index ?? 'N/A'}`);
-        console.log(`    Soil Moisture (10cm): ${droughtData.soil_moisture_10cm ?? 'N/A'}%`);
+        console.log(`    Vízhiány: ${droughtData.water_deficit_index ?? 'N/A'} mm`);
+        console.log(`    Talajnedvesség (10cm): ${droughtData.soil_moisture_10cm ?? 'N/A'}%`);
 
         // Get location_id from database
         const locationId = await getLocationId(supabase, location.name);
@@ -412,7 +377,8 @@ serve(async (req) => {
         results.push({
           location: location.name,
           status: 'success',
-          droughtIndex: droughtData.drought_index
+          droughtIndex: droughtData.drought_index,
+          waterDeficit: droughtData.water_deficit_index
         });
 
         console.log(`✅ Success: ${location.name}`);
@@ -441,8 +407,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        version: '2.0',
-        apiSource: 'Official aszalymonitoring.vizugy.hu REST API',
+        version: '3.0',
+        apiSource: 'Official aszalymonitoring.vizugy.hu Pattern Endpoint',
+        endpoint: `${API_BASE_URL}?voa={UUID}&view=pattern&model={MODEL_UUID}`,
         timestamp: new Date().toISOString(),
         duration,
         summary: {
@@ -452,10 +419,11 @@ serve(async (req) => {
         },
         results,
         notes: [
-          'Using official API documented at https://aszalymonitoring.vizugy.hu/makings/api.docx',
-          'API endpoints: getstations, getvariables, getmeas',
-          'Upgraded from web scraping to real API (v2.0)',
-          'Groundwater well data (15 wells) requires separate implementation'
+          'Using pattern endpoint - the SAME endpoint the official website uses!',
+          'Returns 7 datasets: temp, soil temp, soil moisture, precip, humidity, HDI, vízhiány',
+          'Dataset 6 contains water deficit (vízhiány) in mm at 35cm depth',
+          'Upgraded from api.php (which did not return vízhiány) to pattern endpoint (v3.0)',
+          'All data now available including previously missing water deficit values'
         ]
       }),
       {

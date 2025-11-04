@@ -19,7 +19,7 @@ export const WaterDeficitCard: React.FC<WaterDeficitCardProps> = ({
   selectedLocation,
   droughtData,
 }) => {
-  // Use real data from Supabase
+  // Water deficit from pattern endpoint (Dataset 6, 35cm depth)
   const waterDeficit: number | null = droughtData?.waterDeficitIndex ?? null;
 
   return (
@@ -29,6 +29,11 @@ export const WaterDeficitCard: React.FC<WaterDeficitCardProps> = ({
       value={waterDeficit !== null ? waterDeficit.toFixed(1) : null}
       unit="mm"
       moduleColor="drought"
-    />
+    >
+      {/* Additional info */}
+      {waterDeficit !== null && (
+        <p className="text-xs text-gray-500">35 cm mélység</p>
+      )}
+    </DataCard>
   );
 };
