@@ -5,12 +5,16 @@
  * Displays groundwater level for the selected well.
  *
  * CRITICAL: This uses WellSelector, NOT DroughtLocationSelector!
+ *
+ * NOTE: Currently uses placeholder data due to lack of VízÜgy API.
+ * TODO: Implement fetch-groundwater Edge Function when API available.
  */
 
 import React from 'react';
 import { ArrowDown } from 'lucide-react';
 import { DataCard } from '../../components/UI/DataCard';
 import { WellSelector } from '../../components/selectors/WellSelector';
+import { useGroundwaterData } from '../../hooks/useGroundwaterData';
 import type { GroundwaterWell } from '../../types';
 
 interface GroundwaterLevelCardProps {
@@ -24,8 +28,13 @@ export const GroundwaterLevelCard: React.FC<GroundwaterLevelCardProps> = ({
   selectedWell,
   onWellChange,
 }) => {
-  // Placeholder data (will be replaced with real data)
-  const waterLevel: number | null = selectedWell ? 3.45 : null;
+  // Fetch groundwater data using hook (currently no data in DB)
+  const { groundwaterData } = useGroundwaterData(selectedWell?.id || null);
+
+  // Use real data if available, otherwise placeholder
+  const waterLevel: number | null =
+    groundwaterData?.waterLevelMeters ??
+    (selectedWell ? 3.45 : null); // Placeholder until VízÜgy API available
 
   return (
     <DataCard
