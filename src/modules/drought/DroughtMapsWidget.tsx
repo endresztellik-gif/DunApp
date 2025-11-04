@@ -186,8 +186,8 @@ export const DroughtMapsWidget: React.FC = () => {
 
     // Create all 3 maps
     const widget1 = createWidget(map1Ref, WMS_HUGEO, '0', setMap1State);
-    const widget2 = createWidget(map2Ref, WMS_DROUGHT_SEVERITY, 'WMS', setMap2State);
-    const widget3 = createWidget(map3Ref, WMS_MONITORING_STATIONS, 'WMS', setMap3State);
+    const widget2 = createWidget(map2Ref, WMS_DROUGHT_SEVERITY, '0', setMap2State);
+    const widget3 = createWidget(map3Ref, WMS_MONITORING_STATIONS, '0', setMap3State);
 
     // Cleanup
     return () => {
