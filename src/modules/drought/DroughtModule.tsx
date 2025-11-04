@@ -21,9 +21,7 @@ import { DroughtLocationSelector } from '../../components/Selectors/DroughtLocat
 import { DroughtIndexCard } from './DroughtIndexCard';
 import { SoilMoistureCard } from './SoilMoistureCard';
 import { WaterDeficitCard } from './WaterDeficitCard';
-import { GroundwaterMap } from './GroundwaterMap';
-import { DroughtMonitoringMap } from './DroughtMonitoringMap';
-import { WaterDeficitMap } from './WaterDeficitMap';
+import { DroughtMapsWidget } from './DroughtMapsWidget';
 import { WellListGrid } from './WellListGrid';
 import type { DroughtLocation, GroundwaterWell, DataSource } from '../../types';
 
@@ -171,22 +169,10 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
         />
       </div>
 
-      {/* Maps Section - 3 Maps */}
+      {/* Maps Section - 3 WMS Maps */}
       <div className="mb-6">
         <h2 className="section-title mb-4">Aszály és Talajvíz Térképek</h2>
-        <div className="grid-drought-maps">
-          <GroundwaterMap
-            wells={wells}
-            selectedWell={selectedWell}
-            onWellSelect={setSelectedWell}
-          />
-          <DroughtMonitoringMap
-            locations={locations}
-            selectedLocation={selectedLocation}
-            onLocationSelect={setSelectedLocation}
-          />
-          <WaterDeficitMap />
-        </div>
+        <DroughtMapsWidget />
       </div>
 
       {/* Well Monitoring Grid */}
