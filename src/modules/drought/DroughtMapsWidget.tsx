@@ -16,10 +16,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 
-// WMS server URLs
-const WMS_HUGEO = 'https://map.hugeo.hu/arcgis/services/tvz/tvz100_all/MapServer/WMSServer';
-const WMS_DROUGHT_SEVERITY = 'https://geoportal.vizugy.hu/arcgis/services/Aszalymon/Aszaly_fokozatok/MapServer/WMSServer';
-const WMS_MONITORING_STATIONS = 'https://geoportal.vizugy.hu/arcgis/services/Aszalymon/Aszaly_monitoring_allomasok/MapServer/WMSServer';
+// WMS server URLs (use Vite proxy in development to avoid CORS issues)
+const IS_DEV = import.meta.env.DEV;
+const WMS_HUGEO = IS_DEV
+  ? '/wms/hugeo'
+  : 'https://map.hugeo.hu/arcgis/services/tvz/tvz100_all/MapServer/WMSServer';
+const WMS_DROUGHT_SEVERITY = IS_DEV
+  ? '/wms/vizugy/aszaly'
+  : 'https://geoportal.vizugy.hu/arcgis/services/Aszalymon/Aszaly_fokozatok/MapServer/WMSServer';
+const WMS_MONITORING_STATIONS = IS_DEV
+  ? '/wms/vizugy/monitoring'
+  : 'https://geoportal.vizugy.hu/arcgis/services/Aszalymon/Aszaly_monitoring_allomasok/MapServer/WMSServer';
 
 // Map center (Hungary)
 const MAP_CENTER: [number, number] = [47.1625, 19.5033];

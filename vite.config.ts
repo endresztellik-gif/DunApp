@@ -92,7 +92,28 @@ export default defineConfig({
     port: 5173,
     strictPort: false,
     host: true,
-    open: false
+    open: false,
+    // CORS proxy for WMS servers
+    proxy: {
+      '/wms/hugeo': {
+        target: 'https://map.hugeo.hu',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/wms\/hugeo/, '/arcgis/services/tvz/tvz100_all/MapServer/WMSServer'),
+        secure: false
+      },
+      '/wms/vizugy/aszaly': {
+        target: 'https://geoportal.vizugy.hu',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/wms\/vizugy\/aszaly/, '/arcgis/services/Aszalymon/Aszaly_fokozatok/MapServer/WMSServer'),
+        secure: false
+      },
+      '/wms/vizugy/monitoring': {
+        target: 'https://geoportal.vizugy.hu',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/wms\/vizugy\/monitoring/, '/arcgis/services/Aszalymon/Aszaly_monitoring_allomasok/MapServer/WMSServer'),
+        secure: false
+      }
+    }
   },
 
   // Preview server
