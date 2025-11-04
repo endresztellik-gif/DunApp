@@ -8,10 +8,11 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { DataCard } from '../../components/UI/DataCard';
-import type { DroughtLocation, DroughtCategory } from '../../types';
+import type { DroughtLocation, DroughtCategory, DroughtData } from '../../types';
 
 interface DroughtIndexCardProps {
   selectedLocation: DroughtLocation | null;
+  droughtData: DroughtData | null;
 }
 
 // Helper to get drought category
@@ -38,9 +39,10 @@ const getCategoryLabel = (category: DroughtCategory): string => {
 
 export const DroughtIndexCard: React.FC<DroughtIndexCardProps> = ({
   selectedLocation,
+  droughtData,
 }) => {
-  // Placeholder data (will be replaced with real data)
-  const droughtIndex: number | null = selectedLocation ? 2.3 : null;
+  // Use real data from Supabase
+  const droughtIndex: number | null = droughtData?.droughtIndex ?? null;
   const category = getDroughtCategory(droughtIndex);
   const categoryLabel = getCategoryLabel(category);
 

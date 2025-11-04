@@ -8,17 +8,19 @@
 import React from 'react';
 import { TrendingDown } from 'lucide-react';
 import { DataCard } from '../../components/UI/DataCard';
-import type { DroughtLocation } from '../../types';
+import type { DroughtLocation, DroughtData } from '../../types';
 
 interface WaterDeficitCardProps {
   selectedLocation: DroughtLocation | null;
+  droughtData: DroughtData | null;
 }
 
 export const WaterDeficitCard: React.FC<WaterDeficitCardProps> = ({
   selectedLocation,
+  droughtData,
 }) => {
-  // Placeholder data (will be replaced with real data)
-  const waterDeficit: number | null = selectedLocation ? 45.8 : null;
+  // Use real data from Supabase
+  const waterDeficit: number | null = droughtData?.waterDeficitIndex ?? null;
 
   return (
     <DataCard
