@@ -109,11 +109,11 @@
   }
 
   .selector-dropdown-menu {
-    @apply absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto;
+    @apply absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto flex flex-col;
   }
 
   .selector-dropdown-item {
-    @apply px-4 py-2 cursor-pointer transition-colors duration-150 hover:bg-gray-100 active:bg-gray-200;
+    @apply w-full px-4 py-2 cursor-pointer transition-colors duration-150 hover:bg-gray-100 active:bg-gray-200 text-left block;
   }
 
   .selector-dropdown-item-selected {
