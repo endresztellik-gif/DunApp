@@ -29,28 +29,28 @@ DunApp PWA monitors environmental data for 27 locations across Southern Hungary'
 - ✅ **Animated radar map** (RainViewer API with 13-frame loop)
 - ✅ **6-hourly forecast** (11 data points for 72 hours)
 - ✅ **Danube water levels** (HydroInfo API integration)
+- ✅ **Drought monitoring** (Aszálymonitoring.hu Pattern API - HDI, soil moisture, water deficit)
 - ✅ **Automated data refresh** (Hourly cron jobs via pg_cron)
 - ✅ **Offline support** (Service Worker caching)
 - ✅ **Mobile-first PWA** (Installable on mobile devices)
 
-### ⚠️ Known Issues
+### ✅ Module Status
 
-**Drought Module - API Unavailable**
+**Production Ready:**
+- ✅ **Meteorology Module** - Real-time weather data from OpenWeatherMap + Yr.no APIs
+- ✅ **Water Level Module** - Live Danube water levels from HydroInfo API
+- ✅ **Drought Module** - Real-time drought monitoring data from Aszálymonitoring.hu Pattern API
 
-The Drought Monitoring module is currently affected by an external API issue:
+**Phase 5 Drought Module (Completed 2025-11-04):**
+- ✅ **5 monitoring locations** - Katymár, Dávod, Szederkény, Sükösd, Csávoly
+- ✅ **7 datasets** - Drought Index (HDI), Water Deficit (35cm), Soil Moisture (6 depths), Temperature, Precipitation, Humidity
+- ✅ **Pattern API endpoint** - Official `aszalymonitoring.vizugy.hu/index.php?view=pattern` integration
+- ✅ **Automated daily refresh** - pg_cron scheduled at 6:00 AM UTC
+- ✅ **3 data cards working** - Drought Index (1.7-2.2), Soil Moisture (10-30%), Water Deficit (35-60 mm)
 
-- **Issue:** `aszalymonitoring.vizugy.hu` REST API returns **HTTP 404** for all drought monitoring locations
-- **Affected locations:** Katymár, Dávod, Szederkény, Sükösd, Csávoly (5 locations)
-- **Status:** Investigation ongoing with alternative data sources (web scraping, alternative APIs)
-- **Impact:** Drought index (HDI), soil moisture, and water deficit data not available
-- **Workaround:** Module UI is functional with selectors and maps; awaiting API restoration or alternative implementation
-
-**Groundwater Wells - Data Integration Pending**
-
-- **Status:** 15 groundwater monitoring wells are configured but data integration is pending
-- **Planned:** Integration with VízÜgy data portal or alternative sources
-
-The Meteorology and Water Level modules are fully functional with real-time data.
+**In Progress:**
+- ⚠️ **Groundwater Wells (15 wells)** - Schema ready, pending VízÜgy API discovery or web scraping implementation
+- ⚠️ **Drought Maps** - UI ready, real data integration testing in progress
 
 ---
 
