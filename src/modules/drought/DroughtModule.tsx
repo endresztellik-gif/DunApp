@@ -18,11 +18,12 @@ import { Footer } from '../../components/Layout/Footer';
 import { useDroughtData } from '../../hooks/useDroughtData';
 import { useGroundwaterData } from '../../hooks/useGroundwaterData';
 import { DroughtLocationSelector } from '../../components/Selectors/DroughtLocationSelector';
+import { WellSelector } from '../../components/Selectors/WellSelector';
 import { DroughtIndexCard } from './DroughtIndexCard';
 import { SoilMoistureCard } from './SoilMoistureCard';
 import { WaterDeficitCard } from './WaterDeficitCard';
 import { DroughtMapsWidget } from './DroughtMapsWidget';
-import { WellListGrid } from './WellListGrid';
+import { GroundwaterChart } from './GroundwaterChart';
 import type { DroughtLocation, GroundwaterWell, DataSource } from '../../types';
 
 interface DroughtModuleProps {
@@ -175,18 +176,36 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
         <DroughtMapsWidget />
       </div>
 
-      {/* Well Monitoring Grid */}
-      <div className="mb-6">
-        <h2 className="section-title mb-4">Talajvízkút Monitoring (15 kút)</h2>
-        <p className="section-subtitle mb-4">
-          Választható kutak 60 napos előzmények megtekintéséhez. Forrás: VízÜgy Data Portal
-        </p>
-        <WellListGrid
+      {/* Talajvízkút Monitoring Section with Well Selector */}
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h2 className="section-title">Talajvízkút Monitoring (15 kút)</h2>
+        <WellSelector
           wells={wells}
           selectedWell={selectedWell}
-          onWellSelect={setSelectedWell}
+          onWellChange={setSelectedWell}
+          className="w-full sm:w-auto"
         />
       </div>
+
+      <p className="section-subtitle mb-4">
+        60 napos előzmények VízÜgy Data Portal alapján
+      </p>
+
+      {/* Groundwater Chart - 60-Day Trend */}
+      {selectedWell && (
+        <div className="mb-6">
+          <GroundwaterChart well={selectedWell} />
+        </div>
+      )}
+
+      {/* No Well Selected Info */}
+      {!selectedWell && wells.length > 0 && (
+        <div className="mb-6 p-6 bg-gray-50 border-2 border-gray-200 rounded-lg text-center">
+          <p className="text-gray-600">
+            Válassz ki egy talajvízkövet a fenti legördülő menüből a 60 napos talajvízszint trend megjelenítéséhez.
+          </p>
+        </div>
+      )}
 
       {/* Footer with data sources */}
       <Footer dataSources={dataSources} />

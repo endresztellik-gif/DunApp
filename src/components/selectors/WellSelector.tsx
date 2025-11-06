@@ -1,17 +1,17 @@
 /**
  * WellSelector Component
  *
- * DROUGHT MODULE ONLY - Selector for 15 groundwater wells
+ * DROUGHT MODULE ONLY - Dropdown selector for 15 groundwater wells
  *
  * CRITICAL ARCHITECTURE RULE:
  * This selector is ONLY for the Drought module groundwater wells.
- * It MUST have exactly 15 wells.
- * DO NOT use this as a generic location selector!
+ * It MUST have 15 wells.
+ * DO NOT use this as a generic selector!
  * This is SEPARATE from DroughtLocationSelector (which is for 5 monitoring locations).
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Droplet, ChevronDown } from 'lucide-react';
+import { Droplets, ChevronDown } from 'lucide-react';
 import type { GroundwaterWell } from '../../types';
 
 interface WellSelectorProps {
@@ -30,9 +30,9 @@ export const WellSelector: React.FC<WellSelectorProps> = ({
   // VALIDATION: MUST have exactly 15 wells for Drought module
   if (wells.length !== 15) {
     throw new Error(
-      `WellSelector: Expected exactly 15 wells for Drought module, but received ${wells.length}. ` +
+      `WellSelector: Expected exactly 15 groundwater wells for Drought module, but received ${wells.length}. ` +
       'This selector is module-specific and cannot be used as a generic selector. ' +
-      'For drought monitoring locations, use DroughtLocationSelector instead.'
+      'For monitoring locations, use DroughtLocationSelector instead.'
     );
   }
 
@@ -82,11 +82,9 @@ export const WellSelector: React.FC<WellSelectorProps> = ({
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
-        <Droplet className="h-5 w-5" aria-hidden="true" />
+        <Droplets className="h-5 w-5" aria-hidden="true" />
         <span className="text-base font-medium">
-          {selectedWell
-            ? `${selectedWell.wellName} (#${selectedWell.wellCode})`
-            : 'Válassz kutat'}
+          {selectedWell?.wellName || 'Válassz kutat'} {selectedWell && `(#${selectedWell.wellCode})`}
         </span>
         <ChevronDown
           className={`h-4 w-4 transition-transform duration-200 ${
@@ -99,7 +97,7 @@ export const WellSelector: React.FC<WellSelectorProps> = ({
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="selector-dropdown-menu"
+          className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto flex flex-col"
           role="listbox"
           aria-label="Talajvízkutak listája"
         >
@@ -110,25 +108,22 @@ export const WellSelector: React.FC<WellSelectorProps> = ({
               <button
                 key={well.id}
                 onClick={() => handleWellSelect(well)}
-                className={
+                className={`w-full px-4 py-2 cursor-pointer transition-colors duration-150 text-left ${
                   isSelected
-                    ? 'selector-dropdown-item-selected'
-                    : 'selector-dropdown-item'
-                }
+                    ? 'bg-gray-100 font-medium hover:bg-gray-100'
+                    : 'hover:bg-gray-100 active:bg-gray-200'
+                }`}
                 role="option"
                 aria-selected={isSelected}
               >
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-900">
-                    {well.wellName}
+                    {well.wellName} <span className="text-orange-600">#{well.wellCode}</span>
                   </span>
-                  <div className="flex items-center gap-2 text-xs text-gray-600">
-                    <span className="font-mono font-semibold text-orange-600">
-                      #{well.wellCode}
-                    </span>
-                    <span>•</span>
-                    <span>{well.cityName}</span>
-                  </div>
+                  <span className="text-xs text-gray-600">
+                    {well.cityName}, {well.county} megye
+                    {well.depthMeters && ` • ${well.depthMeters}m mély`}
+                  </span>
                 </div>
               </button>
             );
