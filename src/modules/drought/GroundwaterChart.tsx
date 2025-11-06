@@ -1,19 +1,22 @@
 /**
  * GroundwaterChart Component - REAL DATA MODE ✅
  *
- * Displays 60-day water level trend for a selected groundwater well.
+ * Displays 365-day water level trend for a selected groundwater well.
+ * Uses 5-day sampling to show ~73 data points for optimal trend visualization.
  * Uses Recharts for visualization with responsive design.
  *
  * ✅ NOW USING REAL DATA FROM SUPABASE (2025-11-06)
- * Data scraped daily from vizugy.hu (13,618 measurements from 15 wells)
+ * Data scraped daily from vizugy.hu (3,288+ measurements from 15 wells)
  *
  * Features:
+ * - 365-day historical trend with 5-day sampling
  * - Line chart showing water level over time
  * - Tooltip with formatted dates and values
  * - Loading state with spinner
  * - Empty state when no data available
  * - Well metadata display (name, code, location)
  * - Real-time data from Supabase (hourly cache)
+ * - ~73 data points for optimal performance and readability
  */
 
 import React from 'react';
@@ -45,14 +48,18 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
     return date.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' });
   };
 
-  // Transform data for Recharts
-  const chartData = timeseriesData.map((point) => ({
+  // Transform data for Recharts with 5-day sampling
+  // This reduces ~365 data points to ~73 points for better visualization
+  const allData = timeseriesData.map((point) => ({
     timestamp: point.timestamp,
     dateLabel: formatDate(point.timestamp),
     waterLevelMeters: point.waterLevelMeters,
     waterLevelMasl: point.waterLevelMasl,
     waterTemperature: point.waterTemperature
   }));
+
+  // Sample every 5th day for optimal trend visualization
+  const chartData = allData.filter((_, index) => index % 5 === 0);
 
   // Calculate Y-axis domain for better visibility of small changes
   const waterLevels = chartData.map((d) => d.waterLevelMeters);
@@ -101,9 +108,10 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
     return null;
   };
 
-  // Show only every 5th date label to avoid crowding
+  // Show only every 10th date label to avoid crowding (since we already sample every 5 days)
+  // ~73 points / 10 = ~7-8 labels on X-axis
   const tickFormatter = (value: string, index: number) => {
-    return index % 5 === 0 ? formatDate(value) : '';
+    return index % 10 === 0 ? formatDate(value) : '';
   };
 
   return (
@@ -148,7 +156,7 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center h-80 flex flex-col justify-center">
           <p className="text-yellow-700 font-semibold text-lg">Nincs elérhető adat</p>
           <p className="text-sm text-yellow-600 mt-2">
-            Az elmúlt 60 napból nem áll rendelkezésre talajvízszint mérés ehhez a kúthoz.
+            Az elmúlt 365 napból nem áll rendelkezésre talajvízszint mérés ehhez a kúthoz.
           </p>
           <p className="text-xs text-gray-500 mt-4">
             A kút adatainak gyűjtése folyamatban lehet. Próbáld újra később.
@@ -160,7 +168,7 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
       {!isLoading && !error && chartData.length > 0 && (
         <div>
           <h4 className="text-md font-semibold text-gray-700 mb-4">
-            Talajvízszint alakulása (elmúlt 60 nap)
+            Talajvízszint alakulása (elmúlt 365 nap, 5 napos mintavétel)
           </h4>
           <ResponsiveContainer width="100%" height={400}>
             <LineChart
@@ -216,7 +224,7 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
               Automatikus frissítés: naponta 06:00 órakor
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              Összesen {chartData.length} mérési pont az elmúlt 60 napból
+              {chartData.length} adatpont (5 napos mintavétel, ~{Math.round(chartData.length * 5)} nap lefedve)
             </p>
             <p className="text-xs text-gray-600 mt-2">
               Adatforrás: <strong>vizugy.hu</strong> • Utolsó frissítés: {new Date().toLocaleDateString('hu-HU')}
