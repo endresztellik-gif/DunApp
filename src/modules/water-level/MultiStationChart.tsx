@@ -130,7 +130,7 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
   return (
     <div className="space-y-4">
       {/* Chart */}
-      <div className="chart-container-comparison">
+      <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ed" />
@@ -160,22 +160,6 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
               height={36}
               iconType="circle"
             />
-
-            {/* Alert Level Reference Line */}
-            {avgAlertLevel && !isNaN(avgAlertLevel) && (
-              <ReferenceLine
-                y={avgAlertLevel}
-                stroke="#ff9800"
-                strokeDasharray="3 3"
-                strokeWidth={2}
-                label={{
-                  value: `Átlag riasztási szint (${Math.round(avgAlertLevel)} cm)`,
-                  position: 'insideTopRight',
-                  fill: '#ff9800',
-                  fontSize: 11
-                }}
-              />
-            )}
 
             {/* Station Lines - Dynamically generated */}
             {stations.map((station, index) => (
@@ -213,12 +197,6 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
               {station.riverKm && (
                 <div>
                   <span className="font-medium">Fkm:</span> {station.riverKm}
-                </div>
-              )}
-              {station.alertLevelCm && (
-                <div>
-                  <span className="font-medium">Riasztási szint:</span>{' '}
-                  <span className="font-semibold text-orange-600">{station.alertLevelCm} cm</span>
                 </div>
               )}
             </div>

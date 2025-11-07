@@ -163,8 +163,8 @@ serve(async (req) => {
     console.log('📢 Calling send-push-notification...');
 
     const notificationPayload = {
-      title: '🚨 Vízállás Riasztás - Mohács',
-      body: `A Mohács vízállása elérte a ${currentLevel} cm-t (riasztási szint: ${MOHACS_ALERT_THRESHOLD_CM} cm)`,
+      title: '💧 Vízutánpótlás Lehetséges',
+      body: `A Belső-Béda vízrendszerbe ma lehetséges a vízutánpótlás`,
       icon: '/icons/icon-192x192.png',
       badge: '/icons/badge-72x72.png',
       tag: 'water-level-alert',
