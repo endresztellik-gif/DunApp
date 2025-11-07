@@ -93,12 +93,24 @@ export default defineConfig({
     strictPort: false,
     host: true,
     open: false,
-    // CORS proxy for HUGEO WMS (does not support CORS)
+    // CORS proxy for external services
     proxy: {
       '/wms/hugeo': {
         target: 'https://map.hugeo.hu',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/wms\/hugeo/, '/arcgis/services/tvz/tvz100_all/MapServer/WMSServer'),
+        secure: false
+      },
+      '/api/met': {
+        target: 'https://www.met.hu',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/met/, '/idojaras/agrometeorologia'),
+        secure: false
+      },
+      '/met-img': {
+        target: 'https://www.met.hu',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/met-img/, '/img'),
         secure: false
       }
     }

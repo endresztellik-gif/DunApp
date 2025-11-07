@@ -4,9 +4,11 @@
  * Main component for the Drought module - the most complex module.
  * Features:
  * - TWO separate state management (selectedLocation AND selectedWell)
- * - 4 data cards with embedded selectors
- * - 3 maps (groundwater, monitoring, water deficit)
- * - Well list grid with 15 wells
+ * - 3 data cards (drought index, soil moisture, water deficit)
+ * - 3 maps:
+ *   1-2. ArcGIS maps (HUGEO groundwater, drought index HDIs)
+ *   3. met.hu interactive water deficit map (2 depth layers: 50cm, 100cm)
+ * - Groundwater well chart (15 wells, 365-day trend)
  *
  * CRITICAL: Uses TWO separate selectors - DO NOT merge them!
  */
@@ -23,6 +25,7 @@ import { DroughtIndexCard } from './DroughtIndexCard';
 import { SoilMoistureCard } from './SoilMoistureCard';
 import { WaterDeficitCard } from './WaterDeficitCard';
 import { DroughtMapsWidget } from './DroughtMapsWidget';
+import { WaterDeficitDashboard } from '../../components/WaterDeficitDashboard';
 import { GroundwaterChart } from './GroundwaterChart';
 import type { DroughtLocation, GroundwaterWell, DataSource } from '../../types';
 
@@ -75,6 +78,11 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
     {
       name: 'VízÜgy',
       url: 'https://www.vizugy.hu',
+      lastUpdate: new Date().toISOString(),
+    },
+    {
+      name: 'OMSZ met.hu',
+      url: 'https://www.met.hu',
       lastUpdate: new Date().toISOString(),
     },
   ];
@@ -170,10 +178,16 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
         />
       </div>
 
-      {/* Maps Section - 3 WMS Maps */}
+      {/* Maps Section - 3 ArcGIS Maps */}
       <div className="mb-6">
         <h2 className="section-title mb-4">Aszály és Talajvíz Térképek</h2>
         <DroughtMapsWidget />
+      </div>
+
+      {/* Water Deficit Section - met.hu Interactive Map */}
+      <div className="mb-6">
+        <h2 className="section-title mb-4">Talaj Vízhiány Térkép (met.hu)</h2>
+        <WaterDeficitDashboard />
       </div>
 
       {/* Talajvízkút Monitoring Section with Well Selector */}
@@ -186,10 +200,6 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
           className="w-full sm:w-auto"
         />
       </div>
-
-      <p className="section-subtitle mb-4">
-        60 napos előzmények VízÜgy Data Portal alapján
-      </p>
 
       {/* Groundwater Chart - 60-Day Trend */}
       {selectedWell && (

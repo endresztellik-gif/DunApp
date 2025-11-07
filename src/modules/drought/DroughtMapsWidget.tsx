@@ -1,17 +1,15 @@
 /**
  * DroughtMapsWidget Component
  *
- * Displays 3 ArcGIS maps for drought monitoring:
+ * Displays 2 ArcGIS maps for drought monitoring:
  * 1. HUGEO Groundwater Level Map (map.hugeo.hu - MapServer)
  * 2. Drought Index Map (ovfgis2.vizugy.hu - ImageServer with HDI raster data)
- * 3. Monitoring Stations Map (geoportal.vizugy.hu - MapServer with identify popups)
  *
  * Features:
  * - Dynamic Leaflet + esri-leaflet loading
  * - Progress tracking for image loading
  * - Auto-refresh every 10 minutes
  * - Color legends overlaid on each map
- * - Interactive popups on monitoring stations (click to view details)
  *
  * Technical Notes:
  * - WMS endpoints don't work (HTTP 400 errors)
@@ -32,9 +30,6 @@ const WMS_HUGEO = 'https://map.hugeo.hu/arcgis/services/tvz/tvz100_all/MapServer
 // Aszályindex ImageServer (CORS OK)
 const IMAGE_DROUGHT_INDEX = 'https://ovfgis2.vizugy.hu/arcgis/rest/services/Aszalymon/mosaic_hdis/ImageServer';
 
-// Monitoring MapServer (CORS OK)
-const REST_MONITORING_STATIONS = 'https://geoportal.vizugy.hu/arcgis/rest/services/Aszalymon/Aszaly_monitoring_allomasok/MapServer';
-
 // Map center (Hungary)
 const MAP_CENTER: [number, number] = [47.1625, 19.5033];
 const MAP_ZOOM = 7;
@@ -51,12 +46,10 @@ export const DroughtMapsWidget: React.FC = () => {
   // Map refs
   const map1Ref = useRef<HTMLDivElement>(null);
   const map2Ref = useRef<HTMLDivElement>(null);
-  const map3Ref = useRef<HTMLDivElement>(null);
 
   // Map states
   const [map1State, setMap1State] = useState<MapState>({ loading: true, progress: 0, error: null });
   const [map2State, setMap2State] = useState<MapState>({ loading: true, progress: 0, error: null });
-  const [map3State, setMap3State] = useState<MapState>({ loading: true, progress: 0, error: null });
 
   // HUGEO layer selector (0: mélység, 1: nyugalmi szint)
   const [selectedHugeoLayer, setSelectedHugeoLayer] = useState<number>(0);
@@ -95,7 +88,6 @@ export const DroughtMapsWidget: React.FC = () => {
       esriLeafletScript.onerror = () => {
         setMap1State(prev => ({ ...prev, loading: false, error: 'esri-leaflet betöltési hiba' }));
         setMap2State(prev => ({ ...prev, loading: false, error: 'esri-leaflet betöltési hiba' }));
-        setMap3State(prev => ({ ...prev, loading: false, error: 'esri-leaflet betöltési hiba' }));
       };
 
       document.head.appendChild(esriLeafletScript);
@@ -104,7 +96,6 @@ export const DroughtMapsWidget: React.FC = () => {
     leafletScript.onerror = () => {
       setMap1State(prev => ({ ...prev, loading: false, error: 'Leaflet betöltési hiba' }));
       setMap2State(prev => ({ ...prev, loading: false, error: 'Leaflet betöltési hiba' }));
-      setMap3State(prev => ({ ...prev, loading: false, error: 'Leaflet betöltési hiba' }));
     };
 
     document.head.appendChild(leafletScript);
@@ -293,10 +284,9 @@ export const DroughtMapsWidget: React.FC = () => {
       }
     };
 
-    // Create all 3 maps
+    // Create 2 maps (HUGEO + Aszályindex)
     const widget1 = createWidget(map1Ref, WMS_HUGEO, 'wms', String(selectedHugeoLayer), setMap1State, false, true);
     const widget2 = createWidget(map2Ref, IMAGE_DROUGHT_INDEX, 'imageserver', '0', setMap2State, false);
-    const widget3 = createWidget(map3Ref, REST_MONITORING_STATIONS, 'mapserver', '0', setMap3State, true); // Enable popup
 
     // Cleanup
     return () => {
@@ -309,11 +299,6 @@ export const DroughtMapsWidget: React.FC = () => {
         widget2.dataLayer.remove();
         widget2.map.remove();
         clearInterval(widget2.refreshInterval);
-      }
-      if (widget3) {
-        widget3.dataLayer.remove();
-        widget3.map.remove();
-        clearInterval(widget3.refreshInterval);
       }
     };
   }, [leafletLoaded, selectedHugeoLayer]);
@@ -388,217 +373,249 @@ export const DroughtMapsWidget: React.FC = () => {
     </select>
   );
 
-  // Dynamic legend based on selected layer
+  // Dynamic legend based on selected layer (HUGEO official colors)
   const hugeoLegend = selectedHugeoLayer === 0 ? (
     <div>
-      <h4 className="text-xs font-semibold text-gray-900 mb-2">Mélység (m)</h4>
+      <h4 className="text-xs font-semibold text-gray-900 mb-2">Talajvízszint mélysége a felszín alatt (m)</h4>
       <div className="space-y-1 text-xs">
         <div className="map-legend-item">
           <div
             className="map-legend-color"
             style={{
-              backgroundColor: '#ff4500',
+              backgroundColor: '#0066CC',
               width: '20px',
               height: '20px',
               border: '1px solid #333',
               borderRadius: '3px'
             }}
           />
-          <span>&lt; 3m (Sekély)</span>
+          <span>0-1 m</span>
         </div>
         <div className="map-legend-item">
           <div
             className="map-legend-color"
             style={{
-              backgroundColor: '#ffa500',
+              backgroundColor: '#33CCFF',
               width: '20px',
               height: '20px',
               border: '1px solid #333',
               borderRadius: '3px'
             }}
           />
-          <span>3-5m (Közepes)</span>
+          <span>1-2 m</span>
         </div>
         <div className="map-legend-item">
           <div
             className="map-legend-color"
             style={{
-              backgroundColor: '#43a047',
+              backgroundColor: '#66CC66',
               width: '20px',
               height: '20px',
               border: '1px solid #333',
               borderRadius: '3px'
             }}
           />
-          <span>&gt; 5m (Mély)</span>
+          <span>2-4 m</span>
+        </div>
+        <div className="map-legend-item">
+          <div
+            className="map-legend-color"
+            style={{
+              backgroundColor: '#FFCC33',
+              width: '20px',
+              height: '20px',
+              border: '1px solid #333',
+              borderRadius: '3px'
+            }}
+          />
+          <span>4-8 m</span>
+        </div>
+        <div className="map-legend-item">
+          <div
+            className="map-legend-color"
+            style={{
+              backgroundColor: '#FF9933',
+              width: '20px',
+              height: '20px',
+              border: '1px solid #333',
+              borderRadius: '3px'
+            }}
+          />
+          <span>&gt;8 m</span>
         </div>
       </div>
     </div>
   ) : (
     <div>
-      <h4 className="text-xs font-semibold text-gray-900 mb-2">Nyugalmi szint (m)</h4>
+      <h4 className="text-xs font-semibold text-gray-900 mb-2">Nyugalmi szint a felszín alatt (m)</h4>
       <div className="space-y-1 text-xs">
         <div className="map-legend-item">
           <div
             className="map-legend-color"
             style={{
-              backgroundColor: '#ff4500',
+              backgroundColor: '#0066CC',
               width: '20px',
               height: '20px',
               border: '1px solid #333',
               borderRadius: '3px'
             }}
           />
-          <span>&lt; 2m (Alacsony)</span>
+          <span>0-1 m</span>
         </div>
         <div className="map-legend-item">
           <div
             className="map-legend-color"
             style={{
-              backgroundColor: '#ffa500',
+              backgroundColor: '#33CCFF',
               width: '20px',
               height: '20px',
               border: '1px solid #333',
               borderRadius: '3px'
             }}
           />
-          <span>2-4m (Közepes)</span>
+          <span>1-2 m</span>
         </div>
         <div className="map-legend-item">
           <div
             className="map-legend-color"
             style={{
-              backgroundColor: '#43a047',
+              backgroundColor: '#66CC66',
               width: '20px',
               height: '20px',
               border: '1px solid #333',
               borderRadius: '3px'
             }}
           />
-          <span>&gt; 4m (Magas)</span>
+          <span>2-4 m</span>
+        </div>
+        <div className="map-legend-item">
+          <div
+            className="map-legend-color"
+            style={{
+              backgroundColor: '#FFCC33',
+              width: '20px',
+              height: '20px',
+              border: '1px solid #333',
+              borderRadius: '3px'
+            }}
+          />
+          <span>4-8 m</span>
+        </div>
+        <div className="map-legend-item">
+          <div
+            className="map-legend-color"
+            style={{
+              backgroundColor: '#FF9933',
+              width: '20px',
+              height: '20px',
+              border: '1px solid #333',
+              borderRadius: '3px'
+            }}
+          />
+          <span>&gt;8 m</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Drought index legend (HDIs)
+  const droughtIndexLegend = (
+    <div>
+      <h4 className="text-xs font-semibold text-gray-900 mb-2">Aszályindex</h4>
+      <div className="space-y-1 text-xs">
+        <div className="map-legend-item">
+          <div
+            style={{
+              backgroundColor: '#4daf4a',
+              width: '20px',
+              height: '20px',
+              border: '1px solid #333',
+              borderRadius: '3px',
+              flexShrink: 0
+            }}
+          />
+          <span>Aszálymentes (&lt; 1,33)</span>
+        </div>
+        <div className="map-legend-item">
+          <div
+            style={{
+              backgroundColor: '#90ee90',
+              width: '20px',
+              height: '20px',
+              border: '1px solid #333',
+              borderRadius: '3px',
+              flexShrink: 0
+            }}
+          />
+          <span>Enyhe (1,33 - 1,50)</span>
+        </div>
+        <div className="map-legend-item">
+          <div
+            style={{
+              backgroundColor: '#ffff00',
+              width: '20px',
+              height: '20px',
+              border: '1px solid #333',
+              borderRadius: '3px',
+              flexShrink: 0
+            }}
+          />
+          <span>Közepes (1,50 - 2,00)</span>
+        </div>
+        <div className="map-legend-item">
+          <div
+            style={{
+              backgroundColor: '#ff7f00',
+              width: '20px',
+              height: '20px',
+              border: '1px solid #333',
+              borderRadius: '3px',
+              flexShrink: 0
+            }}
+          />
+          <span>Erős (2,00 - 3,00)</span>
+        </div>
+        <div className="map-legend-item">
+          <div
+            style={{
+              backgroundColor: '#e31a1c',
+              width: '20px',
+              height: '20px',
+              border: '1px solid #333',
+              borderRadius: '3px',
+              flexShrink: 0
+            }}
+          />
+          <span>Rendkívüli (&gt; 3,00)</span>
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="grid-drought-maps">
-      {/* Map 1: HUGEO Groundwater Level */}
-      {renderMap(
-        map1Ref,
-        map1State,
-        'Aktuális talajvízszint (HUGEO)',
-        'HUGEO adatok',
-        hugeoLegend,
-        hugeoLayerSelector
-      )}
+    <div className="grid grid-cols-1 gap-6">
+      {/* Map 1: HUGEO Groundwater Level - Blue tint */}
+      <div className="bg-blue-50 p-6 rounded-2xl">
+        {renderMap(
+          map1Ref,
+          map1State,
+          'Aktuális talajvízszint (HUGEO)',
+          'HUGEO adatok',
+          hugeoLegend,
+          hugeoLayerSelector
+        )}
+      </div>
 
-      {/* Map 2: Drought Index (HDIs) */}
-      {renderMap(
-        map2Ref,
-        map2State,
-        'Aszályindex (HDIs)',
-        'OVF aszálymonitoring - aktuális',
-        <div>
-          <h4 className="text-xs font-semibold text-gray-900 mb-2">Aszályindex</h4>
-          <div className="space-y-1 text-xs">
-            <div className="map-legend-item">
-              <div
-                style={{
-                  backgroundColor: '#4daf4a',
-                  width: '20px',
-                  height: '20px',
-                  border: '1px solid #333',
-                  borderRadius: '3px',
-                  flexShrink: 0
-                }}
-              />
-              <span>Aszálymentes (&lt; 1,33)</span>
-            </div>
-            <div className="map-legend-item">
-              <div
-                style={{
-                  backgroundColor: '#90ee90',
-                  width: '20px',
-                  height: '20px',
-                  border: '1px solid #333',
-                  borderRadius: '3px',
-                  flexShrink: 0
-                }}
-              />
-              <span>Enyhe (1,33 - 1,50)</span>
-            </div>
-            <div className="map-legend-item">
-              <div
-                style={{
-                  backgroundColor: '#ffff00',
-                  width: '20px',
-                  height: '20px',
-                  border: '1px solid #333',
-                  borderRadius: '3px',
-                  flexShrink: 0
-                }}
-              />
-              <span>Közepes (1,50 - 2,00)</span>
-            </div>
-            <div className="map-legend-item">
-              <div
-                style={{
-                  backgroundColor: '#ff7f00',
-                  width: '20px',
-                  height: '20px',
-                  border: '1px solid #333',
-                  borderRadius: '3px',
-                  flexShrink: 0
-                }}
-              />
-              <span>Erős (2,00 - 3,00)</span>
-            </div>
-            <div className="map-legend-item">
-              <div
-                style={{
-                  backgroundColor: '#e31a1c',
-                  width: '20px',
-                  height: '20px',
-                  border: '1px solid #333',
-                  borderRadius: '3px',
-                  flexShrink: 0
-                }}
-              />
-              <span>Rendkívüli (&gt; 3,00)</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Map 3: Monitoring Stations */}
-      {renderMap(
-        map3Ref,
-        map3State,
-        'Mérőállomások',
-        'OVF aszálymonitoring hálózat',
-        <div>
-          <h4 className="text-xs font-semibold text-gray-900 mb-2">Állomások</h4>
-          <div className="space-y-1 text-xs">
-            <div className="map-legend-item">
-              <div
-                style={{
-                  backgroundColor: '#38a800',
-                  width: '20px',
-                  height: '20px',
-                  border: '1px solid #333',
-                  borderRadius: '3px',
-                  flexShrink: 0
-                }}
-              />
-              <span>Monitoring állomás</span>
-            </div>
-            <p className="text-xs text-gray-500 mt-2 italic">
-              Kattints az állomásokra további információkért
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Map 2: Drought Index (HDIs) - Green tint */}
+      <div className="bg-green-50 p-6 rounded-2xl">
+        {renderMap(
+          map2Ref,
+          map2State,
+          'Aszályindex (HDIs)',
+          'OVF aszálymonitoring - aktuális',
+          droughtIndexLegend
+        )}
+      </div>
     </div>
   );
 };

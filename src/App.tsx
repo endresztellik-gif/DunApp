@@ -12,6 +12,7 @@
 
 import { useState, lazy, Suspense } from 'react';
 import { Header } from './components/Layout/Header';
+import { HomePage } from './components/HomePage';
 import { InstallPrompt } from './components/InstallPrompt';
 import { LoadingSpinner } from './components/UI/LoadingSpinner';
 import { useCities } from './hooks/useCities';
@@ -47,7 +48,7 @@ function App() {
     }
   }
 
-  const [activeModule, setActiveModule] = useState<ModuleType>('meteorology');
+  const [activeModule, setActiveModule] = useState<ModuleType | null>(null);
 
   // Fetch real data from Supabase
   const { cities, isLoading: citiesLoading, error: citiesError } = useCities();
@@ -102,6 +103,16 @@ function App() {
             <p className="text-sm">{locationsError?.message || wellsError?.message}</p>
           </div>
         </main>
+      </div>
+    );
+  }
+
+  // Show HomePage if no module selected
+  if (!activeModule) {
+    return (
+      <div className="min-h-screen">
+        <HomePage onModuleSelect={setActiveModule} />
+        <InstallPrompt />
       </div>
     );
   }

@@ -15,7 +15,7 @@ import type { ModuleType } from '../../types';
 
 interface ModuleTabsProps {
   currentModule: ModuleType;
-  onModuleChange: (module: ModuleType) => void;
+  onModuleChange: (module: ModuleType | null) => void;
 }
 
 interface TabConfig {
