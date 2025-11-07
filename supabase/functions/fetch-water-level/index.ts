@@ -135,10 +135,14 @@ async function scrapeVizugyActual() {
 
 /**
  * Scrape water level forecast from hydroinfo.hu
- * Returns: { stationName: [{ day: 1-5, waterLevel: number, date: string }] }
+ * Returns: { stationName: [{ day: 1-6, waterLevel: number, date: string }] }
+ *
+ * Data source: https://www.hydroinfo.hu/tables/dunelotH.html
+ * Table format: All 3 stations in one consolidated table
+ * Columns: Station | Ma reggel | Day+1 07h | Day+2 07h | Day+3 07h | Day+4 07h | Day+5 07h | Day+6 07h
  */
 async function scrapeHydroinfoForecast() {
-  const url = 'http://www.hydroinfo.hu/Html/hidelo/duna.html';
+  const url = 'https://www.hydroinfo.hu/tables/dunelotH.html';
 
   const response = await fetchWithRetry(() => fetch(url, {
     headers: {
@@ -146,7 +150,7 @@ async function scrapeHydroinfoForecast() {
     }
   }));
 
-  // Handle ISO-8859-2 encoding
+  // Handle ISO-8859-2 encoding for Hungarian characters
   const buffer = await response.arrayBuffer();
   const decoder = new TextDecoder('iso-8859-2');
   const html = decoder.decode(buffer);
@@ -159,7 +163,7 @@ async function scrapeHydroinfoForecast() {
 
   const forecasts: Record<string, Array<{ day: number; waterLevel: number; date: string }>> = {};
 
-  // Find forecast table
+  // Find all table rows
   const tables = doc.querySelectorAll('table');
 
   for (const table of tables) {
@@ -167,7 +171,9 @@ async function scrapeHydroinfoForecast() {
 
     for (const row of rows) {
       const cells = row.querySelectorAll('td');
-      if (cells.length < 6) continue; // Need at least station name + 5 days forecast
+
+      // Need at least 8 cells: station name + "Ma reggel" + 6 forecast days
+      if (cells.length < 8) continue;
 
       const stationText = cells[0]?.textContent?.trim() || '';
 
@@ -176,20 +182,32 @@ async function scrapeHydroinfoForecast() {
         if (stationText.includes(station.name)) {
           const stationForecasts = [];
 
-          // Extract 5-day forecast (next 5 cells)
-          for (let i = 1; i <= 5 && i < cells.length; i++) {
-            const forecastText = cells[i]?.textContent?.trim() || '';
-            const forecastLevel = parseInt(forecastText.replace(/[^\d-]/g, ''));
+          // Skip cell[1] which is "Ma reggel" (current day)
+          // Extract 6-day forecast from cells[2] through cells[7]
+          for (let i = 2; i <= 7 && i < cells.length; i++) {
+            const cell = cells[i];
 
-            if (!isNaN(forecastLevel)) {
-              const forecastDate = new Date();
-              forecastDate.setDate(forecastDate.getDate() + i);
+            // Forecast values are in nested <b> tags within nested tables
+            // Extract the first <b> tag which contains the forecasted water level
+            const boldTags = cell.querySelectorAll('b');
 
-              stationForecasts.push({
-                day: i,
-                waterLevel: forecastLevel,
-                date: forecastDate.toISOString().split('T')[0] // YYYY-MM-DD
-              });
+            if (boldTags.length > 0) {
+              const forecastText = boldTags[0]?.textContent?.trim() || '';
+              const forecastLevel = parseInt(forecastText.replace(/[^\d-]/g, ''));
+
+              if (!isNaN(forecastLevel)) {
+                // Calculate forecast date
+                // i=2 is tomorrow (day+1), i=3 is day+2, etc.
+                const dayOffset = i - 1;
+                const forecastDate = new Date();
+                forecastDate.setDate(forecastDate.getDate() + dayOffset);
+
+                stationForecasts.push({
+                  day: dayOffset,
+                  waterLevel: forecastLevel,
+                  date: forecastDate.toISOString().split('T')[0] // YYYY-MM-DD
+                });
+              }
             }
           }
 

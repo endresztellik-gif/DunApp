@@ -20,10 +20,9 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Footer } from '../../components/Layout/Footer';
 import { NotificationSettings } from '../../components/NotificationSettings';
 import { MultiStationChart } from './MultiStationChart';
-import { DataTable } from './DataTable';
+import { ForecastDataTable } from './ForecastDataTable';
 import { useStations } from '../../hooks/useStations';
 import { useWaterLevelData } from '../../hooks/useWaterLevelData';
-import { useWaterLevelForecast } from '../../hooks/useWaterLevelForecast';
 import type { DataSource } from '../../types';
 
 export const WaterLevelModule: React.FC = () => {
@@ -44,11 +43,6 @@ export const WaterLevelModule: React.FC = () => {
     selectedStation
   );
 
-  // Fetch 5-day forecast for selected station
-  const { forecasts, isLoading: forecastLoading, error: forecastError } = useWaterLevelForecast(
-    selectedStation
-  );
-
   // Data sources for footer
   const dataSources: DataSource[] = [
     {
@@ -59,7 +53,7 @@ export const WaterLevelModule: React.FC = () => {
     {
       name: 'HydroInfo.hu',
       url: 'http://www.hydroinfo.hu',
-      lastUpdate: forecasts.length > 0 ? forecasts[0].issuedAt : new Date().toISOString(),
+      lastUpdate: new Date().toISOString(),
     },
   ];
 
@@ -111,13 +105,16 @@ export const WaterLevelModule: React.FC = () => {
 
   return (
     <div className="main-container">
-      {/* Station Selector */}
-      <div className="flex justify-end mb-6">
-        <StationSelector
-          stations={stations}
-          selectedStation={selectedStationObj}
-          onStationChange={(station) => setSelectedStation(station.id)}
-        />
+      {/* Station Selector - Bordered Box */}
+      <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-700">Állomás kiválasztása</h3>
+          <StationSelector
+            stations={stations}
+            selectedStation={selectedStationObj}
+            onStationChange={(station) => setSelectedStation(station.id)}
+          />
+        </div>
       </div>
 
       {/* Push Notification Settings */}
@@ -197,38 +194,21 @@ export const WaterLevelModule: React.FC = () => {
         </div>
       )}
 
-      {/* Multi-Station Comparison Chart */}
+      {/* 5-Day Forecast Section */}
       <div className="mb-6">
-        <h2 className="section-title mb-4">3 Állomás Összehasonlítása</h2>
+        <h2 className="section-title mb-4">5 Napos Előrejelzés</h2>
         <p className="section-subtitle mb-4">
-          Nagybajcs, Baja, Mohács - összehasonlító grafikon
+          Nagybajcs, Baja, Mohács - vízállás előrejelzés
         </p>
-        <MultiStationChart stations={stations} />
-      </div>
 
-      {/* Data Table - 5-day Forecast */}
-      {selectedStation && (
+        {/* Forecast Chart */}
         <div className="mb-6">
-          <h2 className="section-title mb-4">5 Napos Előrejelzés</h2>
-          {forecastLoading ? (
-            <LoadingSpinner message="Előrejelzés betöltése..." />
-          ) : forecastError ? (
-            <div className="rounded-lg border-2 border-yellow-200 bg-yellow-50 p-4">
-              <p className="text-sm text-yellow-700">
-                Az előrejelzési adatok betöltése sikertelen. Próbáld újra később.
-              </p>
-            </div>
-          ) : forecasts.length === 0 ? (
-            <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-4">
-              <p className="text-sm text-blue-700">
-                Jelenleg nincs elérhető előrejelzés ehhez az állomáshoz.
-              </p>
-            </div>
-          ) : (
-            <DataTable forecasts={forecasts} station={station} />
-          )}
+          <MultiStationChart stations={stations} />
         </div>
-      )}
+
+        {/* Forecast Data Table */}
+        <ForecastDataTable stations={stations} />
+      </div>
 
       {/* Footer with data source */}
       <Footer dataSources={dataSources} />
