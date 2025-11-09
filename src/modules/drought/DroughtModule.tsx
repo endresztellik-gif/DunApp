@@ -13,7 +13,7 @@
  * CRITICAL: Uses TWO separate selectors - DO NOT merge them!
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Footer } from '../../components/Layout/Footer';
@@ -49,6 +49,20 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
   const [selectedWell, setSelectedWell] = useState<GroundwaterWell | null>(
     initialWell || wells[0] || null
   );
+
+  // Ref for well selector section to preserve scroll position
+  const wellSelectorRef = useRef<HTMLDivElement>(null);
+
+  // Preserve scroll position when well changes
+  useEffect(() => {
+    if (selectedWell && wellSelectorRef.current) {
+      // Scroll to the well selector section smoothly, keep it in view
+      wellSelectorRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest' // Don't force to top, just keep in view
+      });
+    }
+  }, [selectedWell]);
 
   // Fetch real drought and groundwater data from Supabase
   const {
@@ -191,7 +205,7 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
       </div>
 
       {/* Talajvízkút Monitoring Section with Well Selector */}
-      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div ref={wellSelectorRef} className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 className="section-title">Talajvízkút Monitoring (15 kút)</h2>
         <WellSelector
           wells={wells}
