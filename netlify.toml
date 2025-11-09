@@ -20,7 +20,7 @@
       script-src 'self' https://unpkg.com;
       style-src 'self' https://unpkg.com https://fonts.googleapis.com 'unsafe-inline';
       style-src-elem 'self' https://unpkg.com https://fonts.googleapis.com 'unsafe-inline';
-      img-src 'self' data: https: blob:;
+      img-src 'self' data: https: blob: https://www.met.hu;
       font-src 'self' https://fonts.gstatic.com;
       connect-src 'self' https://*.supabase.co https://api.openweathermap.org https://api.met.no https://api.rainviewer.com https://tilecache.rainviewer.com https://my.meteoblue.com https://map.hugeo.hu https://ovfgis2.vizugy.hu https://*.tile.openstreetmap.org wss://*.supabase.co;
       frame-src 'self';
