@@ -69,13 +69,13 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
   return (
     <div
       ref={dropdownRef}
-      className={`selector-dropdown ${className}`}
+      className={`relative w-full md:w-auto ${className}`}
       onKeyDown={handleKeyDown}
     >
       {/* Selector Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="selector-button-water"
+        className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-cyan-300 text-cyan-700 rounded-lg font-medium transition-all duration-200 w-full md:w-auto hover:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
         aria-label="Állomás kiválasztása"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
@@ -95,7 +95,7 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="selector-dropdown-menu"
+          className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto flex flex-col"
           role="listbox"
           aria-label="Állomások listája"
         >
@@ -106,11 +106,11 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
               <button
                 key={station.id}
                 onClick={() => handleStationSelect(station)}
-                className={
+                className={`w-full px-4 py-2 cursor-pointer transition-colors duration-150 text-left ${
                   isSelected
-                    ? 'selector-dropdown-item-selected'
-                    : 'selector-dropdown-item'
-                }
+                    ? 'bg-gray-100 font-medium hover:bg-gray-100'
+                    : 'hover:bg-gray-100 active:bg-gray-200'
+                }`}
                 role="option"
                 aria-selected={isSelected}
               >

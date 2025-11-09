@@ -105,16 +105,14 @@ export const WaterLevelModule: React.FC = () => {
 
   return (
     <div className="main-container">
-      {/* Station Selector - Bordered Box */}
-      <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-700">Állomás kiválasztása</h3>
-          <StationSelector
-            stations={stations}
-            selectedStation={selectedStationObj}
-            onStationChange={(station) => setSelectedStation(station.id)}
-          />
-        </div>
+      {/* Station Selector */}
+      <div className="mb-6 flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">Állomás kiválasztása</h3>
+        <StationSelector
+          stations={stations}
+          selectedStation={selectedStationObj}
+          onStationChange={(station) => setSelectedStation(station.id)}
+        />
       </div>
 
       {/* Push Notification Settings */}
@@ -169,7 +167,7 @@ export const WaterLevelModule: React.FC = () => {
 
       {/* Water Level Data Cards - 1x3 Grid */}
       {waterLevelData && (
-        <div className="grid-water-cards mb-6">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <DataCard
             icon={Waves}
             label="Vízállás"

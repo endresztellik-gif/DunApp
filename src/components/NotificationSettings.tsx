@@ -28,11 +28,11 @@ export const NotificationSettings: React.FC = () => {
           <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-500" />
           <div>
             <h4 className="text-sm font-semibold text-gray-900">
-              Push értesítések nem támogatottak
+              Push Ã©rtesÃ­tÃ©sek nem tÃ¡mogatottak
             </h4>
             <p className="mt-1 text-xs text-gray-600">
-              A böngészQd nem támogatja a push értesítéseket. Próbálj Chrome, Firefox, vagy Edge
-              böngészQt használni.
+              A bÃ¶ngÃ©szÅ‘d nem tÃ¡mogatja a push Ã©rtesÃ­tÃ©seket. PrÃ³bÃ¡lj Chrome, Firefox, vagy Edge
+              bÃ¶ngÃ©szÅ‘t hasznÃ¡lni.
             </p>
           </div>
         </div>
@@ -47,10 +47,10 @@ export const NotificationSettings: React.FC = () => {
         <div className="flex items-start gap-3">
           <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" />
           <div>
-            <h4 className="text-sm font-semibold text-red-900">Értesítések letiltva</h4>
+            <h4 className="text-sm font-semibold text-red-900">Ã‰rtesÃ­tÃ©sek letiltva</h4>
             <p className="mt-1 text-xs text-red-700">
-              Az értesítések engedélyezéséhez nyisd meg a böngészQ beállításait és engedélyezd az
-              értesítéseket erre az oldalra.
+              Az Ã©rtesÃ­tÃ©sek engedÃ©lyezÃ©sÃ©hez nyisd meg a bÃ¶ngÃ©szÅ‘ beÃ¡llÃ­tÃ¡sait Ã©s engedÃ©lyezd az
+              Ã©rtesÃ­tÃ©seket erre az oldalra.
             </p>
           </div>
         </div>
@@ -68,9 +68,9 @@ export const NotificationSettings: React.FC = () => {
           <BellOff className="h-6 w-6 text-gray-400" />
         )}
         <div>
-          <h3 className="text-base font-semibold text-gray-900">Vízállás Riasztások</h3>
+          <h3 className="text-base font-semibold text-gray-900">VÃ­zÃ¡llÃ¡s RiasztÃ¡sok</h3>
           <p className="text-xs text-gray-600">
-            Értesítést kapsz, ha a Mohács vízállása eléri a 400 cm-t
+            Ã‰rtesÃ­tÃ©st kapsz, ha a MohÃ¡cs vÃ­zÃ¡llÃ¡sa elÃ©ri a 400 cm-t
           </p>
         </div>
       </div>
@@ -78,7 +78,7 @@ export const NotificationSettings: React.FC = () => {
       {/* Status */}
       <div className="mb-4 rounded-md bg-gray-50 px-3 py-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-gray-700">Státusz:</span>
+          <span className="text-xs font-medium text-gray-700">StÃ¡tusz:</span>
           {isSubscribed ? (
             <span className="flex items-center gap-1.5 text-xs font-semibold text-green-600">
               <Check className="h-4 w-4" />
@@ -108,12 +108,12 @@ export const NotificationSettings: React.FC = () => {
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Leíratkozás...
+                LeiratkozÃ¡s...
               </>
             ) : (
               <>
                 <BellOff className="h-4 w-4" />
-                Leíratkozás
+                LeiratkozÃ¡s
               </>
             )}
           </button>
@@ -126,12 +126,12 @@ export const NotificationSettings: React.FC = () => {
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Feliratkozás...
+                FeliratkozÃ¡s...
               </>
             ) : (
               <>
                 <Bell className="h-4 w-4" />
-                Feliratkozás
+                FeliratkozÃ¡s
               </>
             )}
           </button>
@@ -140,7 +140,7 @@ export const NotificationSettings: React.FC = () => {
 
       {/* Info text */}
       <p className="mt-3 text-xs text-gray-500">
-        9 Az értesítéseket bármikor kikapcsolhatod a leíratkozás gombra kattintva.
+        â„¹ Az Ã©rtesÃ­tÃ©seket bÃ¡rmikor kikapcsolhatod a leiratkozÃ¡s gombra kattintva.
       </p>
     </div>
   );
