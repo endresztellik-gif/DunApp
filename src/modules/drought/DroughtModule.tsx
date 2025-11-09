@@ -19,8 +19,8 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Footer } from '../../components/Layout/Footer';
 import { useDroughtData } from '../../hooks/useDroughtData';
 import { useGroundwaterData } from '../../hooks/useGroundwaterData';
-import { DroughtLocationSelector } from '../../components/Selectors/DroughtLocationSelector';
-import { WellSelector } from '../../components/Selectors/WellSelector';
+import { DroughtLocationSelector } from '../../components/selectors/DroughtLocationSelector';
+import { WellSelector } from '../../components/selectors/WellSelector';
 import { DroughtIndexCard } from './DroughtIndexCard';
 import { SoilMoistureCard } from './SoilMoistureCard';
 import { WaterDeficitCard } from './WaterDeficitCard';
@@ -58,7 +58,7 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
   } = useDroughtData(selectedLocation?.id || null);
 
   const {
-    groundwaterData,
+    groundwaterData: _groundwaterData,
     isLoading: isGroundwaterLoading,
     error: groundwaterError
   } = useGroundwaterData(selectedWell?.id || null);

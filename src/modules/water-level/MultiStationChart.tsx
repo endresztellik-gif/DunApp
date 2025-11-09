@@ -18,7 +18,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  ReferenceLine,
 } from 'recharts';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
@@ -136,12 +135,6 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
       />
     );
   }
-
-  // Calculate average alert level for reference line
-  const avgAlertLevel = stations
-    .filter(s => s.alertLevelCm)
-    .reduce((sum, s) => sum + (s.alertLevelCm || 0), 0) /
-    stations.filter(s => s.alertLevelCm).length;
 
   return (
     <div className="space-y-4">

@@ -21,7 +21,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AlertCircle } from 'lucide-react';
 
 // Map service URLs
-const IS_DEV = import.meta.env.DEV;
 
 // HUGEO WMS - Try direct access first (user's original working approach)
 // If CORS error occurs in production, we'll need to use server-side proxy
@@ -116,7 +115,7 @@ export const DroughtMapsWidget: React.FC = () => {
 
     // Create map widget (supports WMS, MapServer, and ImageServer)
     const createWidget = (
-      mapRef: React.RefObject<HTMLDivElement>,
+      mapRef: React.RefObject<HTMLDivElement | null>,
       layerUrl: string,
       layerType: 'wms' | 'mapserver' | 'imageserver',
       layerParam: string,
@@ -142,6 +141,7 @@ export const DroughtMapsWidget: React.FC = () => {
         }).addTo(map);
 
         let dataLayer: any;
+        let layerId: number | undefined;
 
         if (layerType === 'wms') {
           // Native Leaflet WMS (HUGEO - proven to work)
@@ -161,7 +161,7 @@ export const DroughtMapsWidget: React.FC = () => {
           }).addTo(map);
         } else {
           // MapServer layer (Monitoring - esri-leaflet)
-          const layerId = parseInt(layerParam);
+          layerId = parseInt(layerParam);
           dataLayer = (L as any).esri.dynamicMapLayer({
             url: layerUrl,
             opacity: 0.7,
@@ -305,7 +305,7 @@ export const DroughtMapsWidget: React.FC = () => {
 
   // Render map with loading state
   const renderMap = (
-    ref: React.RefObject<HTMLDivElement>,
+    ref: React.RefObject<HTMLDivElement | null>,
     state: MapState,
     title: string,
     subtitle: string,

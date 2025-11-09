@@ -15,7 +15,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ZoomIn, X } from 'lucide-react';
 
 type Layer = 'vh50' | 'vh100';
-type Overlay = null; // NDVI and rain overlays not available
 
 export const WaterDeficitDashboard: React.FC = () => {
   const [layer, setLayer] = useState<Layer>('vh50'); // Default: 0-50 cm
@@ -51,7 +50,6 @@ export const WaterDeficitDashboard: React.FC = () => {
     ? `/met-img/${prefix}/${prefix}${dateStr}_0000.png`
     : `https://www.met.hu/img/${prefix}/${prefix}${dateStr}_0000.png`;
 
-  const overlayUrl = null; // No overlays available
   const today = new Date().toLocaleDateString('hu-HU', {
     year: 'numeric',
     month: 'long',

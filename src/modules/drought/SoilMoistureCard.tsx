@@ -16,7 +16,7 @@ interface SoilMoistureCardProps {
 }
 
 export const SoilMoistureCard: React.FC<SoilMoistureCardProps> = ({
-  selectedLocation,
+  selectedLocation: _selectedLocation,
   droughtData,
 }) => {
   // Calculate average of all 6 soil moisture depths (10-100cm)

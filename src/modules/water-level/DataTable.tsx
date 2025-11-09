@@ -10,7 +10,7 @@
 
 import React from 'react';
 import { EmptyState } from '../../components/UI/EmptyState';
-import { Table, TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
+import { Table, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import type { WaterLevelStation, WaterLevelForecast } from '../../types';
 
 interface DataTableProps {

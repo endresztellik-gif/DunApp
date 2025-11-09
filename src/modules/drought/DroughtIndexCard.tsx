@@ -38,7 +38,7 @@ const getCategoryLabel = (category: DroughtCategory): string => {
 };
 
 export const DroughtIndexCard: React.FC<DroughtIndexCardProps> = ({
-  selectedLocation,
+  selectedLocation: _selectedLocation,
   droughtData,
 }) => {
   // Use real data from Supabase

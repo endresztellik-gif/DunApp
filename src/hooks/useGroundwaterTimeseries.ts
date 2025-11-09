@@ -26,6 +26,14 @@ interface UseGroundwaterTimeseriesReturn {
   refetch: () => Promise<unknown>;
 }
 
+// Database row type
+interface GroundwaterDataRow {
+  timestamp: string;
+  water_level_meters: number;
+  water_level_masl: number | null;
+  water_temperature: number | null;
+}
+
 /**
  * Fetch 365-day groundwater timeseries for a well
  * (Changed from 60-day to get better long-term trend visualization)
@@ -40,7 +48,10 @@ async function fetchGroundwaterTimeseries(wellId: string) {
     .select('timestamp, water_level_meters, water_level_masl, water_temperature')
     .eq('well_id', wellId)
     .gte('timestamp', oneYearAgo.toISOString())
-    .order('timestamp', { ascending: true }); // Chronological order for chart
+    .order('timestamp', { ascending: true }) as {
+      data: GroundwaterDataRow[] | null;
+      error: any;
+    }; // Chronological order for chart
 
   if (error) {
     throw new Error(`Failed to fetch groundwater timeseries: ${error.message}`);

@@ -16,7 +16,7 @@ interface WaterDeficitCardProps {
 }
 
 export const WaterDeficitCard: React.FC<WaterDeficitCardProps> = ({
-  selectedLocation,
+  selectedLocation: _selectedLocation,
   droughtData,
 }) => {
   // Water deficit from pattern endpoint (Dataset 6, 35cm depth)

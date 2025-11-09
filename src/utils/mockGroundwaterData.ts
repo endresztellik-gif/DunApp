@@ -27,7 +27,7 @@ export interface MockGroundwaterDataPoint {
  */
 export function generateMockGroundwaterData(
   wellCode: string,
-  wellName: string
+  _wellName: string
 ): MockGroundwaterDataPoint[] {
   const data: MockGroundwaterDataPoint[] = [];
   const now = new Date();
