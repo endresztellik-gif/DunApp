@@ -1,0 +1,24 @@
+# Our security policy
+# This file is compliant with RFC 9116 (https://www.rfc-editor.org/rfc/rfc9116)
+
+Contact: https://github.com/endresztellik-gif/DunApp/security/advisories/new
+Contact: mailto:noreply@anthropic.com
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: hu, en
+Canonical: https://dunapp.netlify.app/.well-known/security.txt
+Policy: https://github.com/endresztellik-gif/DunApp/blob/main/SECURITY.md
+
+# Acknowledgments
+# Security researchers who responsibly disclose vulnerabilities will be acknowledged
+
+# Encryption
+# PGP key: Not yet configured (use GitHub Security Advisories)
+
+# Hiring
+# We are not currently hiring security researchers
+
+# Please report security vulnerabilities responsibly via GitHub Security Advisories
+# or email. Do not disclose security issues publicly until we have had a chance
+# to address them.
+
+# Thank you for helping keep DunApp PWA secure!

@@ -31,6 +31,64 @@ const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || '';
 const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:contact@dunapp.hu';
 
 /**
+ * Simple in-memory rate limiter (SECURITY: DoS prevention)
+ * Limits: 20 requests per 15 minutes per IP
+ */
+class RateLimiter {
+  private requests: Map<string, number[]> = new Map();
+  private readonly windowMs: number;
+  private readonly maxRequests: number;
+
+  constructor(windowMs: number = 15 * 60 * 1000, maxRequests: number = 20) {
+    this.windowMs = windowMs;
+    this.maxRequests = maxRequests;
+  }
+
+  check(identifier: string): { allowed: boolean; remaining: number; resetAt: number } {
+    const now = Date.now();
+    const windowStart = now - this.windowMs;
+
+    // Get existing requests for this identifier
+    let timestamps = this.requests.get(identifier) || [];
+
+    // Remove expired timestamps
+    timestamps = timestamps.filter(ts => ts > windowStart);
+
+    // Check if limit exceeded
+    const allowed = timestamps.length < this.maxRequests;
+
+    if (allowed) {
+      timestamps.push(now);
+      this.requests.set(identifier, timestamps);
+    }
+
+    // Cleanup old entries periodically (prevent memory leak)
+    if (Math.random() < 0.01) { // 1% chance
+      this.cleanup(windowStart);
+    }
+
+    return {
+      allowed,
+      remaining: Math.max(0, this.maxRequests - timestamps.length),
+      resetAt: timestamps[0] ? timestamps[0] + this.windowMs : now + this.windowMs,
+    };
+  }
+
+  private cleanup(cutoff: number) {
+    for (const [key, timestamps] of this.requests.entries()) {
+      const valid = timestamps.filter(ts => ts > cutoff);
+      if (valid.length === 0) {
+        this.requests.delete(key);
+      } else {
+        this.requests.set(key, valid);
+      }
+    }
+  }
+}
+
+const rateLimiter = new RateLimiter(15 * 60 * 1000, 20); // 20 requests per 15 minutes
+
+/**
  * Convert base64url to Uint8Array
  */
 function base64UrlToUint8Array(base64String: string): Uint8Array {
@@ -506,6 +564,36 @@ serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
+  }
+
+  // Rate limiting (SECURITY: DoS prevention)
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] ||
+                   req.headers.get('x-real-ip') ||
+                   'unknown';
+
+  const rateLimit = rateLimiter.check(clientIp);
+
+  if (!rateLimit.allowed) {
+    const resetDate = new Date(rateLimit.resetAt).toISOString();
+    return new Response(
+      JSON.stringify({
+        error: 'Too many requests',
+        message: 'Rate limit exceeded. Please try again later.',
+        retryAfter: Math.ceil((rateLimit.resetAt - Date.now()) / 1000),
+        resetAt: resetDate
+      }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)),
+          'X-RateLimit-Limit': '20',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': resetDate,
+        }
+      }
+    );
   }
 
   try {

@@ -47,6 +47,17 @@
     # Permissions Policy (formerly Feature-Policy)
     Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=()"
 
+    # Cross-Origin Policies (MEDIUM-03 Fix)
+    Cross-Origin-Resource-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "credentialless"
+    Cross-Origin-Opener-Policy = "same-origin"
+
+    # Prevent Adobe Flash/PDF XSS
+    X-Permitted-Cross-Domain-Policies = "none"
+
+    # DNS Prefetch Control (privacy)
+    X-DNS-Prefetch-Control = "off"
+
 # Cache static assets
 [[headers]]
   for = "/assets/*"

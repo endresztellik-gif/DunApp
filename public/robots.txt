@@ -1,35 +1,21 @@
-# DunApp PWA - robots.txt
-# https://www.robotstxt.org/
+# robots.txt for DunApp PWA
+# This file controls search engine crawler access
 
-# Allow all crawlers
+# Allow all robots
 User-agent: *
 Allow: /
 
-# Disallow admin or private routes (if any)
-# Disallow: /admin/
-# Disallow: /api/
+# Disallow sensitive paths (security)
+Disallow: /.well-known/
+Disallow: /api/
+Disallow: /*.json$
 
-# Crawl-delay
-Crawl-delay: 10
-
-# Sitemap location
+# Sitemap
 Sitemap: https://dunapp.netlify.app/sitemap.xml
 
-# Common search engines
-User-agent: Googlebot
-Allow: /
+# Crawl delay to prevent DoS (1 second between requests)
+Crawl-delay: 1
 
-User-agent: Bingbot
-Allow: /
-
-User-agent: Slurp
-Allow: /
-
-User-agent: DuckDuckBot
-Allow: /
-
-User-agent: Baiduspider
-Allow: /
-
-User-agent: YandexBot
-Allow: /
+# Security note: This file does not provide security,
+# but it helps prevent accidental exposure of sensitive endpoints.
+# Real security is enforced via authentication and authorization.
