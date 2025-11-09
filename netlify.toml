@@ -14,11 +14,11 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    # Content Security Policy
+    # Content Security Policy (OWASP A05 Compliant - No unsafe directives)
     Content-Security-Policy = """
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com;
-      style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com;
+      script-src 'self' https://unpkg.com;
+      style-src 'self' https://unpkg.com https://fonts.googleapis.com;
       img-src 'self' data: https: blob:;
       font-src 'self' https://fonts.gstatic.com;
       connect-src 'self' https://*.supabase.co https://api.openweathermap.org https://api.met.no https://api.rainviewer.com https://tilecache.rainviewer.com https://my.meteoblue.com wss://*.supabase.co;

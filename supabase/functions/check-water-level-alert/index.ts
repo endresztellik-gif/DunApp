@@ -30,9 +30,32 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '
  * Main handler
  */
 serve(async (req) => {
-  // CORS headers
+  // Allowed origins for CORS (SECURITY: No wildcard allowed)
+  const allowedOrigins = [
+    'https://dunapp.netlify.app',
+    'https://dunapp-pwa.netlify.app',
+    'http://localhost:5173',
+    'http://localhost:5174',
+  ];
+
+  // Validate origin
+  const origin = req.headers.get('origin');
+  const isAllowedOrigin = origin && allowedOrigins.includes(origin);
+
+  // Reject requests from unauthorized origins
+  if (!isAllowedOrigin && req.method !== 'OPTIONS') {
+    return new Response(
+      JSON.stringify({ error: 'Forbidden - Invalid origin' }),
+      {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+  }
+
+  // CORS headers (using validated origin)
   const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': origin || allowedOrigins[0],
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   };

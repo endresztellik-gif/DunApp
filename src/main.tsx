@@ -26,7 +26,9 @@ const updateSW = registerSW({
   },
   onOfflineReady() {
     // Notify user that app is ready to work offline
-    console.log('✅ App ready to work offline')
+    if (import.meta.env.DEV) {
+      console.log('✅ App ready to work offline');
+    }
 
     // Optional: Show a notification to user
     if ('Notification' in window && Notification.permission === 'granted') {

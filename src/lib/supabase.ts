@@ -19,9 +19,11 @@ import type { Database } from '../types/database.types';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Debug logging for production troubleshooting
-console.log('[Supabase Config] URL:', supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'MISSING');
-console.log('[Supabase Config] Key:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING');
+// Debug logging (development only - SECURITY: No logs in production)
+if (import.meta.env.DEV) {
+  console.log('[Supabase Config] URL:', supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'MISSING');
+  console.log('[Supabase Config] Key:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING');
+}
 
 // Validate that environment variables are set
 if (!supabaseUrl || !supabaseAnonKey) {

@@ -168,7 +168,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       }
 
       setIsSubscribed(true);
-      console.log(' Push notification subscription successful');
+      if (import.meta.env.DEV) {
+        console.log('✅ Push notification subscription successful');
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to subscribe';
       setError(errorMessage);
@@ -220,7 +222,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       }
 
       setIsSubscribed(false);
-      console.log(' Push notification unsubscription successful');
+      if (import.meta.env.DEV) {
+        console.log('✅ Push notification unsubscription successful');
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to unsubscribe';
       setError(errorMessage);
