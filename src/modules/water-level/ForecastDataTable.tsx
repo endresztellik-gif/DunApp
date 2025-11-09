@@ -60,10 +60,21 @@ export const ForecastDataTable: React.FC<ForecastDataTableProps> = ({ stations }
     dateString: f.forecastDate
   }));
 
-  // Helper to get forecast value for a station on a specific date
-  const getForecastValue = (forecasts: any[], dateString: string): number | null => {
+  // Helper to get forecast data for a station on a specific date
+  const getForecastData = (forecasts: any[], dateString: string) => {
     const forecast = forecasts.find(f => f.forecastDate === dateString);
-    return forecast ? forecast.forecastedLevelCm : null;
+    if (!forecast) return null;
+
+    const level = forecast.forecastedLevelCm;
+    const uncertainty = forecast.uncertaintyCm || 0;
+
+    return {
+      level,
+      uncertainty,
+      min: level - uncertainty,
+      max: level + uncertainty,
+      hasUncertainty: uncertainty > 0
+    };
   };
 
   return (
@@ -104,12 +115,23 @@ export const ForecastDataTable: React.FC<ForecastDataTableProps> = ({ stations }
                 </div>
               </td>
               {forecastDates.map(fd => {
-                const value = getForecastValue(forecast1.forecasts, fd.dateString);
+                const data = getForecastData(forecast1.forecasts, fd.dateString);
                 return (
-                  <td key={fd.dateString} className="px-4 py-4 whitespace-nowrap text-center">
-                    <span className="text-sm font-semibold text-cyan-600">
-                      {value !== null ? `${value} cm` : 'N/A'}
-                    </span>
+                  <td key={fd.dateString} className="px-4 py-4 text-center">
+                    {data ? (
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-cyan-600">
+                          {data.level} cm
+                        </span>
+                        {data.hasUncertainty && (
+                          <span className="text-xs text-gray-500 mt-0.5">
+                            {data.min}-{data.max} cm
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">N/A</span>
+                    )}
                   </td>
                 );
               })}
@@ -126,12 +148,23 @@ export const ForecastDataTable: React.FC<ForecastDataTableProps> = ({ stations }
                 </div>
               </td>
               {forecastDates.map(fd => {
-                const value = getForecastValue(forecast2.forecasts, fd.dateString);
+                const data = getForecastData(forecast2.forecasts, fd.dateString);
                 return (
-                  <td key={fd.dateString} className="px-4 py-4 whitespace-nowrap text-center">
-                    <span className="text-sm font-semibold text-cyan-600">
-                      {value !== null ? `${value} cm` : 'N/A'}
-                    </span>
+                  <td key={fd.dateString} className="px-4 py-4 text-center">
+                    {data ? (
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-cyan-600">
+                          {data.level} cm
+                        </span>
+                        {data.hasUncertainty && (
+                          <span className="text-xs text-gray-500 mt-0.5">
+                            {data.min}-{data.max} cm
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">N/A</span>
+                    )}
                   </td>
                 );
               })}
@@ -148,12 +181,23 @@ export const ForecastDataTable: React.FC<ForecastDataTableProps> = ({ stations }
                 </div>
               </td>
               {forecastDates.map(fd => {
-                const value = getForecastValue(forecast3.forecasts, fd.dateString);
+                const data = getForecastData(forecast3.forecasts, fd.dateString);
                 return (
-                  <td key={fd.dateString} className="px-4 py-4 whitespace-nowrap text-center">
-                    <span className="text-sm font-semibold text-cyan-600">
-                      {value !== null ? `${value} cm` : 'N/A'}
-                    </span>
+                  <td key={fd.dateString} className="px-4 py-4 text-center">
+                    {data ? (
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-cyan-600">
+                          {data.level} cm
+                        </span>
+                        {data.hasUncertainty && (
+                          <span className="text-xs text-gray-500 mt-0.5">
+                            {data.min}-{data.max} cm
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">N/A</span>
+                    )}
                   </td>
                 );
               })}
@@ -180,7 +224,7 @@ export const ForecastDataTable: React.FC<ForecastDataTableProps> = ({ stations }
               </div>
               <div className="space-y-2">
                 {forecastDates.map((fd, index) => {
-                  const value = getForecastValue(stationForecasts, fd.dateString);
+                  const data = getForecastData(stationForecasts, fd.dateString);
                   return (
                     <div key={fd.dateString} className="flex justify-between items-center">
                       <span className="text-xs text-gray-600">
@@ -188,9 +232,20 @@ export const ForecastDataTable: React.FC<ForecastDataTableProps> = ({ stations }
                          index === 1 ? 'Holnapután' :
                          fd.date.toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' })}
                       </span>
-                      <span className="text-sm font-semibold text-cyan-600">
-                        {value !== null ? `${value} cm` : 'N/A'}
-                      </span>
+                      {data ? (
+                        <div className="flex flex-col items-end">
+                          <span className="text-sm font-semibold text-cyan-600">
+                            {data.level} cm
+                          </span>
+                          {data.hasUncertainty && (
+                            <span className="text-xs text-gray-500">
+                              {data.min}-{data.max} cm
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">N/A</span>
+                      )}
                     </div>
                   );
                 })}

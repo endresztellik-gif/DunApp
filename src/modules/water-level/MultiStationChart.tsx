@@ -24,20 +24,21 @@ import { EmptyState } from '../../components/UI/EmptyState';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { TrendingUp } from 'lucide-react';
 import { useWaterLevelForecast } from '../../hooks/useWaterLevelForecast';
-import type { WaterLevelStation } from '../../types';
+import type { WaterLevelStation, WaterLevelForecast } from '../../types';
 
 interface MultiStationChartProps {
   stations: WaterLevelStation[];
 }
 
 // Station colors - dynamically assigned
-const STATION_COLORS = ['#00BCD4', '#00897B', '#43A047']; // cyan, teal, green
+const STATION_COLORS = ['#00BCD4', '#FF6F00', '#9C27B0']; // cyan, orange, purple
 
 /**
  * Aggregate forecast data from multiple stations into chart format
+ * Now includes uncertainty bands (min/max) for each station
  */
 const aggregateChartData = (
-  forecasts: Array<{ stationName: string; forecasts: Array<{ forecastDate: string; forecastedLevelCm: number }> }>
+  forecasts: Array<{ stationName: string; forecasts: WaterLevelForecast[] }>
 ) => {
   if (forecasts.length === 0 || forecasts.every(f => f.forecasts.length === 0)) {
     return [];
@@ -51,7 +52,7 @@ const aggregateChartData = (
 
   const sortedDates = Array.from(allDates).sort();
 
-  // Build chart data
+  // Build chart data with uncertainty bands
   return sortedDates.map(date => {
     const dataPoint: any = {
       date: new Date(date).toLocaleDateString('hu-HU', { month: 'short', day: 'numeric' }),
@@ -59,7 +60,22 @@ const aggregateChartData = (
 
     forecasts.forEach(({ stationName, forecasts: stationForecasts }) => {
       const forecast = stationForecasts.find(f => f.forecastDate === date);
-      dataPoint[stationName] = forecast ? forecast.forecastedLevelCm : null;
+
+      if (forecast) {
+        const centerValue = forecast.forecastedLevelCm;
+        const uncertainty = forecast.uncertaintyCm || 0;
+
+        // Center line (main forecast)
+        dataPoint[stationName] = centerValue;
+
+        // Uncertainty bands
+        dataPoint[`${stationName}_min`] = centerValue - uncertainty;
+        dataPoint[`${stationName}_max`] = centerValue + uncertainty;
+      } else {
+        dataPoint[stationName] = null;
+        dataPoint[`${stationName}_min`] = null;
+        dataPoint[`${stationName}_max`] = null;
+      }
     });
 
     return dataPoint;
@@ -161,19 +177,49 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
               iconType="circle"
             />
 
-            {/* Station Lines - Dynamically generated */}
+            {/* Station Lines - Dynamically generated with uncertainty bands */}
             {stations.map((station, index) => (
-              <Line
-                key={station.id}
-                type="monotone"
-                dataKey={station.name}
-                stroke={STATION_COLORS[index]}
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={{ fill: STATION_COLORS[index], r: 5 }}
-                activeDot={{ r: 7 }}
-                connectNulls
-              />
+              <React.Fragment key={station.id}>
+                {/* Min uncertainty line (lower bound) - dashed, thin */}
+                <Line
+                  type="monotone"
+                  dataKey={`${station.name}_min`}
+                  stroke={STATION_COLORS[index]}
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                  dot={false}
+                  activeDot={false}
+                  connectNulls
+                  name={`${station.name} (min)`}
+                  legendType="none"
+                />
+
+                {/* Max uncertainty line (upper bound) - dashed, thin */}
+                <Line
+                  type="monotone"
+                  dataKey={`${station.name}_max`}
+                  stroke={STATION_COLORS[index]}
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                  dot={false}
+                  activeDot={false}
+                  connectNulls
+                  name={`${station.name} (max)`}
+                  legendType="none"
+                />
+
+                {/* Center line (main forecast) - solid, thick, with dots */}
+                <Line
+                  type="monotone"
+                  dataKey={station.name}
+                  stroke={STATION_COLORS[index]}
+                  strokeWidth={2}
+                  dot={{ fill: STATION_COLORS[index], r: 5 }}
+                  activeDot={{ r: 7 }}
+                  connectNulls
+                  name={station.name}
+                />
+              </React.Fragment>
             ))}
           </LineChart>
         </ResponsiveContainer>

@@ -123,6 +123,7 @@ export interface WaterLevelForecast {
   forecastDate: string; // DATE (YYYY-MM-DD)
   issuedAt: string; // TIMESTAMPTZ when forecast was issued
   forecastedLevelCm: number; // Predicted water level in centimeters
+  uncertaintyCm?: number | null; // Forecast uncertainty (± value in cm, grows over time)
   source: string; // Data source (hydroinfo.hu, manual)
   createdAt: string;
 }

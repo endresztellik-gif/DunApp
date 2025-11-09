@@ -67,6 +67,7 @@ async function fetchWaterLevelForecast(stationId: string): Promise<WaterLevelFor
     forecastDate: forecast.forecast_date,
     issuedAt: forecast.issued_at,
     forecastedLevelCm: forecast.forecasted_level_cm,
+    uncertaintyCm: forecast.forecast_uncertainty_cm, // ± uncertainty value
     source: forecast.source,
     createdAt: forecast.created_at,
   }));
