@@ -1,7 +1,7 @@
 {
-  "name": "DunApp PWA - Meteorológiai és Vízállás Monitoring",
+  "name": "DunApp PWA - terepi embereknek",
   "short_name": "DunApp",
-  "description": "Meteorológiai, vízállás és aszály monitoring alkalmazás Magyarország déli részére. Valós idejű adatok Szekszárd, Baja, Dunaszekcső, Mohács térségéből.",
+  "description": "Meteorológiai, vízállás és aszály monitoring alkalmazás terepi embereknek. Valós idejű adatok Szekszárd, Baja, Dunaszekcső, Mohács térségéből.",
   "start_url": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],

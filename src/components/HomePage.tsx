@@ -22,6 +22,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onModuleSelect }) => {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col items-center justify-center px-4 py-12">
       {/* Brand */}
       <div className="text-center mb-12">
+        {/* Logo */}
+        <div className="flex justify-center mb-4">
+          <img
+            src="/icons/icon-192x192.svg"
+            alt="DunApp Logo"
+            className="w-24 h-24 md:w-32 md:h-32"
+          />
+        </div>
         <h1 className="text-5xl md:text-6xl font-bold mb-3">
           <span className="text-cyan-600">Dun</span>
           <span className="text-gray-900">App</span>
@@ -90,7 +98,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onModuleSelect }) => {
 
       {/* Footer Info */}
       <div className="mt-16 text-center text-gray-500 text-sm">
-        <p>DunApp PWA - Magyarország déli részének monitoring rendszere</p>
+        <p>DunApp PWA - terepi embereknek</p>
       </div>
     </div>
   );
