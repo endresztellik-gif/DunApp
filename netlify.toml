@@ -90,6 +90,13 @@
   status = 200
   force = true
 
+# Proxy for met.hu images to avoid CORS errors
+[[redirects]]
+  from = "/met-img/*"
+  to = "https://www.met.hu/img/:splat"
+  status = 200
+  force = true
+
 # SPA fallback
 [[redirects]]
   from = "/*"

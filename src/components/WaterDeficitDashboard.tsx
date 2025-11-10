@@ -44,11 +44,8 @@ export const WaterDeficitDashboard: React.FC = () => {
   const dateStr = getDateString();
   const prefix = layerPrefixes[layer];
 
-  // Use Vite proxy in development to avoid CORS issues
-  const IS_DEV = import.meta.env.DEV;
-  const imageUrl = IS_DEV
-    ? `/met-img/${prefix}/${prefix}${dateStr}_0000.png`
-    : `https://www.met.hu/img/${prefix}/${prefix}${dateStr}_0000.png`;
+  // Use Netlify proxy to avoid CORS issues (both dev and production)
+  const imageUrl = `/met-img/${prefix}/${prefix}${dateStr}_0000.png`;
 
   const today = new Date().toLocaleDateString('hu-HU', {
     year: 'numeric',
