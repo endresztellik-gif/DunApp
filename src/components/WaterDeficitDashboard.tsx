@@ -31,13 +31,13 @@ export const WaterDeficitDashboard: React.FC = () => {
     vh100: 'msEf', // 0-100 cm water deficit
   };
 
-  // Get yesterday's date in YYYYMMDD format (images are uploaded with 1-day delay)
+  // Get date 2 days ago in YYYYMMDD format (met.hu has 2-day upload delay)
   const getDateString = () => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1); // Start with yesterday
-    const year = yesterday.getFullYear();
-    const month = String(yesterday.getMonth() + 1).padStart(2, '0');
-    const day = String(yesterday.getDate()).padStart(2, '0');
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2); // Met.hu has 2-day delay
+    const year = twoDaysAgo.getFullYear();
+    const month = String(twoDaysAgo.getMonth() + 1).padStart(2, '0');
+    const day = String(twoDaysAgo.getDate()).padStart(2, '0');
     return `${year}${month}${day}`;
   };
 
