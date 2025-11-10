@@ -164,7 +164,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       if (insertError) {
         console.error('Failed to save subscription to database:', insertError);
-        throw new Error('Failed to save subscription');
+        throw new Error(`Failed to save subscription: ${insertError.message || insertError.toString()}`);
       }
 
       setIsSubscribed(true);
