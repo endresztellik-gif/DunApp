@@ -100,16 +100,14 @@ export const WaterDeficitDashboard: React.FC = () => {
           loading="lazy"
           crossOrigin="anonymous"
           onError={(e) => {
-            // Fallback for missing image (try 2 days ago)
-            const twoDaysAgo = new Date();
-            twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-            const year = twoDaysAgo.getFullYear();
-            const month = String(twoDaysAgo.getMonth() + 1).padStart(2, '0');
-            const day = String(twoDaysAgo.getDate()).padStart(2, '0');
+            // Fallback for missing image (try 3 days ago via proxy)
+            const threeDaysAgo = new Date();
+            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+            const year = threeDaysAgo.getFullYear();
+            const month = String(threeDaysAgo.getMonth() + 1).padStart(2, '0');
+            const day = String(threeDaysAgo.getDate()).padStart(2, '0');
             const fallbackDateStr = `${year}${month}${day}`;
-            const fallbackUrl = IS_DEV
-              ? `/met-img/${prefix}/${prefix}${fallbackDateStr}_0000.png`
-              : `https://www.met.hu/img/${prefix}/${prefix}${fallbackDateStr}_0000.png`;
+            const fallbackUrl = `/met-img/${prefix}/${prefix}${fallbackDateStr}_0000.png`;
             e.currentTarget.src = fallbackUrl;
           }}
         />
