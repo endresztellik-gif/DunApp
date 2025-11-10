@@ -10,7 +10,7 @@
  * CRITICAL: Each module has its own selector - NO global selectors!
  */
 
-import { useState, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense, useEffect } from 'react';
 import { Header } from './components/Layout/Header';
 import { HomePage } from './components/HomePage';
 import { InstallPrompt } from './components/InstallPrompt';
@@ -18,6 +18,7 @@ import { LoadingSpinner } from './components/UI/LoadingSpinner';
 import { useCities } from './hooks/useCities';
 import { useDroughtLocations } from './hooks/useDroughtLocations';
 import { useGroundwaterWells } from './hooks/useGroundwaterWells';
+import { supabase } from './lib/supabase';
 
 // Lazy load modules for better initial load performance
 const MeteorologyModule = lazy(() =>
@@ -54,6 +55,28 @@ function App() {
   const { cities, isLoading: citiesLoading, error: citiesError } = useCities();
   const { locations: droughtLocations, isLoading: locationsLoading, error: locationsError } = useDroughtLocations();
   const { wells: groundwaterWells, isLoading: wellsLoading, error: wellsError } = useGroundwaterWells();
+
+  // Check water level alert when app loads (user request)
+  useEffect(() => {
+    const checkWaterLevelAlert = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('check-water-level-alert', {
+          method: 'POST',
+        });
+
+        if (error) {
+          console.error('Water level alert check failed:', error);
+        } else if (import.meta.env.DEV) {
+          console.log('Water level alert check:', data);
+        }
+      } catch (err) {
+        console.error('Failed to check water level alert:', err);
+      }
+    };
+
+    // Run alert check on app load
+    checkWaterLevelAlert();
+  }, []); // Empty dependency array - only run once on mount
 
   // Show loading spinner while data is loading
   if (activeModule === 'meteorology' && citiesLoading) {

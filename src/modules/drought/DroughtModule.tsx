@@ -52,15 +52,26 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
   // Ref for well selector section to preserve scroll position
   const wellSelectorRef = useRef<HTMLDivElement>(null);
+  const scrollPositionRef = useRef<number>(0);
 
-  // Preserve scroll position when well changes
+  // Save scroll position before well change
+  const handleWellChange = (well: GroundwaterWell) => {
+    scrollPositionRef.current = window.scrollY;
+    setSelectedWell(well);
+  };
+
+  // Restore scroll position after render (mobile-friendly)
   useEffect(() => {
-    if (selectedWell && wellSelectorRef.current) {
-      // Scroll to the well selector section smoothly, keep it in view
-      wellSelectorRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest' // Don't force to top, just keep in view
-      });
+    if (selectedWell && scrollPositionRef.current > 0) {
+      // Small delay to allow render, then restore scroll
+      const timeoutId = setTimeout(() => {
+        window.scrollTo({
+          top: scrollPositionRef.current,
+          behavior: 'auto' // Instant scroll, no animation (better for mobile)
+        });
+      }, 50);
+
+      return () => clearTimeout(timeoutId);
     }
   }, [selectedWell]);
 
@@ -210,7 +221,7 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
         <WellSelector
           wells={wells}
           selectedWell={selectedWell}
-          onWellChange={setSelectedWell}
+          onWellChange={handleWellChange}
           className="w-full sm:w-auto"
         />
       </div>

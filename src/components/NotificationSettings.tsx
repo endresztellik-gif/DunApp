@@ -20,24 +20,14 @@ export const NotificationSettings: React.FC = () => {
   const { isSupported, permission, isSubscribed, subscribe, unsubscribe, isLoading, error } =
     usePushNotifications();
 
-  // Not supported
+  // Not supported - don't render anything (silent)
   if (!isSupported) {
-    return (
-      <div className="rounded-lg border-2 border-gray-200 bg-gray-50 p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-500" />
-          <div>
-            <h4 className="text-sm font-semibold text-gray-900">
-              Push értesítések nem támogatottak
-            </h4>
-            <p className="mt-1 text-xs text-gray-600">
-              A böngésződ nem támogatja a push értesítéseket. Próbálj Chrome, Firefox, vagy Edge
-              böngészőt használni.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    return null;
+  }
+
+  // Already subscribed - hide component after first subscription
+  if (isSubscribed && permission === 'granted') {
+    return null;
   }
 
   // Permission denied
