@@ -16,9 +16,10 @@
  * Leaflet rendering is expensive - memoization has high impact.
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, ImageOverlay } from 'react-leaflet';
-import { icon as leafletIcon, LatLngBoundsExpression } from 'leaflet';
+import { icon as leafletIcon } from 'leaflet';
+import type { LatLngBoundsExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { MapPin, Play, Pause } from 'lucide-react';
@@ -102,10 +103,6 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
   const [isLoadingRadar, setIsLoadingRadar] = useState(true);
   const [loadedFrames, setLoadedFrames] = useState<Set<string>>(new Set());
   const [activeLayer, setActiveLayer] = useState<0 | 1>(0);
-
-  // Refs for crossfade layers
-  const layer0Opacity = useRef(0.7);
-  const layer1Opacity = useRef(0);
 
   // Generate radar frame URLs
   const initializeRadarFrames = useCallback(async () => {
