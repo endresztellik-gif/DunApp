@@ -5,8 +5,9 @@
  * Displays weather data for 4 cities with:
  * - City selector (module-specific)
  * - 6 data cards (temperature, precipitation, wind speed, pressure, humidity, wind direction)
- * - 3-day forecast chart
- * - Radar map
+ * - Precipitation summary card (7-day, 30-day, YTD from Open-Meteo Historical API)
+ * - 3-day forecast chart (Yr.no)
+ * - Radar map (OMSZ met.hu ODP)
  */
 
 import React, { useState } from 'react'
@@ -25,6 +26,7 @@ import { LoadingSpinner } from '../../components/UI/LoadingSpinner'
 import { Footer } from '../../components/Layout/Footer'
 import { ForecastChart } from './ForecastChart'
 import { RadarMap } from './RadarMap'
+import { PrecipitationSummaryCard } from './PrecipitationSummaryCard'
 import { useWeatherData } from '../../hooks/useWeatherData'
 import type { City, DataSource } from '../../types'
 
@@ -42,8 +44,23 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
   // Data sources for footer
   const dataSources: DataSource[] = [
     {
-      name: 'OMSZ',
-      url: 'https://www.met.hu',
+      name: 'OpenWeatherMap',
+      url: 'https://openweathermap.org',
+      lastUpdate: new Date().toISOString(),
+    },
+    {
+      name: 'OMSZ Radar',
+      url: 'https://odp.met.hu',
+      lastUpdate: new Date().toISOString(),
+    },
+    {
+      name: 'Open-Meteo',
+      url: 'https://open-meteo.com',
+      lastUpdate: new Date().toISOString(),
+    },
+    {
+      name: 'Yr.no',
+      url: 'https://www.yr.no',
       lastUpdate: new Date().toISOString(),
     },
   ]
@@ -157,6 +174,11 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
               unit=""
               moduleColor="meteorology"
             />
+          </div>
+
+          {/* Precipitation Summary */}
+          <div className="mb-6">
+            <PrecipitationSummaryCard cityId={selectedCity?.id || null} />
           </div>
 
           {/* 3-Day Forecast Chart */}

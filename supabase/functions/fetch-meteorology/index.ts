@@ -11,7 +11,6 @@
  * IMPLEMENTATION:
  * Current Weather:
  * - OpenWeatherMap API integration (primary source)
- * - Meteoblue API fallback
  * - Yr.no fallback
  *
  * Forecast:
@@ -25,7 +24,6 @@
  *
  * API Keys needed (set in Supabase dashboard):
  * - OPENWEATHER_API_KEY
- * - METEOBLUE_API_KEY
  * - YR_NO_USER_AGENT (optional, defaults to 'DunApp PWA/1.0 (contact@dunapp.hu)')
  * - SUPABASE_URL
  * - SUPABASE_SERVICE_ROLE_KEY
@@ -36,7 +34,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Environment variables
 const OPENWEATHER_API_KEY = Deno.env.get('OPENWEATHER_API_KEY');
-const METEOBLUE_API_KEY = Deno.env.get('METEOBLUE_API_KEY');
 const YR_NO_USER_AGENT = Deno.env.get('YR_NO_USER_AGENT') || 'DunApp PWA/1.0 (contact@dunapp.hu)';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -113,55 +110,6 @@ async function fetchFromOpenWeatherMap(city: { name: string; lat: number; lon: n
   };
 }
 
-/**
- * Fetch weather data from Meteoblue (fallback)
- */
-async function fetchFromMeteoblue(city: { name: string; lat: number; lon: number }) {
-  if (!METEOBLUE_API_KEY) {
-    throw new Error('METEOBLUE_API_KEY not configured');
-  }
-
-  const url = `https://my.meteoblue.com/packages/basic-1h?apikey=${METEOBLUE_API_KEY}&lat=${city.lat}&lon=${city.lon}&format=json`;
-
-  const response = await fetchWithRetry(() => fetch(url));
-
-  if (!response.ok) {
-    throw new Error(`Meteoblue API error: ${response.status} ${response.statusText}`);
-  }
-
-  const data = await response.json();
-
-  // Get the latest (first) data point from the hourly forecast
-  const latest = {
-    temperature: data.data_1h?.temperature?.[0] ?? null,
-    humidity: data.data_1h?.relativehumidity?.[0] ?? null,
-    wind_speed: data.data_1h?.windspeed?.[0] ? data.data_1h.windspeed[0] / 3.6 : null, // km/h to m/s
-    wind_direction: data.data_1h?.winddirection?.[0] ?? null,
-    precipitation: data.data_1h?.precipitation?.[0] ?? null,
-    clouds_percent: data.data_1h?.totalcloudcover?.[0] ?? null,
-  };
-
-  return {
-    temperature: latest.temperature,
-    feels_like: null, // Meteoblue doesn't provide feels_like
-    temp_min: null,
-    temp_max: null,
-    pressure: null,
-    humidity: latest.humidity,
-    wind_speed: latest.wind_speed,
-    wind_direction: latest.wind_direction,
-    clouds_percent: latest.clouds_percent,
-    weather_main: null,
-    weather_description: null,
-    weather_icon: null,
-    rain_1h: latest.precipitation,
-    rain_3h: null,
-    snow_1h: null,
-    snow_3h: null,
-    visibility: null,
-    source: 'meteoblue'
-  };
-}
 
 /**
  * Fetch weather data from Yr.no (fallback)
@@ -208,56 +156,7 @@ async function fetchFromYrNo(city: { name: string; lat: number; lon: number }) {
 }
 
 /**
- * Fetch 3-day forecast from Meteoblue API
- * Returns daily forecast data with min/max temperature
- */
-async function fetchMeteoblueForecast(city: { name: string; lat: number; lon: number }) {
-  if (!METEOBLUE_API_KEY) {
-    throw new Error('METEOBLUE_API_KEY not configured');
-  }
-
-  const url = `https://my.meteoblue.com/packages/basic-day?apikey=${METEOBLUE_API_KEY}&lat=${city.lat}&lon=${city.lon}&format=json`;
-
-  console.log(`Fetching Meteoblue forecast for ${city.name}...`);
-
-  const response = await fetchWithRetry(() => fetch(url));
-
-  if (!response.ok) {
-    throw new Error(`Meteoblue API error: ${response.status} ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const forecasts = [];
-
-  // Get next 3 days of forecast (today + 2 more days)
-  const daysToFetch = Math.min(3, data.data_day?.time?.length || 0);
-
-  for (let i = 0; i < daysToFetch; i++) {
-    // Parse date string (format: "YYYY-MM-DD")
-    const dateStr = data.data_day.time[i];
-    const forecastDate = new Date(dateStr + 'T12:00:00Z'); // Set to noon UTC
-
-    forecasts.push({
-      forecast_time: forecastDate.toISOString(),
-      temperature: data.data_day.temperature_mean?.[i] ?? null,
-      temperature_min: data.data_day.temperature_min?.[i] ?? null,
-      temperature_max: data.data_day.temperature_max?.[i] ?? null,
-      precipitation_amount: data.data_day.precipitation?.[i] ?? null,
-      wind_speed: data.data_day.windspeed_mean?.[i] ?? null,
-      wind_direction: data.data_day.winddirection?.[i] ? Math.round(data.data_day.winddirection[i]) : null,
-      humidity: data.data_day.relativehumidity_mean?.[i] ? Math.round(data.data_day.relativehumidity_mean[i]) : null,
-      pressure: data.data_day.sealevelpressure_mean?.[i] ?? null,
-      clouds_percent: null, // Not available in basic-day package
-      weather_symbol: data.data_day.pictocode?.[i]?.toString() ?? null
-    });
-  }
-
-  console.log(`✅ Meteoblue forecast for ${city.name}: ${forecasts.length} days`);
-  return forecasts;
-}
-
-/**
- * Fetch 3-day forecast from Yr.no API (DEPRECATED - replaced by Meteoblue)
+ * Fetch 3-day forecast from Yr.no API
  * Returns forecast data with 6-hour intervals for the next 72 hours
  */
 async function fetchYrNoForecast(city: { name: string; lat: number; lon: number }) {
@@ -335,7 +234,7 @@ async function fetchYrNoForecast(city: { name: string; lat: number; lon: number 
 }
 
 /**
- * Fetch weather data with fallback hierarchy
+ * Fetch weather data with fallback hierarchy (OpenWeatherMap → Yr.no)
  */
 async function fetchWeatherData(city: { name: string; lat: number; lon: number }) {
   // Try OpenWeatherMap first
@@ -345,21 +244,13 @@ async function fetchWeatherData(city: { name: string; lat: number; lon: number }
   } catch (error) {
     console.warn(`OpenWeatherMap failed for ${city.name}:`, error.message);
 
-    // Try Meteoblue as fallback
+    // Try Yr.no as fallback
     try {
-      console.log(`Trying Meteoblue for ${city.name}...`);
-      return await fetchFromMeteoblue(city);
+      console.log(`Trying Yr.no for ${city.name}...`);
+      return await fetchFromYrNo(city);
     } catch (error2) {
-      console.warn(`Meteoblue failed for ${city.name}:`, error2.message);
-
-      // Try Yr.no as last fallback
-      try {
-        console.log(`Trying Yr.no for ${city.name}...`);
-        return await fetchFromYrNo(city);
-      } catch (error3) {
-        console.error(`All weather sources failed for ${city.name}`);
-        throw new Error(`Failed to fetch weather data for ${city.name}: all sources failed`);
-      }
+      console.error(`All weather sources failed for ${city.name}`);
+      throw new Error(`Failed to fetch weather data for ${city.name}: all sources failed`);
     }
   }
 }

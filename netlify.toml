@@ -20,9 +20,9 @@
       script-src 'self' https://unpkg.com;
       style-src 'self' https://unpkg.com https://fonts.googleapis.com 'unsafe-inline';
       style-src-elem 'self' https://unpkg.com https://fonts.googleapis.com 'unsafe-inline';
-      img-src 'self' data: https: blob: https://www.met.hu;
+      img-src 'self' data: https: blob: https://www.met.hu https://odp.met.hu;
       font-src 'self' https://fonts.gstatic.com;
-      connect-src 'self' https://*.supabase.co https://api.openweathermap.org https://api.met.no https://api.rainviewer.com https://tilecache.rainviewer.com https://my.meteoblue.com https://map.hugeo.hu https://ovfgis2.vizugy.hu https://*.tile.openstreetmap.org wss://*.supabase.co;
+      connect-src 'self' https://*.supabase.co https://api.openweathermap.org https://api.met.no https://api.rainviewer.com https://tilecache.rainviewer.com https://odp.met.hu https://archive-api.open-meteo.com https://map.hugeo.hu https://ovfgis2.vizugy.hu https://*.tile.openstreetmap.org wss://*.supabase.co;
       frame-src 'self';
       base-uri 'self';
       form-action 'self';
@@ -94,6 +94,20 @@
 [[redirects]]
   from = "/met-img/*"
   to = "https://www.met.hu/img/:splat"
+  status = 200
+  force = true
+
+# Proxy for met.hu ODP radar images
+[[redirects]]
+  from = "/met-radar/*"
+  to = "https://odp.met.hu/weather/radar/composite/png/refl2D/:splat"
+  status = 200
+  force = true
+
+# Proxy for Open-Meteo Historical API (precipitation data)
+[[redirects]]
+  from = "/open-meteo-archive/*"
+  to = "https://archive-api.open-meteo.com/v1/:splat"
   status = 200
   force = true
 

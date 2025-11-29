@@ -99,4 +99,20 @@
   --transition-fast: 150ms ease-in-out;
   --transition-base: 200ms ease-in-out;
   --transition-slow: 300ms ease-in-out;
+
+  /* RADAR ANIMATION */
+  --radar-transition: 300ms ease-in-out;
+}
+
+/* RADAR CROSSFADE ANIMATION */
+.radar-layer {
+  transition: opacity var(--radar-transition);
+}
+
+.radar-layer-fade-in {
+  opacity: 0.7;
+}
+
+.radar-layer-fade-out {
+  opacity: 0;
 }

@@ -50,29 +50,55 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
     initialWell || wells[0] || null
   );
 
-  // Ref for well selector section to preserve scroll position
+  // Ref for well selector section to scroll into view after well change
   const wellSelectorRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef<number>(0);
+  const isChangingWell = useRef(false);
 
-  // Save scroll position before well change
+  // Handle well change - save scroll position before state change
   const handleWellChange = (well: GroundwaterWell) => {
     scrollPositionRef.current = window.scrollY;
+    isChangingWell.current = true;
     setSelectedWell(well);
   };
 
-  // Restore scroll position after render (mobile-friendly)
+  // Restore scroll position multiple times to counter any re-renders
   useEffect(() => {
-    if (selectedWell && scrollPositionRef.current > 0) {
-      // Small delay to allow render, then restore scroll
-      const timeoutId = setTimeout(() => {
-        window.scrollTo({
-          top: scrollPositionRef.current,
-          behavior: 'auto' // Instant scroll, no animation (better for mobile)
-        });
-      }, 50);
-
-      return () => clearTimeout(timeoutId);
+    if (!isChangingWell.current || scrollPositionRef.current === 0) {
+      return;
     }
+
+    const savedPosition = scrollPositionRef.current;
+
+    // Restore scroll at multiple intervals to handle async re-renders
+    const restoreScroll = () => {
+      window.scrollTo({ top: savedPosition, behavior: 'auto' });
+    };
+
+    // Immediate restore
+    restoreScroll();
+
+    // After React render
+    const t1 = setTimeout(restoreScroll, 50);
+
+    // After potential data fetch start
+    const t2 = setTimeout(restoreScroll, 150);
+
+    // After data arrives and chart renders
+    const t3 = setTimeout(restoreScroll, 400);
+
+    // Final restore and cleanup
+    const t4 = setTimeout(() => {
+      restoreScroll();
+      isChangingWell.current = false;
+    }, 800);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
   }, [selectedWell]);
 
   // Fetch real drought and groundwater data from Supabase

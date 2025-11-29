@@ -50,10 +50,13 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
 
   // Transform data for Recharts with 5-day sampling
   // This reduces ~365 data points to ~73 points for better visualization
+  // IMPORTANT: Display values as NEGATIVE because higher value = deeper water
+  // This makes the chart intuitive: deeper water appears lower on the chart
   const allData = timeseriesData.map((point) => ({
     timestamp: point.timestamp,
     dateLabel: formatDate(point.timestamp),
     waterLevelMeters: point.waterLevelMeters,
+    displayLevel: point.waterLevelMeters !== null ? -point.waterLevelMeters : null, // NEGATIVE for display
     waterLevelMasl: point.waterLevelMasl,
     waterTemperature: point.waterTemperature
   }));
@@ -61,17 +64,18 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
   // Sample every 5th day for optimal trend visualization
   const chartData = allData.filter((_, index) => index % 5 === 0);
 
-  // Calculate Y-axis domain for better visibility of small changes
-  const waterLevels = chartData.map((d) => d.waterLevelMeters);
-  const minLevel = Math.min(...waterLevels);
-  const maxLevel = Math.max(...waterLevels);
-  const range = maxLevel - minLevel;
+  // Calculate Y-axis domain for NEGATIVE values
+  // Deeper water (larger positive value) = more negative display value = lower on chart
+  const displayLevels = chartData.map((d) => d.displayLevel).filter((v): v is number => v !== null);
+  const minDisplayLevel = Math.min(...displayLevels); // Most negative (deepest)
+  const maxDisplayLevel = Math.max(...displayLevels); // Least negative (shallowest)
+  const range = maxDisplayLevel - minDisplayLevel;
 
   // Add padding: 30% of range or minimum 0.5m (50cm)
   const padding = Math.max(range * 0.3, 0.5);
   const yDomain = [
-    Math.floor((minLevel - padding) * 10) / 10, // Round down to 0.1m
-    Math.ceil((maxLevel + padding) * 10) / 10   // Round up to 0.1m
+    Math.floor((minDisplayLevel - padding) * 10) / 10, // Most negative (bottom)
+    Math.ceil((maxDisplayLevel + padding) * 10) / 10   // Least negative (top)
   ];
 
   // Custom tooltip formatter
@@ -90,7 +94,10 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
         <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
           <p className="text-xs text-gray-600 mb-1">{fullDate}</p>
           <p className="text-sm font-semibold text-blue-700">
-            Talajvízszint: {data.waterLevelMeters.toFixed(2)} m
+            Mélység: {data.displayLevel?.toFixed(2)} m
+          </p>
+          <p className="text-xs text-gray-500">
+            ({Math.abs(data.displayLevel || 0).toFixed(2)} m a felszín alatt)
           </p>
           {data.waterLevelMasl !== null && (
             <p className="text-xs text-gray-600">
@@ -131,17 +138,17 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
         )}
       </div>
 
-      {/* Loading State */}
+      {/* Loading State - same min-height as chart to prevent layout shift */}
       {isLoading && (
-        <div className="flex justify-center items-center h-80">
+        <div className="flex justify-center items-center min-h-[500px]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
           <p className="ml-4 text-gray-600">Adatok betöltése...</p>
         </div>
       )}
 
-      {/* Error State */}
+      {/* Error State - same min-height as chart to prevent layout shift */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center h-80 flex flex-col justify-center">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center min-h-[500px] flex flex-col justify-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <p className="text-red-700 font-semibold text-lg">Hiba az adatok betöltésekor</p>
           <p className="text-sm text-red-600 mt-2">{error.message}</p>
@@ -151,9 +158,9 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty State - same min-height as chart to prevent layout shift */}
       {!isLoading && !error && chartData.length === 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center h-80 flex flex-col justify-center">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center min-h-[500px] flex flex-col justify-center">
           <p className="text-yellow-700 font-semibold text-lg">Nincs elérhető adat</p>
           <p className="text-sm text-yellow-600 mt-2">
             Az elmúlt 365 napból nem áll rendelkezésre talajvízszint mérés ehhez a kúthoz.
@@ -188,7 +195,7 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
                 domain={yDomain}
                 tickCount={8}
                 label={{
-                  value: 'Talajvízszint (m)',
+                  value: 'Mélység a felszíntől (m)',
                   angle: -90,
                   position: 'insideLeft',
                   style: { fontSize: 14, fill: '#374151' }
@@ -202,12 +209,12 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
               />
               <Line
                 type="monotone"
-                dataKey="waterLevelMeters"
+                dataKey="displayLevel"
                 stroke="#f97316"
                 strokeWidth={2}
                 dot={{ fill: '#f97316', r: 3 }}
                 activeDot={{ r: 6 }}
-                name="Talajvízszint (m)"
+                name="Mélység (m)"
               />
             </LineChart>
           </ResponsiveContainer>

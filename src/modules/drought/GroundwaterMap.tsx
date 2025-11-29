@@ -111,7 +111,12 @@ export const GroundwaterMap: React.FC<GroundwaterMapProps> = ({
                   <p className="text-xs text-gray-600 mt-1">{well.cityName}</p>
                   {waterLevel !== null && (
                     <p className="text-sm font-semibold text-gray-900 mt-2">
-                      {waterLevel.toFixed(2)} m
+                      {(-waterLevel).toFixed(2)} m
+                    </p>
+                  )}
+                  {waterLevel !== null && (
+                    <p className="text-xs text-gray-500">
+                      ({waterLevel.toFixed(2)} m a felszín alatt)
                     </p>
                   )}
                 </div>
@@ -123,19 +128,19 @@ export const GroundwaterMap: React.FC<GroundwaterMapProps> = ({
 
       {/* Legend */}
       <div className="map-legend">
-        <h4 className="text-xs font-semibold text-gray-900 mb-2">Szint (m)</h4>
+        <h4 className="text-xs font-semibold text-gray-900 mb-2">Mélység (m)</h4>
         <div className="space-y-1">
           <div className="map-legend-item">
-            <div className="map-legend-color bg-green-600" />
-            <span>&gt; 5m (Magas)</span>
+            <div className="map-legend-color bg-red-600" />
+            <span>&lt; -5m (Mély)</span>
           </div>
           <div className="map-legend-item">
             <div className="map-legend-color bg-orange-500" />
-            <span>3-5m (Közepes)</span>
+            <span>-3 to -5m (Közepes)</span>
           </div>
           <div className="map-legend-item">
-            <div className="map-legend-color bg-red-600" />
-            <span>&lt; 3m (Alacsony)</span>
+            <div className="map-legend-color bg-green-600" />
+            <span>&gt; -3m (Sekély)</span>
           </div>
         </div>
       </div>

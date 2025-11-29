@@ -29,10 +29,13 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Logo */}
           <button
             onClick={() => onModuleChange(null)}
-            className="text-3xl font-bold hover:opacity-80 transition-opacity"
+            className="flex flex-col items-center hover:opacity-80 transition-opacity"
           >
-            <span className="text-cyan-600">Dun</span>
-            <span className="text-gray-900">App</span>
+            <span className="text-3xl font-bold">
+              <span className="text-cyan-600">Dun</span>
+              <span className="text-gray-900">App</span>
+            </span>
+            <span className="text-xs text-gray-400">v 1.5</span>
           </button>
 
           {/* Module Tabs - Always visible */}

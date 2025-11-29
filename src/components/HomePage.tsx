@@ -30,10 +30,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onModuleSelect }) => {
             className="w-24 h-24 md:w-32 md:h-32"
           />
         </div>
-        <h1 className="text-5xl md:text-6xl font-bold mb-3">
+        <h1 className="text-5xl md:text-6xl font-bold mb-1">
           <span className="text-cyan-600">Dun</span>
           <span className="text-gray-900">App</span>
         </h1>
+        <p className="text-sm text-gray-400 mb-3">v 1.5</p>
         <p className="text-gray-600 text-lg">
           Meteorológiai és Vízügyi Monitoring
         </p>

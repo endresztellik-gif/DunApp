@@ -1,23 +1,24 @@
 /**
  * RadarMap Component
  *
- * Displays weather radar map using Leaflet with RainViewer API overlay.
- * Shows real-time rain/precipitation radar data for the selected city region.
+ * Displays weather radar map using Leaflet with Met.hu ODP radar overlay.
+ * Shows real-time rain/precipitation radar data for Hungary.
  *
  * Features:
  * - OpenStreetMap base layer
- * - RainViewer radar overlay (latest frame)
+ * - Met.hu radar composite overlay (5-minute resolution)
+ * - CSS crossfade animation for smooth transitions
  * - City marker with popup info
  *
- * API: https://www.rainviewer.com/api.html
+ * API: https://odp.met.hu/weather/radar/composite/png/refl2D/
  *
  * PERFORMANCE: Memoized to prevent re-renders during radar animation.
  * Leaflet rendering is expensive - memoization has high impact.
  */
 
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { icon as leafletIcon } from 'leaflet';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, ImageOverlay } from 'react-leaflet';
+import { icon as leafletIcon, LatLngBoundsExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { MapPin, Play, Pause } from 'lucide-react';
@@ -34,52 +35,143 @@ const defaultIcon = leafletIcon({
   shadowSize: [41, 41],
 });
 
+// Hungary radar composite bounds (approximate)
+// Based on met.hu radar coverage area
+const HUNGARY_RADAR_BOUNDS: LatLngBoundsExpression = [
+  [45.5, 13.5], // Southwest corner
+  [49.5, 25.0], // Northeast corner
+];
+
 interface RadarMapProps {
   city: City | null;
 }
 
+interface RadarFrame {
+  timestamp: string; // YYYYMMDD_HHMM format
+  url: string;
+}
+
+/**
+ * Generate radar frame URLs for the last 2 hours (24 frames at 5-minute intervals)
+ * Met.hu updates radar images every 5 minutes
+ */
+function generateRadarFrameUrls(): RadarFrame[] {
+  const frames: RadarFrame[] = [];
+  const now = new Date();
+
+  // Go back 2 hours and generate 24 frames (5-minute intervals)
+  for (let i = 24; i >= 0; i--) {
+    const frameTime = new Date(now.getTime() - i * 5 * 60 * 1000);
+
+    // Round down to nearest 5 minutes
+    const minutes = Math.floor(frameTime.getMinutes() / 5) * 5;
+    frameTime.setMinutes(minutes, 0, 0);
+
+    // Format: YYYYMMDD_HHMM
+    const year = frameTime.getFullYear();
+    const month = String(frameTime.getMonth() + 1).padStart(2, '0');
+    const day = String(frameTime.getDate()).padStart(2, '0');
+    const hours = String(frameTime.getHours()).padStart(2, '0');
+    const mins = String(frameTime.getMinutes()).padStart(2, '0');
+
+    const timestamp = `${year}${month}${day}_${hours}${mins}`;
+    const url = `/met-radar/radar_composite-refl2D-${timestamp}.png`;
+
+    frames.push({ timestamp, url });
+  }
+
+  return frames;
+}
+
+/**
+ * Preload image and return a promise
+ */
+function preloadImage(url: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+    img.src = url;
+  });
+}
+
 export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
-  const [radarFrames, setRadarFrames] = useState<string[]>([]);
+  const [radarFrames, setRadarFrames] = useState<RadarFrame[]>([]);
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isLoadingRadar, setIsLoadingRadar] = useState(true);
+  const [loadedFrames, setLoadedFrames] = useState<Set<string>>(new Set());
+  const [activeLayer, setActiveLayer] = useState<0 | 1>(0);
 
-  // Fetch radar frames from RainViewer API
-  useEffect(() => {
-    const fetchRadarFrames = async () => {
-      try {
-        setIsLoadingRadar(true);
-        const response = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-        const data = await response.json();
+  // Refs for crossfade layers
+  const layer0Opacity = useRef(0.7);
+  const layer1Opacity = useRef(0);
 
-        // Get all available radar frames (last 2 hours, typically 8-12 frames)
-        if (data.radar?.past && data.radar.past.length > 0) {
-          const timestamps = data.radar.past.map((frame: { path: string }) =>
-            frame.path.split('/').pop()
-          );
-          setRadarFrames(timestamps);
-          setCurrentFrameIndex(timestamps.length - 1); // Start with latest frame
-        }
-      } catch (error) {
-        console.error('Failed to fetch radar data:', error);
-      } finally {
-        setIsLoadingRadar(false);
-      }
-    };
+  // Generate radar frame URLs
+  const initializeRadarFrames = useCallback(async () => {
+    setIsLoadingRadar(true);
+    const frames = generateRadarFrameUrls();
+    setRadarFrames(frames);
 
-    fetchRadarFrames();
-    // Refresh every 10 minutes
-    const interval = setInterval(fetchRadarFrames, 10 * 60 * 1000);
-    return () => clearInterval(interval);
+    // Preload the first few frames
+    const preloadCount = Math.min(5, frames.length);
+    const preloadPromises = frames.slice(0, preloadCount).map((frame) =>
+      preloadImage(frame.url)
+        .then(() => {
+          setLoadedFrames((prev) => new Set([...prev, frame.timestamp]));
+        })
+        .catch(() => {
+          // Silently fail - image might not exist yet
+        })
+    );
+
+    await Promise.allSettled(preloadPromises);
+    setCurrentFrameIndex(frames.length - 1); // Start with latest frame
+    setIsLoadingRadar(false);
   }, []);
 
-  // Radar animation loop
+  // Initialize on mount and refresh every 5 minutes
+  useEffect(() => {
+    initializeRadarFrames();
+    const interval = setInterval(initializeRadarFrames, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [initializeRadarFrames]);
+
+  // Preload next frames as animation progresses
+  useEffect(() => {
+    if (radarFrames.length === 0) return;
+
+    // Preload next 3 frames
+    const preloadIndices = [1, 2, 3].map(
+      (offset) => (currentFrameIndex + offset) % radarFrames.length
+    );
+
+    preloadIndices.forEach((index) => {
+      const frame = radarFrames[index];
+      if (frame && !loadedFrames.has(frame.timestamp)) {
+        preloadImage(frame.url)
+          .then(() => {
+            setLoadedFrames((prev) => new Set([...prev, frame.timestamp]));
+          })
+          .catch(() => {
+            // Silently fail
+          });
+      }
+    });
+  }, [currentFrameIndex, radarFrames, loadedFrames]);
+
+  // Radar animation loop with crossfade
   useEffect(() => {
     if (!isPlaying || radarFrames.length === 0) return;
 
     const animationInterval = setInterval(() => {
-      setCurrentFrameIndex((prevIndex) => (prevIndex + 1) % radarFrames.length);
-    }, 500); // Change frame every 500ms
+      setCurrentFrameIndex((prevIndex) => {
+        const newIndex = (prevIndex + 1) % radarFrames.length;
+        // Toggle active layer for crossfade
+        setActiveLayer((prev) => (prev === 0 ? 1 : 0));
+        return newIndex;
+      });
+    }, 700); // Slightly longer for smoother animation
 
     return () => clearInterval(animationInterval);
   }, [isPlaying, radarFrames.length]);
@@ -97,19 +189,25 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
   // Map center on selected city
   const mapCenter: [number, number] = [city.latitude, city.longitude];
 
-  // RainViewer tile URL for current frame
-  // Format: https://tilecache.rainviewer.com/v2/radar/{timestamp}/256/{z}/{x}/{y}/2/0_0.png
-  // Parameters: 2 = color scheme, 0_0 = smooth_0_snow_0
-  const currentTimestamp = radarFrames[currentFrameIndex];
-  const radarTileUrl = currentTimestamp
-    ? `https://tilecache.rainviewer.com/v2/radar/${currentTimestamp}/256/{z}/{x}/{y}/2/0_0.png`
-    : null;
+  // Current and previous frame for crossfade
+  const currentFrame = radarFrames[currentFrameIndex];
+  const prevFrameIndex =
+    currentFrameIndex === 0 ? radarFrames.length - 1 : currentFrameIndex - 1;
+  const prevFrame = radarFrames[prevFrameIndex];
+
+  // Format timestamp for display (YYYYMMDD_HHMM -> HH:MM)
+  const formatTimestamp = (timestamp: string): string => {
+    if (!timestamp || timestamp.length < 13) return '';
+    const hours = timestamp.substring(9, 11);
+    const mins = timestamp.substring(11, 13);
+    return `${hours}:${mins}`;
+  };
 
   return (
     <div className="relative w-full h-96 bg-white rounded-lg shadow-sm border-2 border-gray-200">
       <MapContainer
         center={mapCenter}
-        zoom={10}
+        zoom={7}
         className="h-full w-full rounded-lg"
         scrollWheelZoom={false}
         style={{ borderRadius: '8px' }}
@@ -117,17 +215,28 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
         {/* Base Map Layer */}
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
 
-        {/* RainViewer Radar Overlay */}
-        {radarTileUrl && (
-          <TileLayer
-            key={currentTimestamp}
-            url={radarTileUrl}
-            opacity={0.6}
-            attribution='<a href="https://www.rainviewer.com/api.html">RainViewer</a>'
+        {/* Met.hu Radar Overlay - Layer 0 (crossfade) */}
+        {prevFrame && activeLayer === 1 && (
+          <ImageOverlay
+            url={prevFrame.url}
+            bounds={HUNGARY_RADAR_BOUNDS}
+            opacity={0.7}
+            className="radar-layer radar-layer-fade-out"
             zIndex={200}
+          />
+        )}
+
+        {/* Met.hu Radar Overlay - Layer 1 (crossfade) */}
+        {currentFrame && (
+          <ImageOverlay
+            url={currentFrame.url}
+            bounds={HUNGARY_RADAR_BOUNDS}
+            opacity={0.7}
+            className="radar-layer radar-layer-fade-in"
+            zIndex={201}
           />
         )}
 
@@ -152,7 +261,9 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
           {isLoadingRadar ? (
             <span>⏳ Radarkép betöltése...</span>
           ) : radarFrames.length > 0 ? (
-            <span>✅ Radar: {radarFrames.length} frame</span>
+            <span>
+              🌧️ OMSZ Radar {currentFrame ? formatTimestamp(currentFrame.timestamp) : ''}
+            </span>
           ) : (
             <span>❌ Radarkép nem elérhető</span>
           )}
@@ -180,6 +291,18 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
             </button>
           </div>
         )}
+      </div>
+
+      {/* Attribution */}
+      <div className="absolute top-2 right-2 z-[1000]">
+        <a
+          href="https://www.met.hu"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-white/80 rounded px-2 py-1 text-xs text-gray-500 hover:text-cyan-600"
+        >
+          Forrás: OMSZ
+        </a>
       </div>
     </div>
   );

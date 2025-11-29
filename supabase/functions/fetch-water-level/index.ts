@@ -398,43 +398,62 @@ async function scrapeHydroinfoForecast() {
     for (const row of rows) {
       const cells = row.querySelectorAll('td');
 
-      // Need at least 8 cells: station name + "Ma reggel" + 6 forecast days
-      if (cells.length < 8) continue;
+      // Need at least 4 cells for station row
+      if (cells.length < 4) continue;
 
-      const stationText = cells[0]?.textContent?.trim() || '';
+      // Check BOTH cells[0] AND cells[1] for station name
+      // Table structure varies: sometimes "Duna" is in cells[0] and station name in cells[1]
+      const cell0Text = cells[0]?.textContent?.trim() || '';
+      const cell1Text = cells[1]?.textContent?.trim() || '';
+      const stationText = cell0Text + ' ' + cell1Text;
 
       // Check if this row contains one of our stations
       for (const station of STATIONS) {
         if (stationText.includes(station.name)) {
           const stationForecasts = [];
+          let dayCounter = 0;
 
-          // Skip cell[1] which is "Ma reggel" (current day)
-          // Extract 6-day forecast from cells[2] through cells[7]
-          for (let i = 2; i <= 7 && i < cells.length; i++) {
+          // Iterate through ALL cells looking for forecast values
+          // Skip: river name (cell 0), station name (cell 1), current level (cell 2)
+          // Table structure: forecast value cells alternate with uncertainty cells (± XX)
+          for (let i = 2; i < cells.length; i++) {
             const cell = cells[i];
+            const cellText = cell.textContent?.trim() || '';
 
-            // Forecast values are in nested <b> tags within nested tables
-            // Extract the first <b> tag (forecast value) and second <b> tag (± uncertainty)
+            // IMPORTANT: Skip uncertainty cells (contain ± symbol)
+            // These were being incorrectly parsed as forecast values!
+            if (cellText.includes('±')) {
+              continue;
+            }
+
+            // Skip current water level (first numeric cell after station name)
+            // It's typically a larger number without date context
+            if (i === 2) {
+              continue;
+            }
+
+            // Forecast values are in <b> tags
             const boldTags = cell.querySelectorAll('b');
 
             if (boldTags.length > 0) {
               const forecastText = boldTags[0]?.textContent?.trim() || '';
               const forecastLevel = parseInt(forecastText.replace(/[^\d-]/g, ''));
 
-              // Parse uncertainty (± value) from second <b> tag if exists
+              // Get uncertainty from the NEXT cell (which contains ± value)
               let uncertainty = 0;
-              if (boldTags.length > 1) {
-                const uncertaintyText = boldTags[1]?.textContent?.trim() || '';
-                const uncertaintyMatch = uncertaintyText.match(/±\s*(\d+)/);
+              const nextCell = cells[i + 1];
+              if (nextCell) {
+                const nextCellText = nextCell.textContent?.trim() || '';
+                const uncertaintyMatch = nextCellText.match(/±\s*(\d+)/);
                 if (uncertaintyMatch) {
                   uncertainty = parseInt(uncertaintyMatch[1]);
                 }
               }
 
-              if (!isNaN(forecastLevel)) {
+              if (!isNaN(forecastLevel) && forecastLevel < 1000) {
                 // Calculate forecast date
-                // i=2 is tomorrow (day+1), i=3 is day+2, etc.
-                const dayOffset = i - 1;
+                dayCounter++;
+                const dayOffset = dayCounter;
                 const forecastDate = new Date();
                 forecastDate.setDate(forecastDate.getDate() + dayOffset);
 
@@ -444,6 +463,9 @@ async function scrapeHydroinfoForecast() {
                   uncertainty: uncertainty,
                   date: forecastDate.toISOString().split('T')[0] // YYYY-MM-DD
                 });
+
+                // Maximum 5-6 day forecast
+                if (dayCounter >= 6) break;
               }
             }
           }
@@ -500,7 +522,7 @@ serve(async (req) => {
 
     // Scrape forecasts from hydroinfo.hu
     console.log('🌐 Scraping forecasts from hydroinfo.hu...');
-    let forecasts: Record<string, Array<{ day: number; waterLevel: number; date: string }>> = {};
+    let forecasts: Record<string, Array<{ day: number; waterLevel: number; uncertainty?: number; date: string }>> = {};
 
     // Strategy: Use detail tables for Baja/Mohács (6-day forecast)
     //           Use consolidated table for Nagybajcs (1-2 day forecast, no detail table)
