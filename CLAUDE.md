@@ -222,3 +222,150 @@ VITE_SUPABASE_ANON_KEY  # Public anon key
 *Phase 5 initiated: 2025-11-03*
 *Drought data COMPLETED: 2025-11-04*
 *Status: ✅ **PRODUCTION READY** (Drought), ⏳ Groundwater pending*
+
+---
+
+## 🔧 HOTFIX: Cron Job URL Fixes (2025-12-07)
+
+### Issue Discovered
+**Symptom:** Csapadékmennyiség adatok "be vannak ragadva" - nem frissülnek automatikusan
+**Root Cause:** Két pg_cron job használ **hardcoded rossz Supabase URL-t**
+
+**Affected Migrations:**
+- ❌ **Migration 015:** `invoke_fetch_water_level()` → `tihqkmzwfjhfltzskfgi` (WRONG)
+- ❌ **Migration 017:** `invoke_fetch_precipitation_summary()` → `tihqkmzwfjhfltzskfgi` (WRONG)
+- ✅ **Correct project URL:** `zpwoicpajmvbtmtumsah` (from `.env`)
+
+**Impact:**
+- Precipitation cron (naponta 6:00 AM UTC) SOSEM futott le sikeresen (404 error)
+- Water level cron (óránként :10) SOSEM futott le sikeresen (404 error)
+- Edge Function-ök működnek (tesztelve manuálisan)
+- Adatok csak manuális trigger esetén frissültek
+
+### Fix Applied
+
+**Migrations Created:**
+- ✅ **Migration 018:** `018_fix_precipitation_cron_url.sql` - Fix precipitation cron URL
+- ✅ **Migration 019:** `019_fix_water_level_cron_url.sql` - Fix water level cron URL
+
+**Deployment Method:**
+- SQL Editor (Supabase Dashboard) via `HOTFIX_018_019.sql`
+- See `DEPLOY_INSTRUCTIONS.md` for detailed steps
+
+**Key Changes:**
+```sql
+-- BEFORE (Migration 015 & 017):
+url := 'https://tihqkmzwfjhfltzskfgi.supabase.co/functions/v1/...'
+
+-- AFTER (Migration 018 & 019):
+project_url text := 'https://zpwoicpajmvbtmtumsah.supabase.co';
+url := project_url || '/functions/v1/...'
+```
+
+### Affected Cron Jobs (Now Fixed)
+- `fetch-precipitation-summary-daily` - Daily at 6:00 AM UTC ✅
+- `fetch-water-level-hourly` - Hourly at :10 past the hour ✅
+
+### Testing & Verification
+
+**Manual Function Test:**
+```bash
+# Precipitation (Success - 2025-12-07T17:08:58)
+curl -X POST "https://zpwoicpajmvbtmtumsah.supabase.co/functions/v1/fetch-precipitation-summary" \
+  -H "Authorization: Bearer [ANON_KEY]"
+# Response: {"success":true,...}
+
+# Water Level (Success)
+curl -X POST "https://zpwoicpajmvbtmtumsah.supabase.co/functions/v1/fetch-water-level" \
+  -H "Authorization: Bearer [ANON_KEY]"
+```
+
+**Database Verification:**
+```sql
+-- Check precipitation data (should show recent timestamps)
+SELECT mc.name, ps.last_7_days, ps.updated_at
+FROM precipitation_summary ps
+JOIN meteorology_cities mc ON ps.city_id = mc.id
+ORDER BY ps.updated_at DESC;
+
+-- Verify cron jobs active
+SELECT jobname, schedule, active FROM cron.job
+WHERE jobname IN ('fetch-precipitation-summary-daily', 'fetch-water-level-hourly');
+```
+
+**Monitor Cron Execution:**
+```sql
+SELECT start_time, status, return_message
+FROM cron.job_run_details
+WHERE jobid IN (SELECT jobid FROM cron.job WHERE jobname LIKE 'fetch-%')
+ORDER BY start_time DESC LIMIT 20;
+```
+
+### Files Created
+1. `supabase/migrations/018_fix_precipitation_cron_url.sql`
+2. `supabase/migrations/019_fix_water_level_cron_url.sql`
+3. `HOTFIX_018_019.sql` - Combined SQL for manual execution
+4. `DEPLOY_INSTRUCTIONS.md` - Detailed deployment guide
+
+### Lessons Learned
+- ⚠️ **ALWAYS verify project URLs** against `.env` before hardcoding
+- ⚠️ **Never copy-paste URLs** from other projects/migrations
+- ⚠️ **Test cron jobs** after creation with manual invocation
+- ✅ Use consistent URL patterns across all migrations (007, 010, 012 were correct)
+
+*Hotfix discovered: 2025-12-07*
+*Hotfix applied: 2025-12-07 (pending deployment)*
+*Status: ⏳ **READY FOR DEPLOYMENT** via Supabase Dashboard*
+
+---
+
+## 🔐 SECURITY: CodeQL Action v4 Upgrade (2025-12-08)
+
+### Issue Resolved
+**GitHub Security Alerts:** CodeQL Action v3 deprecation warnings (December 2026)
+
+**Changes Applied:**
+- ✅ Upgraded `.github/workflows/codeql.yml` from CodeQL v3 → v4
+- ✅ Documented Code Scanning enablement process (manual GitHub settings)
+- ✅ Verified no breaking changes (Node.js 24 runtime)
+
+### Migration Details
+- **Runtime:** Node.js 20 → Node.js 24 (automatic)
+- **Breaking Changes:** NONE (simple version update)
+- **Removed Features:** `add-snippets` input (not used in our workflow)
+- **Minimum CodeQL Bundle:** 2.17.6 (automatically handled by GitHub)
+
+### Affected Files
+- `.github/workflows/codeql.yml` - 3 line changes (lines 33, 39, 42)
+  - `github/codeql-action/init@v3` → `@v4`
+  - `github/codeql-action/autobuild@v3` → `@v4`
+  - `github/codeql-action/analyze@v3` → `@v4`
+
+### Code Scanning Status
+- ✅ Workflow configured and upgraded to v4
+- ⏳ Manual enablement required in GitHub repository settings
+- ✅ Runs on: Push to main/develop, PRs to main, weekly (Monday 6 AM UTC)
+- ✅ Language: JavaScript/TypeScript
+- ✅ Queries: security-extended, security-and-quality
+
+### Documentation Created
+- ✅ `docs/GITHUB_CODE_SCANNING_GUIDE.md` - Comprehensive 400+ line guide
+- ✅ `CLAUDE.md` - This section (upgrade details)
+- ✅ `README.md` - CodeQL badge + Tech Stack update
+- ✅ `docs/SECURITY_AUDIT_REPORT.md` - CodeQL v4 section
+
+### Code Scanning Enablement (Manual Step)
+**⚠️ REQUIRED:** Enable Code Scanning in GitHub repository settings
+
+1. Navigate to: `https://github.com/endresztellik-gif/DunApp/settings/security_analysis`
+2. Locate "Code scanning" section
+3. Click **"Set up"** → **"Advanced"**
+4. Select "Use existing CodeQL workflow"
+5. Click **"Enable CodeQL"**
+
+### References
+- [GitHub Changelog - CodeQL v3 Deprecation](https://github.blog/changelog/2025-10-28-upcoming-deprecation-of-codeql-action-v3/)
+- [CodeQL Action Releases](https://github.com/github/codeql-action/releases)
+
+*Upgrade completed: 2025-12-08*
+*Status: ✅ **WORKFLOW UPGRADED** (Code Scanning enablement pending manual action)*

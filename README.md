@@ -6,6 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19.1-61dafb)](https://react.dev/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e)](https://supabase.com/)
+[![CodeQL](https://github.com/endresztellik-gif/DunApp/workflows/CodeQL%20Security%20Analysis/badge.svg)](https://github.com/endresztellik-gif/DunApp/actions/workflows/codeql.yml)
 
 **Live Demo:** [https://dunapp-pwa.netlify.app](https://dunapp-pwa.netlify.app) _(Coming soon)_
 
@@ -112,10 +113,13 @@ Visit http://localhost:5173
 - **HydroInfo** (Danube water level data)
 - **Meteoblue** (Fallback weather API)
 
-### Deployment
+### Deployment & Security
 - **GitHub** (Version control)
 - **Netlify** (Hosting + CI/CD)
 - **GitHub Actions** (Automated workflows)
+  - CI Pipeline: Lint, test, type-check, build
+  - CodeQL Security Scanning: v4 (JavaScript/TypeScript)
+  - Weekly security scans + PR checks
 
 ---
 
