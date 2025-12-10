@@ -10,7 +10,7 @@
  * - Fallback mechanism (OpenWeatherMap → Meteoblue → Yr.no)
  */
 
-import { assertEquals, assertExists, assertRejects } from 'https://deno.land/std@0.168.0/testing/asserts.ts';
+import { assertEquals, assertRejects } from 'https://deno.land/std@0.168.0/testing/asserts.ts';
 
 // Mock fetch function
 let fetchCallCount = 0;
@@ -72,37 +72,6 @@ Deno.test('fetch-meteorology: retry logic on network failure', async () => {
 
 Deno.test('fetch-meteorology: fallback to Meteoblue on OpenWeatherMap failure', async () => {
   fetchCallCount = 0;
-  let callNumber = 0;
-
-  const mockFetchWithFallback = (url: string) => {
-    callNumber++;
-
-    // First call (OpenWeatherMap) fails
-    if (callNumber === 1) {
-      return Promise.resolve({
-        ok: false,
-        status: 500,
-        statusText: 'Internal Server Error'
-      });
-    }
-
-    // Second call (Meteoblue) succeeds
-    return Promise.resolve({
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      json: async () => ({
-        data_1h: {
-          temperature: [23.0],
-          relativehumidity: [60],
-          windspeed: [12.6], // km/h
-          winddirection: [200],
-          precipitation: [0.5],
-          totalcloudcover: [30]
-        }
-      })
-    });
-  };
 
   // Test fallback mechanism
   // Note: In real implementation, this would be tested through the main function

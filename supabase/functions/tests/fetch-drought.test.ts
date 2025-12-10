@@ -57,7 +57,6 @@ const mockStationDataResponse = [
 ];
 
 Deno.test('fetch-drought: search for nearest station', async () => {
-  const settlement = 'Katymár';
   const searchResult = mockSearchResponse;
 
   assertEquals(searchResult.nearestStation.id, 'station-123');

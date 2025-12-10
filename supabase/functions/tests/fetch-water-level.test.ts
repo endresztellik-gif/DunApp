@@ -13,31 +13,6 @@
 
 import { assertEquals, assertExists, assertStringIncludes } from 'https://deno.land/std@0.168.0/testing/asserts.ts';
 
-// Mock HTML responses
-const mockVizugyHTML = `
-<html>
-<body>
-  <table>
-    <tr>
-      <td>Baja</td>
-      <td>150</td>
-      <td>420</td>
-    </tr>
-    <tr>
-      <td>Mohács</td>
-      <td>200</td>
-      <td>395</td>
-    </tr>
-    <tr>
-      <td>Nagybajcs</td>
-      <td>180</td>
-      <td>410</td>
-    </tr>
-  </table>
-</body>
-</html>
-`;
-
 // Mock Supabase client
 const mockSupabaseClient = {
   from: (table: string) => ({
