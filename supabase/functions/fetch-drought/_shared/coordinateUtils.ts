@@ -50,11 +50,6 @@ export function wgs84ToEov(latitude: number, longitude: number): { eovX: number;
   // Simplified Helmert transformation (approximate)
   // For production, use a proper library like proj4js or GDAL
 
-  // Constants for HD72 → WGS84 transformation
-  const deltaX = 52.17;
-  const deltaY = -71.82;
-  const deltaZ = -14.9;
-
   // Semi-major axis and flattening for GRS67
   const a = 6378160.0; // meters
   const f = 1 / 298.247167427;
@@ -112,7 +107,6 @@ export function eovToWgs84(eovX: number, eovY: number): { latitude: number; long
 
   const a = 6378160.0;
   const f = 1 / 298.247167427;
-  const e2 = 2 * f - f * f;
 
   const lat0 = (47.14439372222222 * Math.PI) / 180;
   const lon0 = (19.04857177777778 * Math.PI) / 180;
