@@ -38,39 +38,6 @@ const mockVizugyHTML = `
 </html>
 `;
 
-const mockHydroinfoHTML = `
-<html>
-<body>
-  <table>
-    <tr>
-      <td>Baja</td>
-      <td>425</td>
-      <td>430</td>
-      <td>435</td>
-      <td>440</td>
-      <td>445</td>
-    </tr>
-    <tr>
-      <td>Mohács</td>
-      <td>400</td>
-      <td>405</td>
-      <td>410</td>
-      <td>415</td>
-      <td>420</td>
-    </tr>
-    <tr>
-      <td>Nagybajcs</td>
-      <td>415</td>
-      <td>420</td>
-      <td>425</td>
-      <td>430</td>
-      <td>435</td>
-    </tr>
-  </table>
-</body>
-</html>
-`;
-
 // Mock Supabase client
 const mockSupabaseClient = {
   from: (table: string) => ({

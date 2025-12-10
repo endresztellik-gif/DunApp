@@ -13,10 +13,6 @@
 
 import { assertEquals, assertExists } from 'https://deno.land/std@0.168.0/testing/asserts.ts';
 
-// Constants
-const WATER_LEVEL_THRESHOLD = 400; // cm
-const RATE_LIMIT_HOURS = 6;
-
 Deno.test('check-water-level-alert: threshold check - above threshold', () => {
   const waterLevel = 420; // cm
   const threshold = 400; // cm
