@@ -69,6 +69,8 @@ export const GroundwaterMap: React.FC<GroundwaterMapProps> = ({
 
   // Mock water levels for display (will be replaced with real data)
   const getWellWaterLevel = (_wellId: string): number | null => {
+    // Randomly return null to simulate missing data (10% chance)
+    if (Math.random() < 0.1) return null;
     return 3 + Math.random() * 4; // Random between 3-7m
   };
 
