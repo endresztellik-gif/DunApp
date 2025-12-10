@@ -120,7 +120,7 @@ export const DroughtMonitoringMap: React.FC<DroughtMonitoringMapProps> = ({
         {/* Location Markers */}
         {locations.map((location) => {
           const isSelected = selectedLocation?.id === location.id;
-          const paramValue = getLocationParamValue(location.id, selectedParameter);
+          const paramValue: number | null = getLocationParamValue(location.id, selectedParameter);
 
           return (
             <Marker

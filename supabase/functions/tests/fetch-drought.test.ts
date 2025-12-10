@@ -56,28 +56,6 @@ const mockStationDataResponse = [
   }
 ];
 
-// Mock Supabase client
-const mockSupabaseClient = {
-  from: (table: string) => ({
-    select: (fields: string) => ({
-      eq: (field: string, value: any) => ({
-        single: async () => {
-          if (table === 'drought_locations') {
-            return {
-              data: { id: `location-${value}`, location_name: value },
-              error: null
-            };
-          }
-          return { data: null, error: { message: 'Not found' } };
-        }
-      })
-    }),
-    insert: async (data: any) => {
-      return { data, error: null };
-    }
-  })
-};
-
 Deno.test('fetch-drought: search for nearest station', async () => {
   const settlement = 'Katymár';
   const searchResult = mockSearchResponse;

@@ -12,29 +12,6 @@
 
 import { assertEquals, assertExists, assertRejects } from 'https://deno.land/std@0.168.0/testing/asserts.ts';
 
-// Mock Supabase client
-const mockSupabaseClient = {
-  from: (table: string) => ({
-    select: (fields: string) => ({
-      eq: (field: string, value: any) => ({
-        single: async () => {
-          if (table === 'meteorology_cities') {
-            return {
-              data: { id: 'city-123', name: value },
-              error: null
-            };
-          }
-          return { data: null, error: { message: 'Not found' } };
-        }
-      })
-    }),
-    insert: async (data: any) => {
-      // Simulate successful insert
-      return { data, error: null };
-    }
-  })
-};
-
 // Mock fetch function
 let fetchCallCount = 0;
 let fetchShouldFail = false;

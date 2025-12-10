@@ -292,15 +292,8 @@ Deno.test('fetch-water-level: timestamp generation', () => {
 });
 
 Deno.test('fetch-water-level: HTML parsing error handling', () => {
-  const invalidHTML = '<html><body><table></table></body></html>';
-
-  // Simulate parsing with no data
-  const rows: any[] = [];
+  // Simulate parsing with no data - expect empty result
   const waterLevels: Record<string, number> = {};
-
-  for (const row of rows) {
-    // No rows to process
-  }
 
   assertEquals(Object.keys(waterLevels).length, 0);
   // Should handle gracefully without throwing

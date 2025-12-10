@@ -17,65 +17,6 @@ import { assertEquals, assertExists } from 'https://deno.land/std@0.168.0/testin
 const WATER_LEVEL_THRESHOLD = 400; // cm
 const RATE_LIMIT_HOURS = 6;
 
-// Mock Supabase client
-const mockSupabaseClient = {
-  from: (table: string) => ({
-    select: (fields: string) => ({
-      eq: (field: string, value: any) => ({
-        single: async () => {
-          if (table === 'water_level_stations' && value === 'Mohács') {
-            return {
-              data: { id: 'station-mohacs', station_name: 'Mohács' },
-              error: null
-            };
-          }
-          if (table === 'water_level_data') {
-            return {
-              data: { water_level_cm: 420, timestamp: new Date().toISOString() },
-              error: null
-            };
-          }
-          return { data: null, error: { message: 'Not found' } };
-        },
-        limit: (n: number) => ({
-          single: async () => {
-            return {
-              data: { water_level_cm: 420, timestamp: new Date().toISOString() },
-              error: null
-            };
-          }
-        }),
-        gte: (field: string, value: any) => ({
-          limit: (n: number) => {
-            return {
-              data: [],
-              error: null
-            };
-          }
-        })
-      }),
-      order: (field: string, options: any) => ({
-        limit: (n: number) => ({
-          single: async () => {
-            return {
-              data: { water_level_cm: 420, timestamp: new Date().toISOString() },
-              error: null
-            };
-          }
-        })
-      })
-    }),
-    insert: async (data: any) => {
-      return { data, error: null };
-    },
-    delete: () => ({
-      eq: (field: string, value: any) => {
-        return { data: null, error: null };
-      }
-    })
-  })
-};
-
 Deno.test('check-water-level-alert: threshold check - above threshold', () => {
   const waterLevel = 420; // cm
   const threshold = 400; // cm

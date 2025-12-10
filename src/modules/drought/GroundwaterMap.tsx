@@ -93,7 +93,7 @@ export const GroundwaterMap: React.FC<GroundwaterMapProps> = ({
         {/* Well Markers */}
         {wells.map((well) => {
           const isSelected = selectedWell?.id === well.id;
-          const waterLevel = getWellWaterLevel(well.id);
+          const waterLevel: number | null = getWellWaterLevel(well.id);
 
           return (
             <Marker
