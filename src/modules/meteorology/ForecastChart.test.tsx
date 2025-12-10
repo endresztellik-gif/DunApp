@@ -54,10 +54,6 @@ describe('ForecastChart - Rendering States', () => {
     vi.clearAllMocks();
   });
 
-  const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-
   it('should show loading spinner when data is loading', () => {
     vi.mocked(useForecastData).mockReturnValue({
       forecasts: [],
@@ -466,7 +462,7 @@ describe('ForecastChart - Accessibility', () => {
       refetch: vi.fn(),
     });
 
-    const { container } = render(
+    render(
       <QueryClientProvider client={queryClient}>
         <ForecastChart cityId="" />
       </QueryClientProvider>

@@ -5,7 +5,7 @@
  * Tests map rendering, radar data fetching, animation controls, and empty states.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { RadarMap } from './RadarMap';
 import type { City } from '../../types';

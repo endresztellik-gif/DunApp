@@ -106,7 +106,6 @@ export function eovToWgs84(eovX: number, eovY: number): { latitude: number; long
   // For production, use a proper library like proj4js or GDAL
 
   const a = 6378160.0;
-  const f = 1 / 298.247167427;
 
   const lat0 = (47.14439372222222 * Math.PI) / 180;
   const lon0 = (19.04857177777778 * Math.PI) / 180;
