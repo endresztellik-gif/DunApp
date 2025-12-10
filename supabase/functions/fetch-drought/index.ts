@@ -24,6 +24,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { sanitizeError } from '../_shared/error-sanitizer.ts';
 
 // ============================================================================
 // CONFIGURATION
@@ -388,7 +389,7 @@ serve(async (req) => {
         results.push({
           location: location.name,
           status: 'error',
-          error: error.message
+          error: sanitizeError(error, 'Failed to fetch drought data')
         });
 
         console.error(`❌ Error for ${location.name}:`, error.message);
@@ -441,7 +442,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: sanitizeError(error, 'Failed to fetch drought monitoring data'),
         timestamp: new Date().toISOString(),
         duration
       }),

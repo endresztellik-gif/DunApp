@@ -20,6 +20,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
+import { sanitizeError } from '../_shared/error-sanitizer.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -215,7 +216,7 @@ async function processWell(
     return {
       wellName: well.name,
       status: 'failed',
-      error: error.message
+      error: sanitizeError(error, 'Failed to fetch well data')
     };
   }
 }
@@ -319,7 +320,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: 'Internal server error',
-        message: error.message
+        message: sanitizeError(error, 'Failed to process groundwater data')
       }),
       {
         headers: { 'Content-Type': 'application/json' },

@@ -31,6 +31,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { sanitizeError } from '../_shared/error-sanitizer.ts';
 
 // Environment variables
 const OPENWEATHER_API_KEY = Deno.env.get('OPENWEATHER_API_KEY');
@@ -332,7 +333,7 @@ async function fetchAndStoreForecastsForAllCities(supabase: any) {
       forecastResults.push({
         city: city.name,
         status: 'error',
-        error: error.message
+        error: sanitizeError(error, 'Failed to fetch forecast data')
       });
       console.error(`❌ Forecast error for ${city.name}:`, error.message);
     }
@@ -430,7 +431,7 @@ serve(async (req) => {
         currentResults.push({
           city: city.name,
           status: 'error',
-          error: error.message
+          error: sanitizeError(error, 'Failed to fetch current weather')
         });
         console.error(`❌ Current weather error for ${city.name}:`, error.message);
       }
@@ -479,7 +480,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: sanitizeError(error, 'Failed to fetch meteorology data'),
         timestamp: new Date().toISOString()
       }),
       {

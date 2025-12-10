@@ -19,6 +19,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { sanitizeError } from '../_shared/error-sanitizer.ts';
 
 // Configuration
 const MOHACS_ALERT_THRESHOLD_CM = 400; // Alert if Mohács >= 400cm
@@ -247,7 +248,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : String(error),
+        error: sanitizeError(error, 'Failed to check water level alert'),
         alert_sent: false,
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

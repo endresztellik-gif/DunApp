@@ -24,6 +24,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { sanitizeError } from '../_shared/error-sanitizer.ts';
 
 // VAPID keys and subject from environment
 const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || '';
@@ -678,9 +679,15 @@ serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
+    // Log full error details server-side for debugging
     console.error('Error in send-push-notification:', error);
+
+    // Return sanitized error message to prevent information leakage (CWE-209, CWE-497)
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
+      JSON.stringify({
+        error: sanitizeError(error, 'Failed to send push notification'),
+        timestamp: new Date().toISOString()
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

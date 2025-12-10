@@ -32,6 +32,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts';
+import { sanitizeError } from '../_shared/error-sanitizer.ts';
 
 // Environment variables
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -645,7 +646,7 @@ serve(async (req) => {
         results.push({
           station: station.name,
           status: 'error',
-          error: error.message
+          error: sanitizeError(error, 'Failed to process station data')
         });
         console.error(`❌ Error for ${station.name}:`, error.message);
       }
@@ -677,12 +678,14 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    // Log full error details server-side for debugging
     console.error('❌ Fetch Water Level Error:', error);
 
+    // Return sanitized error message to prevent information leakage (CWE-209, CWE-497)
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: sanitizeError(error, 'Failed to fetch water level data'),
         timestamp: new Date().toISOString()
       }),
       {

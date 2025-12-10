@@ -20,6 +20,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { sanitizeError } from '../_shared/error-sanitizer.ts';
 
 // Environment variables
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -207,7 +208,7 @@ serve(async (req) => {
         results.push({
           city: city.name,
           status: 'error',
-          error: error.message,
+          error: sanitizeError(error, 'Failed to fetch precipitation data'),
         });
         console.error(`❌ Error for ${city.name}:`, error.message);
       }
@@ -241,7 +242,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: sanitizeError(error, 'Failed to fetch precipitation summary'),
         timestamp: new Date().toISOString(),
       }),
       {
