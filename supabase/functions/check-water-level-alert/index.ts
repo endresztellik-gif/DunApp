@@ -142,7 +142,7 @@ serve(async (req) => {
     console.log(`⚠️  Level EXCEEDS threshold (${currentLevel} >= ${MOHACS_ALERT_THRESHOLD_CM})`);
 
     // Step 4: Check cooldown period (last notification time)
-    const { data: lastNotification, error: notificationError } = await supabase
+    const { data: lastNotification } = await supabase
       .from('push_subscriptions')
       .select('last_notified_at')
       .eq('notify_water_level', true)

@@ -12,7 +12,7 @@
  * - Handling of missing/optional fields
  */
 
-import { assertEquals, assertExists, assertRejects } from 'https://deno.land/std@0.168.0/testing/asserts.ts';
+import { assertEquals, assertExists } from 'https://deno.land/std@0.168.0/testing/asserts.ts';
 
 // Mock API responses
 const mockSearchResponse = {

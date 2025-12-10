@@ -103,7 +103,6 @@ function sumPrecipitation(values: (number | null)[]): number {
  */
 async function fetchCityPrecipitationSummary(city: { name: string; lat: number; lon: number }) {
   const now = new Date();
-  const today = formatDate(now);
 
   // Calculate date ranges
   const sevenDaysAgo = new Date(now);
@@ -124,8 +123,7 @@ async function fetchCityPrecipitationSummary(city: { name: string; lat: number; 
   const startDate = formatDate(yearStart);
   const allPrecipitation = await fetchPrecipitationData(city, startDate, endDate);
 
-  // Calculate days from Jan 1 to each cutoff
-  const daysSinceYearStart = Math.floor((yesterday.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  // Calculate days for each period
   const daysInLast7 = 7;
   const daysInLast30 = 30;
 
