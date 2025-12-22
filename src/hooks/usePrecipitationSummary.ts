@@ -63,8 +63,11 @@ export function usePrecipitationSummary(cityId: string | null): UsePrecipitation
     queryKey: ['precipitation', cityId],
     queryFn: () => fetchPrecipitationSummary(cityId!),
     enabled: !!cityId, // Only run if cityId is provided
-    staleTime: 60 * 60 * 1000, // Consider data fresh for 1 hour (updated daily)
-    refetchInterval: 60 * 60 * 1000, // Refetch every hour
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes (ensures fresh data)
+    refetchInterval: 30 * 60 * 1000, // Refetch every 30 minutes
+    refetchOnWindowFocus: true, // Refetch when user returns to window/tab
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnReconnect: true, // Refetch when network reconnects
     retry: 3, // Retry failed requests 3 times
   });
 
