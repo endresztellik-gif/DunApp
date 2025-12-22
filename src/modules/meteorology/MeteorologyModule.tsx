@@ -27,6 +27,7 @@ import { Footer } from '../../components/Layout/Footer'
 import { ForecastChart } from './ForecastChart'
 import { RadarMap } from './RadarMap'
 import { PrecipitationSummaryCard } from './PrecipitationSummaryCard'
+import { SunTimesCards } from './SunTimesCards'
 import { useWeatherData } from '../../hooks/useWeatherData'
 import type { City, DataSource } from '../../types'
 
@@ -174,6 +175,11 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
               unit=""
               moduleColor="meteorology"
             />
+          </div>
+
+          {/* Sun Times Cards - Napkelte/Napnyugta */}
+          <div className="mb-6">
+            <SunTimesCards />
           </div>
 
           {/* Precipitation Summary */}
