@@ -100,13 +100,16 @@
   --transition-base: 200ms ease-in-out;
   --transition-slow: 300ms ease-in-out;
 
-  /* RADAR ANIMATION */
-  --radar-transition: 300ms ease-in-out;
+  /* RADAR ANIMATION - Synced with JS timing (700ms) */
+  --radar-transition: 700ms ease-in-out;
 }
 
-/* RADAR CROSSFADE ANIMATION */
+/* RADAR CROSSFADE ANIMATION - GPU Accelerated */
 .radar-layer {
   transition: opacity var(--radar-transition);
+  will-change: opacity; /* GPU hint - promotes layer to compositing */
+  transform: translateZ(0); /* Force GPU compositing */
+  backface-visibility: hidden; /* Subpixel antialiasing fix */
 }
 
 .radar-layer-fade-in {

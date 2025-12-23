@@ -97,7 +97,16 @@
   status = 200
   force = true
 
-# Proxy for met.hu ODP radar images
+# Proxy for met.hu ODP radar images - WebP optimization
+# Serve WebP if client supports it (25-35% smaller than PNG)
+[[redirects]]
+  from = "/met-radar/*.png"
+  to = "https://odp.met.hu/weather/radar/composite/webp/refl2D/:splat.webp"
+  status = 200
+  force = false
+  conditions = {Accept = "image/webp"}
+
+# Fallback to PNG for unsupported browsers or if WebP not available
 [[redirects]]
   from = "/met-radar/*"
   to = "https://odp.met.hu/weather/radar/composite/png/refl2D/:splat"

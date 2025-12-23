@@ -16,7 +16,7 @@
  * Leaflet rendering is expensive - memoization has high impact.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useReducer } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, ImageOverlay } from 'react-leaflet';
 import { icon as leafletIcon } from 'leaflet';
 import type { LatLngBoundsExpression } from 'leaflet';
@@ -50,6 +50,42 @@ interface RadarMapProps {
 interface RadarFrame {
   timestamp: string; // YYYYMMDD_HHMM format
   url: string;
+}
+
+/**
+ * Animation state for batched updates (prevents double renders)
+ */
+interface AnimationState {
+  frameIndex: number;
+  activeLayer: 0 | 1;
+}
+
+type AnimationAction =
+  | { type: 'NEXT_FRAME'; frameCount: number }
+  | { type: 'RESET'; startIndex: number };
+
+/**
+ * Reducer for animation state - batches frameIndex and activeLayer updates
+ * Prevents double re-renders per animation frame
+ */
+function animationReducer(state: AnimationState, action: AnimationAction): AnimationState {
+  switch (action.type) {
+    case 'NEXT_FRAME': {
+      const newIndex = (state.frameIndex + 1) % action.frameCount;
+      const newLayer = state.activeLayer === 0 ? 1 : 0;
+      return {
+        frameIndex: newIndex,
+        activeLayer: newLayer as 0 | 1,
+      };
+    }
+    case 'RESET':
+      return {
+        frameIndex: action.startIndex,
+        activeLayer: 0,
+      };
+    default:
+      return state;
+  }
 }
 
 /**
@@ -98,21 +134,28 @@ function preloadImage(url: string): Promise<void> {
 
 export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
   const [radarFrames, setRadarFrames] = useState<RadarFrame[]>([]);
-  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isLoadingRadar, setIsLoadingRadar] = useState(true);
   const [loadedFrames, setLoadedFrames] = useState<Set<string>>(new Set());
-  const [activeLayer, setActiveLayer] = useState<0 | 1>(0);
 
-  // Generate radar frame URLs
+  // Use reducer for batched animation state updates (prevents double renders)
+  const [animState, dispatchAnim] = useReducer(animationReducer, {
+    frameIndex: 0,
+    activeLayer: 0,
+  });
+
+  // Generate radar frame URLs with parallel preloading and progressive enhancement
   const initializeRadarFrames = useCallback(async () => {
     setIsLoadingRadar(true);
     const frames = generateRadarFrameUrls();
     setRadarFrames(frames);
 
-    // Preload the first few frames
-    const preloadCount = Math.min(5, frames.length);
-    const preloadPromises = frames.slice(0, preloadCount).map((frame) =>
+    // PHASE 1: Parallel preload first 10 frames (critical batch)
+    const criticalBatchSize = Math.min(10, frames.length);
+    const criticalBatch = frames.slice(0, criticalBatchSize);
+
+    // Preload all critical frames in parallel (not sequential)
+    const preloadPromises = criticalBatch.map((frame) =>
       preloadImage(frame.url)
         .then(() => {
           setLoadedFrames((prev) => new Set([...prev, frame.timestamp]));
@@ -122,9 +165,29 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
         })
     );
 
-    await Promise.allSettled(preloadPromises);
-    setCurrentFrameIndex(frames.length - 1); // Start with latest frame
+    // Wait for 50% of critical batch (5 frames) OR 3-second timeout
+    // This enables progressive enhancement - start animation with partial data
+    const halfBatch = Math.ceil(criticalBatchSize / 2);
+    await Promise.race([
+      Promise.all(preloadPromises.slice(0, halfBatch)),
+      new Promise<void>((resolve) => setTimeout(resolve, 3000)), // Timeout to prevent infinite wait
+    ]);
+
+    // Start animation with partial data (50% of frames ready)
+    dispatchAnim({ type: 'RESET', startIndex: frames.length - 1 }); // Start with latest frame
     setIsLoadingRadar(false);
+
+    // PHASE 2: Lazy load remaining frames in background
+    const remainingFrames = frames.slice(criticalBatchSize);
+    remainingFrames.forEach((frame) => {
+      preloadImage(frame.url)
+        .then(() => {
+          setLoadedFrames((prev) => new Set([...prev, frame.timestamp]));
+        })
+        .catch(() => {
+          // Silently fail
+        });
+    });
   }, []);
 
   // Initialize on mount and refresh every 5 minutes
@@ -140,7 +203,7 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
 
     // Preload next 3 frames
     const preloadIndices = [1, 2, 3].map(
-      (offset) => (currentFrameIndex + offset) % radarFrames.length
+      (offset) => (animState.frameIndex + offset) % radarFrames.length
     );
 
     preloadIndices.forEach((index) => {
@@ -155,22 +218,35 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
           });
       }
     });
-  }, [currentFrameIndex, radarFrames, loadedFrames]);
+  }, [animState.frameIndex, radarFrames, loadedFrames]);
 
-  // Radar animation loop with crossfade
+  // Radar animation loop with requestAnimationFrame (60fps smooth)
+  // Syncs with browser paint cycles for jank-free animation
   useEffect(() => {
     if (!isPlaying || radarFrames.length === 0) return;
 
-    const animationInterval = setInterval(() => {
-      setCurrentFrameIndex((prevIndex) => {
-        const newIndex = (prevIndex + 1) % radarFrames.length;
-        // Toggle active layer for crossfade
-        setActiveLayer((prev) => (prev === 0 ? 1 : 0));
-        return newIndex;
-      });
-    }, 700); // Slightly longer for smoother animation
+    let animationFrameId: number;
+    let lastFrameTime = performance.now();
 
-    return () => clearInterval(animationInterval);
+    const animate = (currentTime: DOMHighResTimeStamp) => {
+      const deltaTime = currentTime - lastFrameTime;
+
+      // Frame pacing: ~700ms between frames (matches CSS transition)
+      if (deltaTime >= 700) {
+        dispatchAnim({ type: 'NEXT_FRAME', frameCount: radarFrames.length });
+        lastFrameTime = currentTime;
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
   }, [isPlaying, radarFrames.length]);
 
   if (!city) {
@@ -186,10 +262,10 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
   // Map center on selected city
   const mapCenter: [number, number] = [city.latitude, city.longitude];
 
-  // Current and previous frame for crossfade
-  const currentFrame = radarFrames[currentFrameIndex];
+  // Current and previous frame for crossfade (using animState from useReducer)
+  const currentFrame = radarFrames[animState.frameIndex];
   const prevFrameIndex =
-    currentFrameIndex === 0 ? radarFrames.length - 1 : currentFrameIndex - 1;
+    animState.frameIndex === 0 ? radarFrames.length - 1 : animState.frameIndex - 1;
   const prevFrame = radarFrames[prevFrameIndex];
 
   // Format timestamp for display (YYYYMMDD_HHMM -> HH:MM)
@@ -207,16 +283,28 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
         zoom={7}
         className="h-full w-full rounded-lg"
         scrollWheelZoom={false}
+        preferCanvas={true} // Canvas renderer (2-3x faster on mobile)
+        touchZoom={true} // Enable pinch-to-zoom on touch devices
+        bounceAtZoomLimits={false} // Disable bounce animation for smoother zoom
+        zoomAnimation={true}
+        markerZoomAnimation={true}
+        maxZoom={18}
+        minZoom={6}
+        maxBounds={HUNGARY_RADAR_BOUNDS} // Prevent over-panning
+        maxBoundsViscosity={0.5} // Smooth boundary enforcement
         style={{ borderRadius: '8px' }}
       >
         {/* Base Map Layer */}
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          maxNativeZoom={18}
+          keepBuffer={2} // Reduce memory usage (default is 2)
+          updateWhenZooming={false} // Defer tile updates during zoom for smoother performance
         />
 
         {/* Met.hu Radar Overlay - Layer 0 (crossfade) */}
-        {prevFrame && activeLayer === 1 && (
+        {prevFrame && animState.activeLayer === 1 && (
           <ImageOverlay
             url={prevFrame.url}
             bounds={HUNGARY_RADAR_BOUNDS}
@@ -271,7 +359,7 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
           <div className="flex items-center gap-2">
             {/* Frame counter */}
             <div className="bg-white rounded-lg shadow-md px-3 py-2 text-xs text-gray-600 font-medium">
-              {currentFrameIndex + 1} / {radarFrames.length}
+              {animState.frameIndex + 1} / {radarFrames.length}
             </div>
 
             {/* Play/Pause button */}
