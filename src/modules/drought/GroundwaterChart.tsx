@@ -1,12 +1,16 @@
 /**
  * GroundwaterChart Component - REAL DATA MODE ✅
  *
- * Displays 365-day water level trend for a selected groundwater well.
+ * Displays up to 365-day (12-month) water level trend for a selected groundwater well.
  * Uses 5-day sampling to show ~73 data points for optimal trend visualization.
  * Uses Recharts for visualization with responsive design.
  *
- * ✅ NOW USING REAL DATA FROM SUPABASE (2025-11-06)
- * Data scraped daily from vizugy.hu (3,288+ measurements from 15 wells)
+ * ✅ NOW USING REAL DATA FROM SUPABASE (2025-11-06+)
+ * Data scraped daily from vizugy.hu via incremental fetching
+ *
+ * NOTE: Database contains 8-9 months of historical data (built incrementally).
+ *       API currently fetches 30 days per run (reduced from 60 due to timeout issues, 2026-01-09).
+ *       Daily scraping will gradually build up a full 365-day dataset.
  *
  * Features:
  * - 365-day historical trend with 5-day sampling
@@ -16,7 +20,7 @@
  * - Empty state when no data available
  * - Well metadata display (name, code, location)
  * - Real-time data from Supabase (hourly cache)
- * - ~73 data points for optimal performance and readability
+ * - ~73 data points for optimal performance and readability (or less for shorter periods)
  */
 
 import React from 'react';
@@ -49,7 +53,7 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
   };
 
   // Transform data for Recharts with 5-day sampling
-  // This reduces ~365 data points to ~73 points for better visualization
+  // This reduces ~180 data points to ~36 points for better visualization
   // IMPORTANT: Display values as NEGATIVE because higher value = deeper water
   // This makes the chart intuitive: deeper water appears lower on the chart
   const allData = timeseriesData.map((point) => ({

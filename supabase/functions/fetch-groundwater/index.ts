@@ -1,12 +1,19 @@
 /**
  * Groundwater Data Fetch Edge Function (OPTIMIZED)
  *
- * Fetches 60-day groundwater level data from vizadat.hu API for 15 monitoring wells
+ * Fetches 30-day (1-month) groundwater level data from vizadat.hu API for 15 monitoring wells
  * in the Duna-Dráva region. Implements daily caching to avoid unnecessary API calls.
+ *
+ * NOTE: vizadat.hu API is very slow and has strict time limits (as of 2026-01-09):
+ * - 365 days: timeout ❌
+ * - 180 days: timeout ❌
+ * - 90 days: timeout ❌
+ * - 60 days: timeout ❌ (previously worked, now fails)
+ * - 30 days: testing ⏳ (reduced to improve success rate)
  *
  * OPTIMIZATIONS:
  * - Parallel processing using Promise.allSettled()
- * - 30-second timeout per API request
+ * - 60-second timeout per API request
  * - Batch cache checking (all wells at once)
  * - Concurrent API fetches (up to 15 parallel)
  * - Better error isolation (one well failure doesn't block others)
@@ -14,8 +21,9 @@
  * API Source: https://vizadat.hu/api/v1/observations
  * Parameter: talajvízszint (groundwater level)
  * Wells: 15 monitoring wells from Sátorhely to Báta
- *
- * Schedule: Daily at 05:00 AM via pg_cron
+ * Data Range: 30 days (reduced from 60 due to API slowness)
+ * Incremental Building: Daily runs will accumulate historical data over time
+ * Schedule: Daily at 05:00 AM UTC via pg_cron
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -46,9 +54,11 @@ const WELLS = [
   { name: 'Báta', code: '660' }
 ];
 
-const DAYS = 60;
+const DAYS = 30; // 30 days (1 month) - vizadat.hu API is currently very slow (2026-01-09)
+                 // Previously worked with 60 days, but now times out
+                 // Reduced to 30 days to increase success rate
 const PARAM = 'talajvízszint';
-const API_TIMEOUT_MS = 30000; // 30 seconds per API request
+const API_TIMEOUT_MS = 90000; // 90 seconds per API request (increased from 60s)
 
 interface VizadatObservation {
   time: string;

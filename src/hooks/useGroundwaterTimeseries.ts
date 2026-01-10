@@ -1,9 +1,14 @@
 /**
  * useGroundwaterTimeseries Hook
  *
- * Fetches 365-day groundwater level timeseries data for chart visualization.
+ * Fetches up to 365-day groundwater level timeseries data for chart visualization.
  * Returns historical water level measurements for a selected well.
- * Frontend will sample every 5th day to show ~73 data points for optimal trend visualization.
+ * Frontend will sample every 5th day for optimal trend visualization.
+ *
+ * NOTE: Due to vizadat.hu API timeout limits (as of 2026-01-09):
+ * - The scraper can only fetch 30 days at a time without timing out
+ * - However, the database contains 8-9 months of historical data from previous scrapes
+ * - Daily incremental fetching will gradually build up a full 365-day dataset
  *
  * @param wellId - The ID of the well to fetch timeseries data for
  * @returns Query object with timeseries data array, loading state, and error
@@ -35,11 +40,13 @@ interface GroundwaterDataRow {
 }
 
 /**
- * Fetch 365-day groundwater timeseries for a well
- * (Changed from 60-day to get better long-term trend visualization)
+ * Fetch groundwater timeseries for a well (requests 365 days)
+ * Database contains 8-9 months of historical data from incremental daily scraping.
+ * Current API limitation: vizadat.hu times out for 60+ days, so only 30 days scraped daily (2026-01-09).
  */
 async function fetchGroundwaterTimeseries(wellId: string) {
   // Calculate date range (365 days ago to now)
+  // Database contains 8-9 months of accumulated data from daily incremental scraping
   const now = new Date();
   const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
 
@@ -71,8 +78,9 @@ async function fetchGroundwaterTimeseries(wellId: string) {
 }
 
 /**
- * Custom hook to fetch 365-day groundwater timeseries with caching
- * Frontend will sample every 5th day for optimal visualization (~73 points)
+ * Custom hook to fetch groundwater timeseries with caching (requests 365 days)
+ * Frontend samples every 5th day for optimal visualization (~73 points for 365 days)
+ * Database currently contains 8-9 months of data from incremental daily scraping
  */
 export function useGroundwaterTimeseries(wellId: string | null): UseGroundwaterTimeseriesReturn {
   const { data, isLoading, error, refetch } = useQuery({

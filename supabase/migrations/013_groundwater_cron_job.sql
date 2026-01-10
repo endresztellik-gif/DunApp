@@ -6,8 +6,9 @@
 --
 -- Function: fetch-groundwater Edge Function
 -- Wells: 15 monitoring wells (Sátorhely to Báta)
--- Data: 60-day timeseries per well
+-- Data: 30-day timeseries per well (reduced from 60 due to API slowness, 2026-01-09)
 -- Cache: Daily cache logic to avoid duplicate fetches
+-- Incremental: Daily runs accumulate historical data over time
 -- ============================================================================
 
 -- Ensure pg_cron and pg_net extensions are enabled
@@ -95,7 +96,7 @@ END $$;
 
 -- Add comment to helper function
 COMMENT ON FUNCTION public.invoke_fetch_groundwater() IS
-'Invokes the fetch-groundwater Edge Function to retrieve 60-day groundwater level data for 15 wells from vizadat.hu API. Called daily at 05:00 AM UTC via pg_cron.';
+'Invokes the fetch-groundwater Edge Function to retrieve 30-day groundwater level data for 15 wells from vizadat.hu API (reduced from 60 days due to API slowness). Called daily at 05:00 AM UTC via pg_cron. Daily incremental fetching builds up historical data over time.';
 
 -- ============================================================================
 -- VERIFICATION QUERY

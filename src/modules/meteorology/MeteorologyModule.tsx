@@ -28,6 +28,7 @@ import { ForecastChart } from './ForecastChart'
 import { RadarMap } from './RadarMap'
 import { PrecipitationSummaryCard } from './PrecipitationSummaryCard'
 import { SunTimesCards } from './SunTimesCards'
+import { MoonTimesCards } from './MoonTimesCards'
 import { useWeatherData } from '../../hooks/useWeatherData'
 import type { City, DataSource } from '../../types'
 
@@ -180,6 +181,11 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
           {/* Sun Times Cards - Napkelte/Napnyugta */}
           <div className="mb-6">
             <SunTimesCards />
+          </div>
+
+          {/* Moon Times Cards - Holdkelte/Holdnyugta/Holdfázis */}
+          <div className="mb-6">
+            <MoonTimesCards />
           </div>
 
           {/* Precipitation Summary */}

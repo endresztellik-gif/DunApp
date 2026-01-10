@@ -89,15 +89,40 @@ function animationReducer(state: AnimationState, action: AnimationAction): Anima
 }
 
 /**
- * Generate radar frame URLs for the last 2 hours (24 frames at 5-minute intervals)
+ * Detect if device is mobile based on viewport width
+ * Mobile: < 768px (Tailwind 'sm' breakpoint)
+ */
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+}
+
+/**
+ * Generate radar frame URLs with adaptive frame count
+ * Mobile: 12 frames (1 hour) - reduces data usage and loading time
+ * Desktop: 25 frames (2 hours) - full animation
  * Met.hu updates radar images every 5 minutes
  */
-function generateRadarFrameUrls(): RadarFrame[] {
+function generateRadarFrameUrls(isMobile: boolean): RadarFrame[] {
   const frames: RadarFrame[] = [];
   const now = new Date();
 
-  // Go back 2 hours and generate 24 frames (5-minute intervals)
-  for (let i = 24; i >= 0; i--) {
+  // Adaptive frame count based on device
+  const frameCount = isMobile ? 12 : 25;
+
+  // Generate frames from now back to frameCount * 5 minutes ago
+  for (let i = frameCount; i >= 0; i--) {
     const frameTime = new Date(now.getTime() - i * 5 * 60 * 1000);
 
     // Round down to nearest 5 minutes
@@ -133,10 +158,12 @@ function preloadImage(url: string): Promise<void> {
 }
 
 export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
+  const isMobile = useIsMobile();
   const [radarFrames, setRadarFrames] = useState<RadarFrame[]>([]);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isLoadingRadar, setIsLoadingRadar] = useState(true);
   const [loadedFrames, setLoadedFrames] = useState<Set<string>>(new Set());
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   // Use reducer for batched animation state updates (prevents double renders)
   const [animState, dispatchAnim] = useReducer(animationReducer, {
@@ -144,20 +171,28 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
     activeLayer: 0,
   });
 
-  // Generate radar frame URLs with parallel preloading and progressive enhancement
+  // Generate radar frame URLs with adaptive preloading strategy
   const initializeRadarFrames = useCallback(async () => {
     setIsLoadingRadar(true);
-    const frames = generateRadarFrameUrls();
+    setLoadingProgress(0);
+    const frames = generateRadarFrameUrls(isMobile);
     setRadarFrames(frames);
 
-    // PHASE 1: Parallel preload first 10 frames (critical batch)
-    const criticalBatchSize = Math.min(10, frames.length);
-    const criticalBatch = frames.slice(0, criticalBatchSize);
+    // Adaptive strategy based on device
+    // Mobile: Wait for ALL frames (better experience, less data)
+    // Desktop: Progressive enhancement (50% threshold)
+    const targetFrameCount = isMobile ? frames.length : Math.ceil(frames.length / 2);
+    const timeout = isMobile ? 8000 : 3000; // Mobile gets more time (8s vs 3s)
 
-    // Preload all critical frames in parallel (not sequential)
-    const preloadPromises = criticalBatch.map((frame) =>
+    // Track loaded frame count
+    let loadedCount = 0;
+
+    // Preload all frames in parallel
+    const preloadPromises = frames.map((frame) =>
       preloadImage(frame.url)
         .then(() => {
+          loadedCount++;
+          setLoadingProgress(Math.round((loadedCount / frames.length) * 100));
           setLoadedFrames((prev) => new Set([...prev, frame.timestamp]));
         })
         .catch(() => {
@@ -165,30 +200,33 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
         })
     );
 
-    // Wait for 50% of critical batch (5 frames) OR 3-second timeout
-    // This enables progressive enhancement - start animation with partial data
-    const halfBatch = Math.ceil(criticalBatchSize / 2);
+    // Mobile: Wait for ALL frames OR timeout
+    // Desktop: Wait for 50% of frames OR timeout
     await Promise.race([
-      Promise.all(preloadPromises.slice(0, halfBatch)),
-      new Promise<void>((resolve) => setTimeout(resolve, 3000)), // Timeout to prevent infinite wait
+      Promise.all(preloadPromises.slice(0, targetFrameCount)),
+      new Promise<void>((resolve) => setTimeout(resolve, timeout)),
     ]);
 
-    // Start animation with partial data (50% of frames ready)
+    // Start animation
     dispatchAnim({ type: 'RESET', startIndex: frames.length - 1 }); // Start with latest frame
     setIsLoadingRadar(false);
 
-    // PHASE 2: Lazy load remaining frames in background
-    const remainingFrames = frames.slice(criticalBatchSize);
-    remainingFrames.forEach((frame) => {
-      preloadImage(frame.url)
-        .then(() => {
-          setLoadedFrames((prev) => new Set([...prev, frame.timestamp]));
-        })
-        .catch(() => {
-          // Silently fail
-        });
-    });
-  }, []);
+    // Continue loading remaining frames in background (desktop only)
+    if (!isMobile) {
+      const remainingFrames = frames.slice(targetFrameCount);
+      remainingFrames.forEach((frame) => {
+        preloadImage(frame.url)
+          .then(() => {
+            loadedCount++;
+            setLoadingProgress(Math.round((loadedCount / frames.length) * 100));
+            setLoadedFrames((prev) => new Set([...prev, frame.timestamp]));
+          })
+          .catch(() => {
+            // Silently fail
+          });
+      });
+    }
+  }, [isMobile]);
 
   // Initialize on mount and refresh every 5 minutes
   useEffect(() => {
@@ -344,7 +382,11 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
         {/* Status indicator */}
         <div className="bg-white rounded-lg shadow-md px-3 py-2 text-xs text-gray-600">
           {isLoadingRadar ? (
-            <span>⏳ Radarkép betöltése...</span>
+            <span className="flex items-center gap-2">
+              <span className="inline-block w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></span>
+              <span>Betöltés: {loadingProgress}%</span>
+              {isMobile && <span className="text-gray-400">({radarFrames.length} frame)</span>}
+            </span>
           ) : radarFrames.length > 0 ? (
             <span>
               🌧️ OMSZ Radar {currentFrame ? formatTimestamp(currentFrame.timestamp) : ''}
