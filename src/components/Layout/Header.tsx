@@ -35,7 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="text-cyan-600">Dun</span>
               <span className="text-gray-900">App</span>
             </span>
-            <span className="text-xs text-gray-400">v 1.8</span>
+            <span className="text-xs text-gray-400">v 2.0</span>
           </button>
 
           {/* Module Tabs - Always visible */}
