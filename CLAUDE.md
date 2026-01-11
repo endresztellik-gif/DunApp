@@ -4,9 +4,9 @@
 > Ez a fájl tartalmazza a DunApp PWA projekt összes kritikus információját.
 > Claude Code: MINDIG olvasd el ezt a fájlt ELŐSZÖR minden feladat előtt!
 
-**Utolsó frissítés:** 2026-01-09
-**Verzió:** 1.3 (Groundwater Data Source Migration - vizugy.hu)
-**Projekt státusz:** Production Ready ✅ (All modules operational)
+**Utolsó frissítés:** 2026-01-11
+**Verzió:** 2.0.0 (Auto-Update Hotfix + Node.js 22 Upgrade)
+**Projekt státusz:** Production Ready ✅ (All modules operational, all cron jobs fixed)
 
 ---
 
@@ -314,8 +314,8 @@ ORDER BY start_time DESC LIMIT 20;
 - ✅ Use consistent URL patterns across all migrations (007, 010, 012 were correct)
 
 *Hotfix discovered: 2025-12-07*
-*Hotfix applied: 2025-12-07 (pending deployment)*
-*Status: ⏳ **READY FOR DEPLOYMENT** via Supabase Dashboard*
+*Hotfix applied: 2026-01-11 (deployed via SQL Editor)*
+*Status: ✅ **DEPLOYED** - Precipitation & Water Level auto-updates now active*
 
 ---
 
