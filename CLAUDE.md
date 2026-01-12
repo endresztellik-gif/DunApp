@@ -311,11 +311,35 @@ ORDER BY start_time DESC LIMIT 20;
 - ⚠️ **ALWAYS verify project URLs** against `.env` before hardcoding
 - ⚠️ **Never copy-paste URLs** from other projects/migrations
 - ⚠️ **Test cron jobs** after creation with manual invocation
+- ⚠️ **Migration 018 was INCOMPLETE** - only updated function, forgot cron job
 - ✅ Use consistent URL patterns across all migrations (007, 010, 012 were correct)
 
+### Final Resolution (2026-01-12)
+**Issue:** Migration 018 only updated the function URL, but did NOT create/update the cron job.
+
+**Root Cause:**
+- 2026-01-11: User ran HOTFIX_018_019.sql (only created function)
+- 2026-01-12 06:00 UTC: Cron job didn't run (because it didn't exist)
+- Manual trigger worked, but automatic scheduling was missing
+
+**Fix Applied:**
+```sql
+SELECT cron.schedule(
+  'fetch-precipitation-summary-daily',
+  '0 6 * * *',
+  $$SELECT invoke_fetch_precipitation_summary()$$
+);
+```
+
+**Result:**
+- ✅ Cron job created: jobid=9, active=true, schedule='0 6 * * *'
+- ✅ First automatic run: 2026-01-13 06:00 UTC (7:00 AM CET)
+- ✅ Function URL correct: zpwoicpajmvbtmtumsah.supabase.co
+
 *Hotfix discovered: 2025-12-07*
-*Hotfix applied: 2026-01-11 (deployed via SQL Editor)*
-*Status: ✅ **DEPLOYED** - Precipitation & Water Level auto-updates now active*
+*Function deployed: 2026-01-11 (SQL Editor)*
+*Cron job created: 2026-01-12 (SQL Editor)*
+*Status: ✅ **FULLY OPERATIONAL** - Precipitation auto-updates active*
 
 ---
 
