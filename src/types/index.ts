@@ -161,6 +161,7 @@ export interface GroundwaterWell {
   depthMeters: number | null;
   wellType: string;
   isActive: boolean;
+  enabled?: boolean; // Data quality-based visibility (added 2026-01-23)
 }
 
 /**

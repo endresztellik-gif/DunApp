@@ -18,13 +18,17 @@ interface UseGroundwaterWellsReturn {
 }
 
 /**
- * Fetch all active groundwater wells from Supabase
+ * Fetch all enabled groundwater wells from Supabase
+ *
+ * Filters by 'enabled' field (data quality-based visibility)
+ * AND 'is_active' field (physical well status)
  */
 async function fetchGroundwaterWells(): Promise<GroundwaterWell[]> {
   const { data, error } = await supabase
     .from('groundwater_wells')
     .select('*')
     .eq('is_active', true)
+    .eq('enabled', true)
     .order('well_name');
 
   if (error) {
@@ -43,6 +47,7 @@ async function fetchGroundwaterWells(): Promise<GroundwaterWell[]> {
     depthMeters: well.depth_meters,
     wellType: well.well_type,
     isActive: well.is_active,
+    enabled: well.enabled,
   }));
 }
 
