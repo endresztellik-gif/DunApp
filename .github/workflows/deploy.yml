@@ -1,0 +1,81 @@
+name: Deploy - Continuous Deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Netlify
+    runs-on: ubuntu-latest
+    needs: []
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_VAPID_PUBLIC_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY }}
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: './dist'
+          production-branch: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: 'Deploy from GitHub Actions - ${{ github.event.head_commit.message }}'
+          enable-pull-request-comment: true
+          enable-commit-comment: true
+          overwrites-pull-request-comment: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        timeout-minutes: 5
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            ${{ steps.deploy.outputs.deploy-url }}
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          runs: 3
+
+      - name: Add Lighthouse results to summary
+        run: |
+          echo "### Lighthouse CI Results" >> $GITHUB_STEP_SUMMARY
+          echo "Deployment URL: ${{ steps.deploy.outputs.deploy-url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Full Lighthouse report available in artifacts." >> $GITHUB_STEP_SUMMARY
+
+      - name: Health check
+        run: |
+          echo "Waiting 10 seconds for deployment to stabilize..."
+          sleep 10
+
+          DEPLOY_URL="${{ steps.deploy.outputs.deploy-url }}"
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL")
+
+          if [ "$STATUS_CODE" -eq 200 ]; then
+            echo "Health check passed! Status: $STATUS_CODE"
+            echo "### Deployment Status: SUCCESS" >> $GITHUB_STEP_SUMMARY
+            echo "URL: $DEPLOY_URL" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Health check failed! Status: $STATUS_CODE"
+            echo "### Deployment Status: FAILED" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
