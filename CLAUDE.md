@@ -511,6 +511,50 @@ WHERE jobname = 'fetch-groundwater-daily';
 *Data refreshed: 2026-01-23 (+13,487 records)*
 *Status: ✅ **FULLY OPERATIONAL** - Auto-updates every 5 days*
 
+### Deployment Issue Resolution (2026-01-24)
+
+**Problem:** Production site (dunapp.netlify.app) showing white screen in Drought module after database changes
+**Root Cause:** Commit 85e287b (well filtering fix) was **NOT deployed to Netlify** - production still running old code
+
+**Investigation:**
+```bash
+# Production bundle check (OLD code):
+curl https://dunapp.netlify.app/assets/index-CkW90hgS.js | grep "enabled.*eq.*true"
+# ❌ NO MATCH → Old code running!
+
+# Local build (NEW code):
+grep -r "enabled.*eq.*true" dist/assets/*.js
+# ✅ 3 MATCHES → Filter code present
+```
+
+**Discovery:** `.github/workflows/deploy.yml.disabled` - GitHub Actions Netlify deployment workflow was **DISABLED**
+
+**Fix Applied:**
+1. ✅ Enabled workflow: Renamed `deploy.yml.disabled` → `deploy.yml`
+2. ✅ Committed and pushed: commit `8ebf453`
+3. ⏳ **REQUIRES:** GitHub repository secrets setup (manual):
+   - `NETLIFY_AUTH_TOKEN` = `nfp_rwJiaew1hVimfLhhX3TCu96jXcvFr5nZed9c`
+   - `NETLIFY_SITE_ID` = `d7544b8d-be4f-4d72-8846-913d5039f7ad`
+
+**Next Steps:**
+1. User must set GitHub secrets at: https://github.com/endresztellik-gif/DunApp/settings/secrets/actions
+2. Once set, GitHub Actions will auto-deploy on every `main` branch push
+3. Verify deployment: https://github.com/endresztellik-gif/DunApp/actions
+
+**Why This Happened:**
+- Workflow was disabled (unknown reason, possibly for testing)
+- Netlify GitHub integration not configured as backup
+- Manual CLI deploy failed (auth issue)
+- Result: 3 commits (85e287b, 2df8fa6, 8ebf453) never deployed to production
+
+**Files Changed:**
+- `.github/workflows/deploy.yml` (enabled from .disabled)
+- Commit: `8ebf453`
+
+*Deployment issue discovered: 2026-01-24*
+*Workflow enabled: 2026-01-24*
+*Status: ⏳ **PENDING** - Waiting for GitHub secrets setup to trigger auto-deploy*
+
 ---
 
 ## 🔐 SECURITY: CodeQL Action v4 Upgrade (2025-12-08)
