@@ -1,11 +1,11 @@
 /**
  * WellSelector Component
  *
- * DROUGHT MODULE ONLY - Dropdown selector for 15 groundwater wells
+ * DROUGHT MODULE ONLY - Dropdown selector for groundwater wells (10-15 wells)
  *
  * CRITICAL ARCHITECTURE RULE:
  * This selector is ONLY for the Drought module groundwater wells.
- * It MUST have 15 wells.
+ * Supports 10-15 wells (after enabled=true filtering).
  * DO NOT use this as a generic selector!
  * This is SEPARATE from DroughtLocationSelector (which is for 5 monitoring locations).
  */
@@ -27,10 +27,10 @@ export const WellSelector: React.FC<WellSelectorProps> = ({
   onWellChange,
   className = '',
 }) => {
-  // VALIDATION: MUST have exactly 15 wells for Drought module
-  if (wells.length !== 15) {
+  // VALIDATION: Must have at least 1 well (10-15 wells expected after enabled filter)
+  if (wells.length < 1) {
     throw new Error(
-      `WellSelector: Expected exactly 15 groundwater wells for Drought module, but received ${wells.length}. ` +
+      `WellSelector: Expected at least 1 groundwater well for Drought module, but received ${wells.length}. ` +
       'This selector is module-specific and cannot be used as a generic selector. ' +
       'For monitoring locations, use DroughtLocationSelector instead.'
     );
