@@ -36,6 +36,7 @@ import {
   Legend
 } from 'recharts';
 import { useGroundwaterTimeseries } from '../../hooks/useGroundwaterTimeseries';
+import { GroundwaterTimestampTable } from './GroundwaterTimestampTable';
 import type { GroundwaterWell } from '../../types';
 
 interface GroundwaterChartProps {
@@ -232,7 +233,7 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
               </p>
             </div>
             <p className="text-xs text-gray-600 mt-1">
-              Automatikus frissítés: naponta 06:00 órakor
+              Automatikus frissítés: 5 naponta 05:00 UTC-kor
             </p>
             <p className="text-xs text-gray-500 mt-1">
               {chartData.length} adatpont (5 napos mintavétel, ~{Math.round(chartData.length * 5)} nap lefedve)
@@ -241,6 +242,9 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
               Adatforrás: <strong>vizugy.hu</strong> • Utolsó frissítés: {new Date().toLocaleDateString('hu-HU')}
             </p>
           </div>
+
+          {/* Timestamp Table - Last Measurement Dates for All Wells */}
+          <GroundwaterTimestampTable />
         </div>
       )}
     </div>

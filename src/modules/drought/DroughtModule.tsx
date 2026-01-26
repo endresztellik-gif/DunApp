@@ -8,7 +8,7 @@
  * - 3 maps:
  *   1-2. ArcGIS maps (HUGEO groundwater, drought index HDIs)
  *   3. met.hu interactive water deficit map (2 depth layers: 50cm, 100cm)
- * - Groundwater well chart (15 wells, 365-day trend)
+ * - Groundwater well chart (10 enabled wells, 365-day trend)
  *
  * CRITICAL: Uses TWO separate selectors - DO NOT merge them!
  */
@@ -243,7 +243,7 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
       {/* Talajvízkút Monitoring Section with Well Selector */}
       <div ref={wellSelectorRef} className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 className="section-title">Talajvízkút Monitoring (15 kút)</h2>
+        <h2 className="section-title">Talajvízkút Monitoring (10 kút)</h2>
         <WellSelector
           wells={wells}
           selectedWell={selectedWell}
