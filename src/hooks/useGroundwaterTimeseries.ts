@@ -81,14 +81,20 @@ async function fetchGroundwaterTimeseries(wellId: string) {
  * Custom hook to fetch groundwater timeseries with caching (requests 365 days)
  * Frontend samples every 5th day for optimal visualization (~73 points for 365 days)
  * Database currently contains 8-9 months of data from incremental daily scraping
+ *
+ * PERFORMANCE OPTIMIZATION (2026-01-26):
+ * - Reduced cache from 1 hour to 5 minutes (matches timestamp table)
+ * - Ensures chart shows fresh data after cron runs (every 5 days)
+ * - Balances freshness with API call reduction
  */
 export function useGroundwaterTimeseries(wellId: string | null): UseGroundwaterTimeseriesReturn {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['groundwater-timeseries', wellId],
     queryFn: () => fetchGroundwaterTimeseries(wellId!),
     enabled: !!wellId, // Only run if wellId is provided
-    staleTime: 1 * 60 * 60 * 1000, // Consider data fresh for 1 hour
-    refetchInterval: 1 * 60 * 60 * 1000, // Refetch every 1 hour
+    staleTime: 5 * 60 * 1000, // 5 minutes cache (was 1 hour)
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchInterval: 5 * 60 * 1000, // Auto-refresh every 5 minutes (was 1 hour)
     retry: 3, // Retry failed requests 3 times
   });
 
