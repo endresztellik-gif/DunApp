@@ -32,6 +32,7 @@ jobs:
           VITE_VAPID_PUBLIC_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY }}
 
       - name: Deploy to Netlify
+        id: deploy
         uses: nwtgck/actions-netlify@v3.0
         with:
           publish-dir: './dist'
