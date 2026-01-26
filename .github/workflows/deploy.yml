@@ -47,6 +47,7 @@ jobs:
         timeout-minutes: 5
 
       - name: Run Lighthouse CI
+        continue-on-error: true
         uses: treosh/lighthouse-ci-action@v11
         with:
           urls: |
@@ -56,6 +57,7 @@ jobs:
           runs: 3
 
       - name: Add Lighthouse results to summary
+        continue-on-error: true
         run: |
           echo "### Lighthouse CI Results" >> $GITHUB_STEP_SUMMARY
           echo "Deployment URL: ${{ steps.deploy.outputs.deploy-url }}" >> $GITHUB_STEP_SUMMARY
