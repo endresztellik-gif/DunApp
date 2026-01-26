@@ -55,10 +55,11 @@ async function fetchGroundwaterTimeseries(wellId: string) {
     .select('timestamp, water_level_meters, water_level_masl, water_temperature')
     .eq('well_id', wellId)
     .gte('timestamp', oneYearAgo.toISOString())
-    .order('timestamp', { ascending: true }) as {
+    .order('timestamp', { ascending: true })
+    .limit(10000) as {
       data: GroundwaterDataRow[] | null;
       error: any;
-    }; // Chronological order for chart
+    }; // Chronological order for chart (limit 10k to handle wells with dense data)
 
   if (error) {
     throw new Error(`Failed to fetch groundwater timeseries: ${error.message}`);
