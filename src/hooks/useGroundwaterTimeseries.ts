@@ -1,14 +1,18 @@
 /**
  * useGroundwaterTimeseries Hook
  *
- * Fetches up to 365-day groundwater level timeseries data for chart visualization.
+ * Fetches ALL available groundwater level timeseries data for chart visualization.
  * Returns historical water level measurements for a selected well.
  * Frontend will sample every 5th day for optimal trend visualization.
  *
- * NOTE: Due to vizadat.hu API timeout limits (as of 2026-01-09):
- * - The scraper can only fetch 30 days at a time without timing out
- * - However, the database contains 8-9 months of historical data from previous scrapes
- * - Daily incremental fetching will gradually build up a full 365-day dataset
+ * NOTE: Database contains 14 months of data (Nov 2024 → Jan 2026) from vizugy.hu:
+ * - Scraper fetches 30-day increments every 5 days (cron schedule)
+ * - Database accumulates data through daily incremental scraping
+ * - No date range filter applied - fetches ALL available data
+ * - .limit(10000) protects against excessive data (sufficient for years of 4-hour samples)
+ *
+ * BUG FIX (2026-01-27): Removed .gte() date filter that was excluding fresh data
+ * causing charts to show stale data (Oct 15) while timestamp table showed Jan 25.
  *
  * @param wellId - The ID of the well to fetch timeseries data for
  * @returns Query object with timeseries data array, loading state, and error
@@ -40,21 +44,20 @@ interface GroundwaterDataRow {
 }
 
 /**
- * Fetch groundwater timeseries for a well (requests 365 days)
- * Database contains 8-9 months of historical data from incremental daily scraping.
- * Current API limitation: vizadat.hu times out for 60+ days, so only 30 days scraped daily (2026-01-09).
+ * Fetch groundwater timeseries for a well (ALL available data, no date filter)
+ * Database contains 14 months of historical data (Nov 2024 → Jan 2026) from vizugy.hu.
+ * Scraper runs every 5 days, fetching 30-day increments (API limitation).
  */
 async function fetchGroundwaterTimeseries(wellId: string) {
-  // Calculate date range (365 days ago to now)
-  // Database contains 8-9 months of accumulated data from daily incremental scraping
-  const now = new Date();
-  const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+  // No date filtering - fetch ALL available data from database
+  // Database self-limits to ~14 months through 5-day incremental scraping
+  // .limit(10000) protects against excessive data (sufficient for years)
 
-  const { data, error } = await supabase
+  const { data, error} = await supabase
     .from('groundwater_data')
     .select('timestamp, water_level_meters, water_level_masl, water_temperature')
     .eq('well_id', wellId)
-    .gte('timestamp', oneYearAgo.toISOString())
+    // Fetch ALL available data (no date filter) - database only has 14 months
     .order('timestamp', { ascending: true })
     .limit(10000) as {
       data: GroundwaterDataRow[] | null;
