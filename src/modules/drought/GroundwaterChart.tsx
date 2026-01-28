@@ -66,8 +66,27 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
     waterTemperature: point.waterTemperature
   }));
 
-  // Sample every 5th day for optimal trend visualization
-  const chartData = allData.filter((_, index) => index % 5 === 0);
+  // Apply rolling 365-day window filter from MOST RECENT data point
+  // This ensures chart always shows last 365 days of available data, not starting from oldest data
+  let dataToDisplay = allData;
+
+  if (allData.length > 0) {
+    // Find the LATEST timestamp in the dataset (not today's date!)
+    const latestTimestamp = Math.max(
+      ...allData.map(d => new Date(d.timestamp).getTime())
+    );
+
+    // Calculate 365 days BACKWARDS from latest data point
+    const oneYearAgo = latestTimestamp - (365 * 24 * 60 * 60 * 1000);
+
+    // Filter to last 365 days from most recent data
+    dataToDisplay = allData.filter(d =>
+      new Date(d.timestamp).getTime() >= oneYearAgo
+    );
+  }
+
+  // Sample every 5th day for optimal trend visualization (~73 points for 365 days)
+  const chartData = dataToDisplay.filter((_, index) => index % 5 === 0);
 
   // Calculate Y-axis domain for NEGATIVE values
   // Deeper water (larger positive value) = more negative display value = lower on chart
