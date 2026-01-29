@@ -54,7 +54,7 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
   };
 
   // Transform data for Recharts with 5-day sampling
-  // This reduces ~180 data points to ~36 points for better visualization
+  // This reduces data points for better visualization
   // IMPORTANT: Display values as NEGATIVE because higher value = deeper water
   // This makes the chart intuitive: deeper water appears lower on the chart
   const allData = timeseriesData.map((point) => ({
@@ -66,27 +66,9 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
     waterTemperature: point.waterTemperature
   }));
 
-  // Apply rolling 365-day window filter from MOST RECENT data point
-  // This ensures chart always shows last 365 days of available data, not starting from oldest data
-  let dataToDisplay = allData;
-
-  if (allData.length > 0) {
-    // Find the LATEST timestamp in the dataset (not today's date!)
-    const latestTimestamp = Math.max(
-      ...allData.map(d => new Date(d.timestamp).getTime())
-    );
-
-    // Calculate 365 days BACKWARDS from latest data point
-    const oneYearAgo = latestTimestamp - (365 * 24 * 60 * 60 * 1000);
-
-    // Filter to last 365 days from most recent data
-    dataToDisplay = allData.filter(d =>
-      new Date(d.timestamp).getTime() >= oneYearAgo
-    );
-  }
-
-  // Sample every 5th day for optimal trend visualization (~73 points for 365 days)
-  const chartData = dataToDisplay.filter((_, index) => index % 5 === 0);
+  // Display ALL available data (database only has ~14 months, limited by .limit(10000))
+  // Sample every 5th day for optimal trend visualization (~280 points for 14 months)
+  const chartData = allData.filter((_, index) => index % 5 === 0);
 
   // Calculate Y-axis domain for NEGATIVE values
   // Deeper water (larger positive value) = more negative display value = lower on chart
