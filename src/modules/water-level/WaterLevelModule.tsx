@@ -21,6 +21,7 @@ import { Footer } from '../../components/Layout/Footer';
 import { NotificationSettings } from '../../components/NotificationSettings';
 import { MultiStationChart } from './MultiStationChart';
 import { ForecastDataTable } from './ForecastDataTable';
+import { WaterBodiesTable } from './WaterBodiesTable';
 import { useStations } from '../../hooks/useStations';
 import { useWaterLevelData } from '../../hooks/useWaterLevelData';
 import type { DataSource } from '../../types';
@@ -206,6 +207,15 @@ export const WaterLevelModule: React.FC = () => {
 
         {/* Forecast Data Table */}
         <ForecastDataTable stations={stations} />
+      </div>
+
+      {/* Water Bodies 3-Day Summary */}
+      <div className="mb-6">
+        <h2 className="section-title mb-4">Víztestek Napi Vízállása</h2>
+        <p className="section-subtitle mb-4">
+          Kadia, FTCS (Karapancsa), Belső-Béda - 3 napos összegzés
+        </p>
+        <WaterBodiesTable />
       </div>
 
       {/* Footer with data source */}
