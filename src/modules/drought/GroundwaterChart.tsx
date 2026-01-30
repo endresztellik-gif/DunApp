@@ -8,9 +8,9 @@
  * ✅ NOW USING REAL DATA FROM SUPABASE (2025-11-06+)
  * Data scraped daily from vizugy.hu via incremental fetching
  *
- * NOTE: Database contains 8-9 months of historical data (built incrementally).
- *       API currently fetches 30 days per run (reduced from 60 due to timeout issues, 2026-01-09).
- *       Daily scraping will gradually build up a full 365-day dataset.
+ * NOTE: Database contains 14 months of historical data (Nov 2024 → Jan 2026).
+ *       Rolling 365-day window filter ensures chart shows most recent year from latest data.
+ *       API fetches 30 days per run every 5 days (cron schedule, updated 2026-01-09).
  *
  * Features:
  * - 365-day historical trend with 5-day sampling
@@ -57,18 +57,51 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
   // This reduces data points for better visualization
   // IMPORTANT: Display values as NEGATIVE because higher value = deeper water
   // This makes the chart intuitive: deeper water appears lower on the chart
-  const allData = timeseriesData.map((point) => ({
-    timestamp: point.timestamp,
-    dateLabel: formatDate(point.timestamp),
-    waterLevelMeters: point.waterLevelMeters,
-    displayLevel: point.waterLevelMeters !== null ? -point.waterLevelMeters : null, // NEGATIVE for display
-    waterLevelMasl: point.waterLevelMasl,
-    waterTemperature: point.waterTemperature
-  }));
+  const allData = timeseriesData.map((point) => {
+    // Check if water_level_meters is already negative (database inconsistency)
+    // If already negative, use as-is. If positive, negate it.
+    const rawValue = point.waterLevelMeters;
+    const displayLevel = rawValue !== null
+      ? (rawValue < 0 ? rawValue : -rawValue)  // Ensure always negative
+      : null;
 
-  // Display ALL available data (database only has ~14 months, limited by .limit(10000))
-  // Sample every 5th day for optimal trend visualization (~280 points for 14 months)
-  const chartData = allData.filter((_, index) => index % 5 === 0);
+    return {
+      timestamp: point.timestamp,
+      dateLabel: formatDate(point.timestamp),
+      waterLevelMeters: point.waterLevelMeters,
+      displayLevel: displayLevel, // ALWAYS negative for display
+      waterLevelMasl: point.waterLevelMasl,
+      waterTemperature: point.waterTemperature
+    };
+  });
+
+  // 🆕 Add rolling 365-day window filter from MOST RECENT data point
+  // This ensures chart always shows last 365 days from latest data, not from oldest data
+  let dataToDisplay = allData;
+
+  if (allData.length > 0) {
+    // Find the LATEST timestamp in the dataset
+    const latestTimestamp = Math.max(
+      ...allData.map(d => new Date(d.timestamp).getTime())
+    );
+
+    // Calculate 365 days BACKWARDS from latest data point (not from today!)
+    const oneYearAgo = latestTimestamp - (365 * 24 * 60 * 60 * 1000);
+
+    // Filter to last 365 days from most recent data
+    dataToDisplay = allData.filter(d =>
+      new Date(d.timestamp).getTime() >= oneYearAgo
+    );
+
+    // Sort in ASCENDING order for chart display (left to right timeline)
+    // Data comes from Supabase in DESCENDING order (newest first)
+    dataToDisplay.sort((a, b) =>
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+  }
+
+  // THEN sample every 5th day for optimal visualization (~73 points for 365 days)
+  const chartData = dataToDisplay.filter((_, index) => index % 5 === 0);
 
   // Calculate Y-axis domain for NEGATIVE values
   // Deeper water (larger positive value) = more negative display value = lower on chart
@@ -169,7 +202,7 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center min-h-[500px] flex flex-col justify-center">
           <p className="text-yellow-700 font-semibold text-lg">Nincs elérhető adat</p>
           <p className="text-sm text-yellow-600 mt-2">
-            Az elmúlt 365 napból nem áll rendelkezésre talajvízszint mérés ehhez a kúthoz.
+            Nem áll rendelkezésre talajvízszint mérés ehhez a kúthoz.
           </p>
           <p className="text-xs text-gray-500 mt-4">
             A kút adatainak gyűjtése folyamatban lehet. Próbáld újra később.
@@ -181,7 +214,7 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well }) => {
       {!isLoading && !error && chartData.length > 0 && (
         <div>
           <h4 className="text-md font-semibold text-gray-700 mb-4">
-            Talajvízszint alakulása (elmúlt 365 nap, 5 napos mintavétel)
+            Talajvízszint alakulása (5 napos mintavétel)
           </h4>
           <ResponsiveContainer width="100%" height={400}>
             <LineChart

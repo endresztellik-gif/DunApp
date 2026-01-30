@@ -57,12 +57,12 @@ async function fetchGroundwaterTimeseries(wellId: string) {
     .from('groundwater_data')
     .select('timestamp, water_level_meters, water_level_masl, water_temperature')
     .eq('well_id', wellId)
-    // Fetch ALL available data (no date filter) - database only has 14 months
-    .order('timestamp', { ascending: true })
+    // Fetch most recent data first (descending order) to ensure latest data is included
+    .order('timestamp', { ascending: false })
     .limit(10000) as {
       data: GroundwaterDataRow[] | null;
       error: any;
-    }; // Chronological order for chart (limit 10k to handle wells with dense data)
+    }; // Reverse chronological order - frontend will re-sort for chart display
 
   if (error) {
     throw new Error(`Failed to fetch groundwater timeseries: ${error.message}`);
