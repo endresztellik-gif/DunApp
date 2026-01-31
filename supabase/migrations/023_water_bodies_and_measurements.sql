@@ -104,7 +104,7 @@ COMMENT ON COLUMN water_body_measurements.water_level_cm IS 'Water level in cent
 
 INSERT INTO water_bodies (name, type, region, vizugy_url) VALUES
   ('Kadia', 'lake', 'Bács-Kiskun', 'https://www.vizugy.hu/?mapModule=OpFeGrafikon&AllomasVOA=164960F7-97AB-11D4-BB62-00508BA24287&mapData=OrasIdosor'),
-  ('FTCS (Karapancsa)', 'wetland', 'Bács-Kiskun', 'https://www.vizugy.hu/?mapModule=OpFeGrafikon&AllomasVOA=16496103-97AB-11D4-BB62-00508BA24287&mapData=OrasIdosor'),
+  ('FTCS (Karapancsa)', 'wetland', 'Bács-Kiskun', 'https://www.vizugy.hu/?mapModule=OpGrafikon&AllomasVOA=164960F8-97AB-11D4-BB62-00508BA24287&mapData=OrasIdosor'),
   ('Belső-Béda', 'wetland', 'Bács-Kiskun', NULL)
 ON CONFLICT (name) DO NOTHING;
 

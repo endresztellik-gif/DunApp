@@ -6,7 +6,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const FTCS_STATION_URL =
-  'https://www.vizugy.hu/?mapModule=OpFeGrafikon&AllomasVOA=16496103-97AB-11D4-BB62-00508BA24287&mapData=OrasIdosor';
+  'https://www.vizugy.hu/?mapModule=OpGrafikon&AllomasVOA=164960F8-97AB-11D4-BB62-00508BA24287&mapData=OrasIdosor';
 
 interface MeasurementData {
   timestamp: string;
