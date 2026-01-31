@@ -34,6 +34,17 @@ interface UseWaterBodiesThreeDayDataReturn {
   refetch: () => Promise<unknown>;
 }
 
+// Database types
+interface WaterBodyRow {
+  id: string;
+  name: string;
+}
+
+interface MeasurementRow {
+  measured_at: string;
+  water_level_cm: number;
+}
+
 /**
  * Fetch 3-day water level data for all water bodies
  */
@@ -64,7 +75,7 @@ async function fetchWaterBodiesThreeDayData(): Promise<WaterBodyThreeDayData[]> 
   // Fetch measurements for each water body
   const waterBodiesData: WaterBodyThreeDayData[] = [];
 
-  for (const waterBody of waterBodies) {
+  for (const waterBody of (waterBodies as WaterBodyRow[])) {
     // Get latest measurement for each of the last 3 days
     const { data: measurements, error: measurementsError } = await supabase
       .from('water_body_measurements')
@@ -79,10 +90,10 @@ async function fetchWaterBodiesThreeDayData(): Promise<WaterBodyThreeDayData[]> 
     }
 
     // Group measurements by day and get latest for each day
-    const measurementsByDay: { [key: string]: any } = {};
+    const measurementsByDay: { [key: string]: MeasurementRow } = {};
 
     if (measurements && measurements.length > 0) {
-      for (const measurement of measurements) {
+      for (const measurement of (measurements as MeasurementRow[])) {
         const measurementDate = new Date(measurement.measured_at);
         measurementDate.setUTCHours(0, 0, 0, 0);
         const dayKey = measurementDate.toISOString();
