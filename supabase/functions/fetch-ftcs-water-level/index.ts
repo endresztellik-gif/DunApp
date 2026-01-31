@@ -47,32 +47,37 @@ serve(async (req) => {
 
     console.log(`Found ${measurements.length} measurements`);
 
-    // Get the latest measurement (first row is usually the most recent)
-    const latestMeasurement = measurements[0];
-    const latestWaterLevel = latestMeasurement.waterLevel;
-    const latestTimestamp = latestMeasurement.timestamp;
+    // Group measurements by day and find the 6:00 AM measurement (or closest)
+    const dailyMeasurements: Map<string, MeasurementData> = new Map();
 
-    // Parse Hungarian timestamp format: '2025.11.20. 22:00' -> ISO 8601
-    // Format: YYYY.MM.DD. HH:mm
-    const timestampParts = latestTimestamp.match(
-      /(\d{4})\.(\d{2})\.(\d{2})\.\s+(\d{2}):(\d{2})/
-    );
+    for (const measurement of measurements) {
+      const timestampParts = measurement.timestamp.match(
+        /(\d{4})\.(\d{2})\.(\d{2})\.\s+(\d{2}):(\d{2})/
+      );
 
-    if (!timestampParts) {
-      throw new Error(`Invalid timestamp format: ${latestTimestamp}`);
+      if (!timestampParts) continue;
+
+      const [_, year, month, day, hour, minute] = timestampParts;
+      const dayKey = `${year}-${month}-${day}`;
+      const hourNum = parseInt(hour, 10);
+
+      // Prefer 6:00 AM measurement (or closest to 6:00 AM)
+      if (!dailyMeasurements.has(dayKey)) {
+        dailyMeasurements.set(dayKey, measurement);
+      } else {
+        const existing = dailyMeasurements.get(dayKey)!;
+        const existingHour = parseInt(existing.timestamp.match(/(\d{2}):(\d{2})/)![1], 10);
+        const existingDiff = Math.abs(existingHour - 6);
+        const currentDiff = Math.abs(hourNum - 6);
+
+        // Replace if current measurement is closer to 6:00 AM
+        if (currentDiff < existingDiff) {
+          dailyMeasurements.set(dayKey, measurement);
+        }
+      }
     }
 
-    const [_, year, month, day, hour, minute] = timestampParts;
-    const measurementDate = new Date(
-      `${year}-${month}-${day}T${hour}:${minute}:00.000Z`
-    );
-    const measurementTimestamp = measurementDate.toISOString();
-
-    console.log('Latest measurement:', {
-      waterLevel: latestWaterLevel,
-      timestamp: latestTimestamp,
-      iso: measurementTimestamp,
-    });
+    console.log(`Found ${dailyMeasurements.size} daily measurements (6:00 AM preferred)`);
 
     // Find FTCS water body ID
     const { data: ftcsWaterBody, error: waterBodyError } = await supabase
@@ -89,55 +94,52 @@ serve(async (req) => {
 
     console.log('FTCS water body ID:', ftcsWaterBody.id);
 
-    // Check if measurement already exists for this timestamp
-    const { data: existingMeasurement } = await supabase
-      .from('water_body_measurements')
-      .select('id')
-      .eq('water_body_id', ftcsWaterBody.id)
-      .eq('measured_at', measurementTimestamp)
-      .single();
-
-    if (existingMeasurement) {
-      console.log('Measurement already exists, skipping');
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'Measurement already exists',
-          data: {
-            waterLevel: latestWaterLevel,
-            timestamp: latestTimestamp,
-          },
-        }),
-        { headers: { 'Content-Type': 'application/json' } }
+    // Prepare all daily measurements for bulk insert
+    const measurementsToInsert = Array.from(dailyMeasurements.values()).map((measurement) => {
+      const timestampParts = measurement.timestamp.match(
+        /(\d{4})\.(\d{2})\.(\d{2})\.\s+(\d{2}):(\d{2})/
       );
-    }
 
-    // Insert new measurement
-    const { data: newMeasurement, error: insertError } = await supabase
-      .from('water_body_measurements')
-      .insert({
+      if (!timestampParts) {
+        throw new Error(`Invalid timestamp format: ${measurement.timestamp}`);
+      }
+
+      const [_, year, month, day, hour, minute] = timestampParts;
+      const measurementDate = new Date(
+        `${year}-${month}-${day}T${hour}:${minute}:00.000Z`
+      );
+
+      return {
         water_body_id: ftcsWaterBody.id,
-        water_level_cm: latestWaterLevel,
-        measured_at: measurementTimestamp,
+        water_level_cm: measurement.waterLevel,
+        measured_at: measurementDate.toISOString(),
         source: 'vizugy.hu',
+      };
+    });
+
+    // Bulk insert (upsert to avoid duplicates)
+    const { data: insertedMeasurements, error: insertError } = await supabase
+      .from('water_body_measurements')
+      .upsert(measurementsToInsert, {
+        onConflict: 'water_body_id,measured_at',
+        ignoreDuplicates: true,
       })
-      .select()
-      .single();
+      .select();
 
     if (insertError) {
       throw new Error(`Insert failed: ${insertError.message}`);
     }
 
-    console.log('New measurement inserted:', newMeasurement);
+    console.log(`Inserted ${insertedMeasurements?.length || 0} measurements`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'FTCS measurement imported successfully',
+        message: 'FTCS measurements imported successfully',
         data: {
-          waterLevel: latestWaterLevel,
-          timestamp: latestTimestamp,
-          inserted: newMeasurement,
+          measurementsFound: measurements.length,
+          dailyMeasurements: dailyMeasurements.size,
+          inserted: insertedMeasurements?.length || 0,
         },
       }),
       { headers: { 'Content-Type': 'application/json' } }
