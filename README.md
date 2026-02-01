@@ -14,44 +14,62 @@
 
 ## 📋 Overview
 
-DunApp PWA monitors environmental data for 27 locations across Southern Hungary's Danube region:
+DunApp PWA monitors environmental data for 30 locations across Southern Hungary's Danube region:
 
 | Module | Locations | Count |
 |--------|-----------|-------|
 | 🌤️ **Meteorology** | Szekszárd, Baja, Dunaszekcső, Mohács | **4 cities** |
-| 💧 **Water Level** | Baja, Mohács, Nagybajcs | **3 stations** |
+| 💧 **Water Level (Danube)** | Baja, Mohács, Nagybajcs | **3 stations** |
+| 🌊 **Water Bodies** | Kadia, FTCS (Karapancsa), Belső-Béda | **3 lakes/wetlands** |
 | 🏜️ **Drought Monitoring** | Katymár, Dávod, Szederkény, Sükösd, Csávoly | **5 locations** |
 | 🚰 **Groundwater Wells** | 15 monitoring wells | **15 wells** |
-| **TOTAL** | | **27 locations** |
+| **TOTAL** | | **30 locations** |
 
 ### Key Features
 
 - ✅ **Real-time weather data** (OpenWeatherMap + Yr.no APIs)
 - ✅ **Animated radar map** (RainViewer API with 13-frame loop)
 - ✅ **6-hourly forecast** (11 data points for 72 hours)
-- ✅ **Danube water levels** (HydroInfo API integration)
+- ✅ **Danube water levels** (HydroInfo API - 3 stations with forecasts)
+- ✅ **Water bodies monitoring** (VizUgy.hu - 3 lakes/wetlands with 3-day trends)
+- ✅ **Groundwater wells** (VizUgy.hu - 15 wells with 365-day history)
 - ✅ **Drought monitoring** (Aszálymonitoring.hu Pattern API - HDI, soil moisture, water deficit)
-- ✅ **Automated data refresh** (Hourly cron jobs via pg_cron)
+- ✅ **Automated data refresh** (Smart cron jobs via pg_cron - hourly/daily/5-day schedules)
 - ✅ **Offline support** (Service Worker caching)
 - ✅ **Mobile-first PWA** (Installable on mobile devices)
 
 ### ✅ Module Status
 
-**Production Ready:**
-- ✅ **Meteorology Module** - Real-time weather data from OpenWeatherMap + Yr.no APIs
-- ✅ **Water Level Module** - Live Danube water levels from HydroInfo API
-- ✅ **Drought Module** - Real-time drought monitoring data from Aszálymonitoring.hu Pattern API
+**Production Ready (All Modules Operational):**
 
-**Phase 5 Drought Module (Completed 2025-11-04):**
+**1. Meteorology Module** (Completed 2025-11-02)
+- ✅ Real-time weather data (OpenWeatherMap + Yr.no APIs)
+- ✅ Animated radar map (RainViewer API, 13-frame loop)
+- ✅ 6-hourly forecast (72-hour outlook)
+- ✅ Hourly auto-refresh via pg_cron
+
+**2. Water Level Module** (Completed 2026-01-31)
+- ✅ **Danube stations** - Baja, Mohács, Nagybajcs (HydroInfo API with forecasts)
+- ✅ **Water bodies** - Kadia, FTCS (Karapancsa), Belső-Béda (VizUgy.hu scraping)
+- ✅ **3-day trend display** - Daily measurements with change indicators
+- ✅ **Daily auto-refresh** - 7:00 AM UTC cron job (Migration 024)
+
+**3. Drought Module** (Completed 2025-11-04)
 - ✅ **5 monitoring locations** - Katymár, Dávod, Szederkény, Sükösd, Csávoly
 - ✅ **7 datasets** - Drought Index (HDI), Water Deficit (35cm), Soil Moisture (6 depths), Temperature, Precipitation, Humidity
 - ✅ **Pattern API endpoint** - Official `aszalymonitoring.vizugy.hu/index.php?view=pattern` integration
 - ✅ **Automated daily refresh** - pg_cron scheduled at 6:00 AM UTC
-- ✅ **3 data cards working** - Drought Index (1.7-2.2), Soil Moisture (10-30%), Water Deficit (35-60 mm)
 
-**In Progress:**
-- ⚠️ **Groundwater Wells (15 wells)** - Schema ready, pending VízÜgy API discovery or web scraping implementation
-- ⚠️ **Drought Maps** - UI ready, real data integration testing in progress
+**4. Groundwater Wells** (Completed 2026-02-01)
+- ✅ **15 monitoring wells** - VizUgy.hu PHP endpoint integration
+- ✅ **365-day historical data** - Up to 2,000+ measurements per well
+- ✅ **Smart 5-day sampling** - TRUE 5-day intervals via smart cron (Migration 025)
+- ✅ **3 active wells** - Sátorhely, Mohács-Sárhát, Hercegszántó (updating to latest)
+
+**All Features:**
+- ✅ **30 locations monitored** (4 cities, 3 stations, 3 water bodies, 5 drought sites, 15 wells)
+- ✅ **Automated data refresh** - Smart pg_cron schedules (hourly, daily, 5-day)
+- ✅ **Offline PWA support** - Service Worker caching for all modules
 
 ---
 
@@ -59,8 +77,8 @@ DunApp PWA monitors environmental data for 27 locations across Southern Hungary'
 
 ### Prerequisites
 
-- **Node.js** 18+ or 20 LTS
-- **NPM** 8+
+- **Node.js** 22 LTS (recommended)
+- **NPM** 10+
 - **Supabase Account** (free tier works)
 - **API Keys** (see [Environment Setup](#-environment-setup))
 
