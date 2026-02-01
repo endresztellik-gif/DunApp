@@ -99,16 +99,19 @@ async function fetchWithTimeout(
 /**
  * Parse chartView() JavaScript function call to extract data arrays
  *
- * Format: chartView([values], [timestamps], [], [metadata])
- * Example: chartView(["597","596",...], ["2025-01-14 04:00:00",...], [], ["Sátorhely",...])
+ * Supports TWO formats (vizugy.hu changed API on 2026-02-01):
+ * - OLD: chartView([values], [timestamps], [], [metadata])
+ * - NEW: chartView("CODE", [values], [timestamps], [], [metadata])
+ * Example: chartView("4576", ["597","596",...], ["2025-01-14 04:00:00",...], [], ["Sátorhely",...])
  * Note: We only extract the first two arrays (values and timestamps)
  */
 function parseChartViewData(html: string): ParsedData | null {
   try {
-    // Regex to extract FOUR arrays from chartView() call
-    // Pattern: chartView( [values], [timestamps], [], [metadata] )
-    // We only need the first two arrays (values and timestamps)
-    const pattern = /chartView\s*\(\s*(\[.*?\])\s*,\s*(\[.*?\])\s*,\s*\[.*?\]\s*,\s*\[.*?\]\s*\)/s;
+    // Regex to extract data arrays from chartView() call
+    // Pattern 1 (OLD): chartView( [values], [timestamps], [], [metadata] )
+    // Pattern 2 (NEW): chartView( "CODE", [values], [timestamps], [], [metadata] )
+    // The (?:"[^"]*"\s*,\s*)? part makes the string parameter optional
+    const pattern = /chartView\s*\(\s*(?:"[^"]*"\s*,\s*)?(\[.*?\])\s*,\s*(\[.*?\])\s*,\s*\[.*?\]\s*,\s*\[.*?\]\s*\)/s;
     const match = html.match(pattern);
 
     if (!match) {
