@@ -1,0 +1,14 @@
+# Supabase API proxy
+/api/*  https://zpwoicpajmvbtmtumsah.supabase.co/:splat  200!
+
+# Met.hu image proxy (CORS bypass)
+/met-img/*  https://www.met.hu/img/:splat  200!
+
+# Met.hu ODP radar image proxy
+/met-radar/*  https://odp.met.hu/weather/radar/composite/png/refl2D/:splat  200!
+
+# Open-Meteo Historical API proxy
+/open-meteo-archive/*  https://archive-api.open-meteo.com/v1/:splat  200!
+
+# SPA fallback
+/*  /index.html  200
