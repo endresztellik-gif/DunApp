@@ -17,7 +17,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useReducer } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, ImageOverlay } from 'react-leaflet';
+import { MapContainer, Marker, Popup, ImageOverlay } from 'react-leaflet';
 import { icon as leafletIcon } from 'leaflet';
 import type { LatLngBoundsExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -332,23 +332,13 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
         maxBoundsViscosity={0.5} // Smooth boundary enforcement
         style={{ borderRadius: '8px' }}
       >
-        {/* Base Map Layer */}
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          maxNativeZoom={18}
-          keepBuffer={2} // Reduce memory usage (default is 2)
-          updateWhenZooming={false} // Defer tile updates during zoom for smoother performance
-        />
-
         {/* Met.hu Radar Overlay - Layer 0 (crossfade) */}
         {prevFrame && animState.activeLayer === 1 && (
           <ImageOverlay
             url={prevFrame.url}
             bounds={HUNGARY_RADAR_BOUNDS}
-            opacity={0.7}
+            opacity={1}
             className="radar-layer radar-layer-fade-out"
-            zIndex={200}
           />
         )}
 
@@ -357,9 +347,8 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
           <ImageOverlay
             url={currentFrame.url}
             bounds={HUNGARY_RADAR_BOUNDS}
-            opacity={0.7}
+            opacity={1}
             className="radar-layer radar-layer-fade-in"
-            zIndex={201}
           />
         )}
 

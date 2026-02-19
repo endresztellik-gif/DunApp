@@ -1,7 +1,7 @@
 {
   "name": "dunapp-temp",
   "private": true,
-  "version": "2.5.0",
+  "version": "2.6.0",
   "type": "module",
   "engines": {
     "node": ">=22.0.0"
