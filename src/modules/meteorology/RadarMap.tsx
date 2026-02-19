@@ -126,15 +126,15 @@ function generateRadarFrameUrls(isMobile: boolean): RadarFrame[] {
     const frameTime = new Date(now.getTime() - i * 5 * 60 * 1000);
 
     // Round down to nearest 5 minutes
-    const minutes = Math.floor(frameTime.getMinutes() / 5) * 5;
-    frameTime.setMinutes(minutes, 0, 0);
+    const minutes = Math.floor(frameTime.getUTCMinutes() / 5) * 5;
+    frameTime.setUTCMinutes(minutes, 0, 0);
 
-    // Format: YYYYMMDD_HHMM
-    const year = frameTime.getFullYear();
-    const month = String(frameTime.getMonth() + 1).padStart(2, '0');
-    const day = String(frameTime.getDate()).padStart(2, '0');
-    const hours = String(frameTime.getHours()).padStart(2, '0');
-    const mins = String(frameTime.getMinutes()).padStart(2, '0');
+    // Format: YYYYMMDD_HHMM (UTC - met.hu uses UTC timestamps)
+    const year = frameTime.getUTCFullYear();
+    const month = String(frameTime.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(frameTime.getUTCDate()).padStart(2, '0');
+    const hours = String(frameTime.getUTCHours()).padStart(2, '0');
+    const mins = String(frameTime.getUTCMinutes()).padStart(2, '0');
 
     const timestamp = `${year}${month}${day}_${hours}${mins}`;
     const url = `/met-radar/radar_composite-refl2D-${timestamp}.png`;
