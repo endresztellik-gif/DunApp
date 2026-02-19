@@ -1,23 +1,12 @@
 /**
  * RadarMap Component
  *
- * Displays weather radar map using Leaflet with Met.hu ODP radar overlay.
- * Shows real-time rain/precipitation radar data for Hungary.
- *
- * Features:
- * - OpenStreetMap base layer
- * - Met.hu radar composite overlay (5-minute resolution)
- * - CSS crossfade animation for smooth transitions
- * - City marker with popup info
- *
+ * Displays weather radar using Leaflet with Met.hu ODP radar overlay.
  * API: https://odp.met.hu/weather/radar/composite/png/refl2D/
- *
- * PERFORMANCE: Memoized to prevent re-renders during radar animation.
- * Leaflet rendering is expensive - memoization has high impact.
  */
 
-import React, { useState, useEffect, useCallback, useReducer } from 'react';
-import { MapContainer, Marker, Popup, ImageOverlay } from 'react-leaflet';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, ImageOverlay } from 'react-leaflet';
 import { icon as leafletIcon } from 'leaflet';
 import type { LatLngBoundsExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -25,7 +14,6 @@ import { EmptyState } from '../../components/UI/EmptyState';
 import { MapPin, Play, Pause } from 'lucide-react';
 import type { City } from '../../types';
 
-// Fix Leaflet default icon path issue with Vite
 const defaultIcon = leafletIcon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -36,11 +24,12 @@ const defaultIcon = leafletIcon({
   shadowSize: [41, 41],
 });
 
-// Hungary radar composite bounds (approximate)
-// Based on met.hu radar coverage area
-const HUNGARY_RADAR_BOUNDS: LatLngBoundsExpression = [
-  [45.5, 13.5], // Southwest corner
-  [49.5, 25.0], // Northeast corner
+// Bounds derived from met.hu NetCDF metadata:
+// La1=50.5, Lo1=13.5, Dy=0.008 (813 rows), Dx=0.0125 (961 cols)
+// South = 50.5 - 813*0.008 = 44.0, East = 13.5 + 961*0.0125 = 25.5
+const RADAR_BOUNDS: LatLngBoundsExpression = [
+  [44.0, 13.5], // Southwest
+  [50.5, 25.5], // Northeast
 ];
 
 interface RadarMapProps {
@@ -48,88 +37,22 @@ interface RadarMapProps {
 }
 
 interface RadarFrame {
-  timestamp: string; // YYYYMMDD_HHMM format
+  timestamp: string;
   url: string;
 }
 
-/**
- * Animation state for batched updates (prevents double renders)
- */
-interface AnimationState {
-  frameIndex: number;
-  activeLayer: 0 | 1;
-}
+const FRAME_COUNT = 13;
+const FRAME_INTERVAL_MS = 800;
 
-type AnimationAction =
-  | { type: 'NEXT_FRAME'; frameCount: number }
-  | { type: 'RESET'; startIndex: number };
-
-/**
- * Reducer for animation state - batches frameIndex and activeLayer updates
- * Prevents double re-renders per animation frame
- */
-function animationReducer(state: AnimationState, action: AnimationAction): AnimationState {
-  switch (action.type) {
-    case 'NEXT_FRAME': {
-      const newIndex = (state.frameIndex + 1) % action.frameCount;
-      const newLayer = state.activeLayer === 0 ? 1 : 0;
-      return {
-        frameIndex: newIndex,
-        activeLayer: newLayer as 0 | 1,
-      };
-    }
-    case 'RESET':
-      return {
-        frameIndex: action.startIndex,
-        activeLayer: 0,
-      };
-    default:
-      return state;
-  }
-}
-
-/**
- * Detect if device is mobile based on viewport width
- * Mobile: < 768px (Tailwind 'sm' breakpoint)
- */
-function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  return isMobile;
-}
-
-/**
- * Generate radar frame URLs with adaptive frame count
- * Mobile: 12 frames (1 hour) - reduces data usage and loading time
- * Desktop: 25 frames (2 hours) - full animation
- * Met.hu updates radar images every 5 minutes
- */
-function generateRadarFrameUrls(isMobile: boolean): RadarFrame[] {
+function generateRadarFrameUrls(): RadarFrame[] {
   const frames: RadarFrame[] = [];
   const now = new Date();
 
-  // Adaptive frame count based on device
-  const frameCount = isMobile ? 12 : 25;
-
-  // Generate frames from now back to frameCount * 5 minutes ago
-  for (let i = frameCount; i >= 0; i--) {
+  for (let i = FRAME_COUNT - 1; i >= 0; i--) {
     const frameTime = new Date(now.getTime() - i * 5 * 60 * 1000);
-
-    // Round down to nearest 5 minutes
     const minutes = Math.floor(frameTime.getUTCMinutes() / 5) * 5;
     frameTime.setUTCMinutes(minutes, 0, 0);
 
-    // Format: YYYYMMDD_HHMM (UTC - met.hu uses UTC timestamps)
     const year = frameTime.getUTCFullYear();
     const month = String(frameTime.getUTCMonth() + 1).padStart(2, '0');
     const day = String(frameTime.getUTCDate()).padStart(2, '0');
@@ -137,155 +60,78 @@ function generateRadarFrameUrls(isMobile: boolean): RadarFrame[] {
     const mins = String(frameTime.getUTCMinutes()).padStart(2, '0');
 
     const timestamp = `${year}${month}${day}_${hours}${mins}`;
-    const url = `/met-radar/radar_composite-refl2D-${timestamp}.png`;
-
-    frames.push({ timestamp, url });
+    frames.push({
+      timestamp,
+      url: `/met-radar/radar_composite-refl2D-${timestamp}.png`,
+    });
   }
 
   return frames;
 }
 
-/**
- * Preload image and return a promise
- */
 function preloadImage(url: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve();
-    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+    img.onerror = () => reject();
     img.src = url;
   });
 }
 
 export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
-  const isMobile = useIsMobile();
-  const [radarFrames, setRadarFrames] = useState<RadarFrame[]>([]);
+  const [frames, setFrames] = useState<RadarFrame[]>([]);
+  const [frameIndex, setFrameIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [isLoadingRadar, setIsLoadingRadar] = useState(true);
-  const [loadedFrames, setLoadedFrames] = useState<Set<string>>(new Set());
-  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Use reducer for batched animation state updates (prevents double renders)
-  const [animState, dispatchAnim] = useReducer(animationReducer, {
-    frameIndex: 0,
-    activeLayer: 0,
-  });
+  // Load frames on mount, refresh every 5 min
+  const loadFrames = useCallback(async () => {
+    setIsLoading(true);
+    const newFrames = generateRadarFrameUrls();
+    setFrames(newFrames);
 
-  // Generate radar frame URLs with adaptive preloading strategy
-  const initializeRadarFrames = useCallback(async () => {
-    setIsLoadingRadar(true);
-    setLoadingProgress(0);
-    const frames = generateRadarFrameUrls(isMobile);
-    setRadarFrames(frames);
-
-    // Adaptive strategy based on device
-    // Mobile: Wait for ALL frames (better experience, less data)
-    // Desktop: Progressive enhancement (50% threshold)
-    const targetFrameCount = isMobile ? frames.length : Math.ceil(frames.length / 2);
-    const timeout = isMobile ? 8000 : 3000; // Mobile gets more time (8s vs 3s)
-
-    // Track loaded frame count
-    let loadedCount = 0;
-
-    // Preload all frames in parallel
-    const preloadPromises = frames.map((frame) =>
-      preloadImage(frame.url)
-        .then(() => {
-          loadedCount++;
-          setLoadingProgress(Math.round((loadedCount / frames.length) * 100));
-          setLoadedFrames((prev) => new Set([...prev, frame.timestamp]));
-        })
-        .catch(() => {
-          // Silently fail - image might not exist yet
-        })
+    // Preload all frames in parallel, start after first 3 load or 5s timeout
+    let loaded = 0;
+    const promises = newFrames.map((f) =>
+      preloadImage(f.url)
+        .then(() => { loaded++; })
+        .catch(() => {})
     );
 
-    // Mobile: Wait for ALL frames OR timeout
-    // Desktop: Wait for 50% of frames OR timeout
     await Promise.race([
-      Promise.all(preloadPromises.slice(0, targetFrameCount)),
-      new Promise<void>((resolve) => setTimeout(resolve, timeout)),
+      Promise.all(promises.slice(0, 3)),
+      new Promise<void>((r) => setTimeout(r, 5000)),
     ]);
 
-    // Start animation
-    dispatchAnim({ type: 'RESET', startIndex: frames.length - 1 }); // Start with latest frame
-    setIsLoadingRadar(false);
+    setFrameIndex(newFrames.length - 1);
+    setIsLoading(false);
 
-    // Continue loading remaining frames in background (desktop only)
-    if (!isMobile) {
-      const remainingFrames = frames.slice(targetFrameCount);
-      remainingFrames.forEach((frame) => {
-        preloadImage(frame.url)
-          .then(() => {
-            loadedCount++;
-            setLoadingProgress(Math.round((loadedCount / frames.length) * 100));
-            setLoadedFrames((prev) => new Set([...prev, frame.timestamp]));
-          })
-          .catch(() => {
-            // Silently fail
-          });
-      });
+    // Continue preloading rest in background
+    Promise.all(promises).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    loadFrames();
+    const refresh = setInterval(loadFrames, 5 * 60 * 1000);
+    return () => clearInterval(refresh);
+  }, [loadFrames]);
+
+  // Simple interval animation
+  useEffect(() => {
+    if (!isPlaying || frames.length === 0) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      return;
     }
-  }, [isMobile]);
 
-  // Initialize on mount and refresh every 5 minutes
-  useEffect(() => {
-    initializeRadarFrames();
-    const interval = setInterval(initializeRadarFrames, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [initializeRadarFrames]);
-
-  // Preload next frames as animation progresses
-  useEffect(() => {
-    if (radarFrames.length === 0) return;
-
-    // Preload next 3 frames
-    const preloadIndices = [1, 2, 3].map(
-      (offset) => (animState.frameIndex + offset) % radarFrames.length
-    );
-
-    preloadIndices.forEach((index) => {
-      const frame = radarFrames[index];
-      if (frame && !loadedFrames.has(frame.timestamp)) {
-        preloadImage(frame.url)
-          .then(() => {
-            setLoadedFrames((prev) => new Set([...prev, frame.timestamp]));
-          })
-          .catch(() => {
-            // Silently fail
-          });
-      }
-    });
-  }, [animState.frameIndex, radarFrames, loadedFrames]);
-
-  // Radar animation loop with requestAnimationFrame (60fps smooth)
-  // Syncs with browser paint cycles for jank-free animation
-  useEffect(() => {
-    if (!isPlaying || radarFrames.length === 0) return;
-
-    let animationFrameId: number;
-    let lastFrameTime = performance.now();
-
-    const animate = (currentTime: DOMHighResTimeStamp) => {
-      const deltaTime = currentTime - lastFrameTime;
-
-      // Frame pacing: ~700ms between frames (matches CSS transition)
-      if (deltaTime >= 700) {
-        dispatchAnim({ type: 'NEXT_FRAME', frameCount: radarFrames.length });
-        lastFrameTime = currentTime;
-      }
-
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    animationFrameId = requestAnimationFrame(animate);
+    intervalRef.current = setInterval(() => {
+      setFrameIndex((prev) => (prev + 1) % frames.length);
+    }, FRAME_INTERVAL_MS);
 
     return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isPlaying, radarFrames.length]);
+  }, [isPlaying, frames.length]);
 
   if (!city) {
     return (
@@ -297,21 +143,12 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
     );
   }
 
-  // Map center on selected city
   const mapCenter: [number, number] = [city.latitude, city.longitude];
+  const currentFrame = frames[frameIndex];
 
-  // Current and previous frame for crossfade (using animState from useReducer)
-  const currentFrame = radarFrames[animState.frameIndex];
-  const prevFrameIndex =
-    animState.frameIndex === 0 ? radarFrames.length - 1 : animState.frameIndex - 1;
-  const prevFrame = radarFrames[prevFrameIndex];
-
-  // Format timestamp for display (YYYYMMDD_HHMM -> HH:MM)
-  const formatTimestamp = (timestamp: string): string => {
-    if (!timestamp || timestamp.length < 13) return '';
-    const hours = timestamp.substring(9, 11);
-    const mins = timestamp.substring(11, 13);
-    return `${hours}:${mins}`;
+  const formatTime = (ts: string): string => {
+    if (!ts || ts.length < 13) return '';
+    return `${ts.substring(9, 11)}:${ts.substring(11, 13)}`;
   };
 
   return (
@@ -321,83 +158,60 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
         zoom={7}
         className="h-full w-full rounded-lg"
         scrollWheelZoom={false}
-        preferCanvas={true} // Canvas renderer (2-3x faster on mobile)
-        touchZoom={true} // Enable pinch-to-zoom on touch devices
-        bounceAtZoomLimits={false} // Disable bounce animation for smoother zoom
-        zoomAnimation={true}
-        markerZoomAnimation={true}
-        maxZoom={18}
+        preferCanvas={true}
+        touchZoom={true}
+        bounceAtZoomLimits={false}
+        maxZoom={10}
         minZoom={6}
-        maxBounds={HUNGARY_RADAR_BOUNDS} // Prevent over-panning
-        maxBoundsViscosity={0.5} // Smooth boundary enforcement
         style={{ borderRadius: '8px' }}
       >
-        {/* Met.hu Radar Overlay - Layer 0 (crossfade) */}
-        {prevFrame && animState.activeLayer === 1 && (
-          <ImageOverlay
-            url={prevFrame.url}
-            bounds={HUNGARY_RADAR_BOUNDS}
-            opacity={1}
-            className="radar-layer radar-layer-fade-out"
-          />
-        )}
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        />
 
-        {/* Met.hu Radar Overlay - Layer 1 (crossfade) */}
         {currentFrame && (
           <ImageOverlay
             url={currentFrame.url}
-            bounds={HUNGARY_RADAR_BOUNDS}
-            opacity={1}
-            className="radar-layer radar-layer-fade-in"
+            bounds={RADAR_BOUNDS}
+            opacity={0.7}
           />
         )}
 
-        {/* City Marker */}
         <Marker position={mapCenter} icon={defaultIcon}>
           <Popup>
             <div className="text-center">
               <h3 className="font-semibold text-gray-900">{city.name}</h3>
               <p className="text-sm text-gray-600">{city.county} megye</p>
-              <p className="text-xs text-gray-500 mt-1">
-                {city.latitude.toFixed(4)}°, {city.longitude.toFixed(4)}°
-              </p>
             </div>
           </Popup>
         </Marker>
       </MapContainer>
 
-      {/* Radar controls and status */}
+      {/* Controls */}
       <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-2 z-[1000]">
-        {/* Status indicator */}
         <div className="bg-white rounded-lg shadow-md px-3 py-2 text-xs text-gray-600">
-          {isLoadingRadar ? (
+          {isLoading ? (
             <span className="flex items-center gap-2">
-              <span className="inline-block w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></span>
-              <span>Betöltés: {loadingProgress}%</span>
-              {isMobile && <span className="text-gray-400">({radarFrames.length} frame)</span>}
+              <span className="inline-block w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
+              Betöltés...
             </span>
-          ) : radarFrames.length > 0 ? (
-            <span>
-              🌧️ OMSZ Radar {currentFrame ? formatTimestamp(currentFrame.timestamp) : ''}
-            </span>
+          ) : currentFrame ? (
+            <span>OMSZ Radar {formatTime(currentFrame.timestamp)}</span>
           ) : (
-            <span>❌ Radarkép nem elérhető</span>
+            <span>Radarkép nem elérhető</span>
           )}
         </div>
 
-        {/* Animation controls */}
-        {radarFrames.length > 1 && (
+        {frames.length > 1 && (
           <div className="flex items-center gap-2">
-            {/* Frame counter */}
             <div className="bg-white rounded-lg shadow-md px-3 py-2 text-xs text-gray-600 font-medium">
-              {animState.frameIndex + 1} / {radarFrames.length}
+              {frameIndex + 1} / {frames.length}
             </div>
-
-            {/* Play/Pause button */}
             <button
               onClick={() => setIsPlaying(!isPlaying)}
               className="bg-white rounded-lg shadow-md p-2 hover:bg-gray-100 transition-colors"
-              aria-label={isPlaying ? 'Pause animation' : 'Play animation'}
+              aria-label={isPlaying ? 'Pause' : 'Play'}
             >
               {isPlaying ? (
                 <Pause className="h-4 w-4 text-cyan-600" />
@@ -409,7 +223,6 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
         )}
       </div>
 
-      {/* Attribution */}
       <div className="absolute top-2 right-2 z-[1000]">
         <a
           href="https://www.met.hu"
