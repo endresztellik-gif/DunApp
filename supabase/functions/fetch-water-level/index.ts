@@ -156,15 +156,15 @@ async function scrapeHydroinfoActual() {
           // 0: station code (e.g., "442032")
           // 1: station name (e.g., "Mohács")
           // 2: river name (e.g., "Duna")
-          // 3: water level 1 (current)
-          // 4: water level 2 (forecast 1)
-          // 5: water level 3 (forecast 2)
-          // 6: trend (change in cm)
+          // 3: water level reference (older baseline value)
+          // 4: water level intermediate
+          // 5: water level current (today's morning measurement) ← USE THIS
+          // 6: trend (change in cm, = cells[5] - cells[3])
           // 7: flow rate (m³/s)
           // 8: water temperature (°C)
           // 9: extra info
 
-          const waterLevel = parseInt(getCellText(cells[3]).replace(/[^\d-]/g, ''));
+          const waterLevel = parseInt(getCellText(cells[5]).replace(/[^\d-]/g, ''));
           const flowRateText = getCellText(cells[7]);
           const waterTempText = getCellText(cells[8]);
 

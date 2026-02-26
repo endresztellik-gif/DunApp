@@ -12,6 +12,7 @@ import React from 'react';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { AlertCircle } from 'lucide-react';
 import { useWaterLevelForecast } from '../../hooks/useWaterLevelForecast';
+import { useWaterLevelData } from '../../hooks/useWaterLevelData';
 import type { WaterLevelStation } from '../../types';
 
 interface ForecastDataTableProps {
@@ -23,6 +24,11 @@ export const ForecastDataTable: React.FC<ForecastDataTableProps> = ({ stations }
   const forecast1 = useWaterLevelForecast(stations[0]?.id || null);
   const forecast2 = useWaterLevelForecast(stations[1]?.id || null);
   const forecast3 = useWaterLevelForecast(stations[2]?.id || null);
+
+  // Fetch current (today) water level for all 3 stations
+  const current1 = useWaterLevelData(stations[0]?.id || null);
+  const current2 = useWaterLevelData(stations[1]?.id || null);
+  const current3 = useWaterLevelData(stations[2]?.id || null);
 
   // Check loading states
   const isLoading = forecast1.isLoading || forecast2.isLoading || forecast3.isLoading;
@@ -90,6 +96,12 @@ export const ForecastDataTable: React.FC<ForecastDataTableProps> = ({ stations }
               >
                 Állomás
               </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-center text-xs font-semibold text-cyan-900 uppercase tracking-wider"
+              >
+                Ma
+              </th>
               {forecastDates.map((fd, index) => (
                 <th
                   key={fd.dateString}
@@ -113,6 +125,15 @@ export const ForecastDataTable: React.FC<ForecastDataTableProps> = ({ stations }
                     {stations[0].name}
                   </span>
                 </div>
+              </td>
+              <td className="px-4 py-4 text-center">
+                {current1.waterLevelData?.waterLevelCm != null ? (
+                  <span className="text-sm font-semibold text-cyan-600">
+                    {current1.waterLevelData.waterLevelCm} cm
+                  </span>
+                ) : (
+                  <span className="text-sm text-gray-400">N/A</span>
+                )}
               </td>
               {forecastDates.map(fd => {
                 const data = getForecastData(forecast1.forecasts, fd.dateString);
@@ -147,6 +168,15 @@ export const ForecastDataTable: React.FC<ForecastDataTableProps> = ({ stations }
                   </span>
                 </div>
               </td>
+              <td className="px-4 py-4 text-center">
+                {current2.waterLevelData?.waterLevelCm != null ? (
+                  <span className="text-sm font-semibold text-cyan-600">
+                    {current2.waterLevelData.waterLevelCm} cm
+                  </span>
+                ) : (
+                  <span className="text-sm text-gray-400">N/A</span>
+                )}
+              </td>
               {forecastDates.map(fd => {
                 const data = getForecastData(forecast2.forecasts, fd.dateString);
                 return (
@@ -180,6 +210,15 @@ export const ForecastDataTable: React.FC<ForecastDataTableProps> = ({ stations }
                   </span>
                 </div>
               </td>
+              <td className="px-4 py-4 text-center">
+                {current3.waterLevelData?.waterLevelCm != null ? (
+                  <span className="text-sm font-semibold text-cyan-600">
+                    {current3.waterLevelData.waterLevelCm} cm
+                  </span>
+                ) : (
+                  <span className="text-sm text-gray-400">N/A</span>
+                )}
+              </td>
               {forecastDates.map(fd => {
                 const data = getForecastData(forecast3.forecasts, fd.dateString);
                 return (
@@ -212,6 +251,9 @@ export const ForecastDataTable: React.FC<ForecastDataTableProps> = ({ stations }
           const stationForecasts = stationIndex === 0 ? forecast1.forecasts :
                                    stationIndex === 1 ? forecast2.forecasts :
                                    forecast3.forecasts;
+          const currentData = stationIndex === 0 ? current1.waterLevelData :
+                              stationIndex === 1 ? current2.waterLevelData :
+                              current3.waterLevelData;
           const color = stationIndex === 0 ? 'bg-cyan-500' :
                        stationIndex === 1 ? 'bg-teal-600' :
                        'bg-green-600';
@@ -223,6 +265,16 @@ export const ForecastDataTable: React.FC<ForecastDataTableProps> = ({ stations }
                 <h4 className="text-sm font-semibold text-gray-900">{station.name}</h4>
               </div>
               <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-600">Ma</span>
+                  {currentData?.waterLevelCm != null ? (
+                    <span className="text-sm font-semibold text-cyan-600">
+                      {currentData.waterLevelCm} cm
+                    </span>
+                  ) : (
+                    <span className="text-sm text-gray-400">N/A</span>
+                  )}
+                </div>
                 {forecastDates.map((fd, index) => {
                   const data = getForecastData(stationForecasts, fd.dateString);
                   return (
