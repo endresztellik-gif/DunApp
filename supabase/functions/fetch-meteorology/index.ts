@@ -2,7 +2,7 @@
  * DunApp PWA - Fetch Meteorology Data Edge Function
  *
  * PURPOSE:
- * - Fetches current weather data for 4 cities (Szekszárd, Baja, Dunaszekcső, Mohács)
+ * - Fetches current weather data for 5 cities (Szekszárd, Baja, Dunaszekcső, Mohács, Bátaapáti)
  * - Fetches 3-day forecast data (72 hours, 6-hour intervals) from Yr.no
  * - Stores current data in meteorology_data table
  * - Stores forecast data in meteorology_forecasts table
@@ -45,6 +45,7 @@ const CITIES = [
   { name: 'Baja', lat: 46.1811, lon: 18.9550 },
   { name: 'Dunaszekcső', lat: 46.0833, lon: 18.7667 },
   { name: 'Mohács', lat: 45.9928, lon: 18.6836 },
+  { name: 'Bátaapáti', lat: 46.1900, lon: 18.5700 },
 ];
 
 // Retry configuration
