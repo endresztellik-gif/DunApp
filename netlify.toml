@@ -7,6 +7,11 @@
   functions = "netlify/functions"
   edge_functions = "netlify/edge-functions"
 
+# OWM Tile Proxy Edge Function (keeps API key server-side)
+[[edge_functions]]
+  path = "/owm-tiles/*"
+  function = "owm-tile-proxy"
+
 [build.environment]
   NODE_VERSION = "22"
   NPM_FLAGS = "--legacy-peer-deps"

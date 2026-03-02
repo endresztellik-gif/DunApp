@@ -8,10 +8,14 @@
  * Example: /owm-tiles/wind_new/7/72/45.png
  */
 
-export default async (request: Request, context: { params: { '*': string } }) => {
-  const pathSuffix = context.params['*']; // e.g. "wind_new/7/72/45.png"
+import type { Context } from 'https://edge.netlify.com';
 
-  if (!pathSuffix) {
+export default async (request: Request, context: Context) => {
+  // Extract the path suffix from the URL (more reliable than context.params['*'])
+  const url = new URL(request.url);
+  const pathSuffix = url.pathname.replace('/owm-tiles/', ''); // e.g. "wind_new/7/72/45.png"
+
+  if (!pathSuffix || pathSuffix === url.pathname) {
     return new Response('Missing tile path', { status: 400 });
   }
 
