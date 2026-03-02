@@ -25,7 +25,7 @@ import { DataCard } from '../../components/UI/DataCard'
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner'
 import { Footer } from '../../components/Layout/Footer'
 import { ForecastChart } from './ForecastChart'
-import { RadarMap } from './RadarMap'
+import { WeatherMapsWidget } from './WeatherMapsWidget'
 import { PrecipitationSummaryCard } from './PrecipitationSummaryCard'
 import { SunTimesCards } from './SunTimesCards'
 import { MoonTimesCards } from './MoonTimesCards'
@@ -199,10 +199,10 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
             <ForecastChart cityId={selectedCity?.id || ''} />
           </div>
 
-          {/* Radar Map */}
+          {/* Weather Maps */}
           <div className="mb-6">
-            <h2 className="section-title mb-4">Radarkép</h2>
-            <RadarMap city={selectedCity} />
+            <h2 className="section-title mb-4">Térképek</h2>
+            <WeatherMapsWidget city={selectedCity} />
           </div>
         </>
       )}

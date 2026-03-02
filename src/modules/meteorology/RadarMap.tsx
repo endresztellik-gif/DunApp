@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, ImageOverlay } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, ImageOverlay, useMap } from 'react-leaflet';
 import { icon as leafletIcon } from 'leaflet';
 import type { LatLngBoundsExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -67,6 +67,14 @@ function generateRadarFrameUrls(): RadarFrame[] {
   }
 
   return frames;
+}
+
+function InvalidateMapSize() {
+  const map = useMap();
+  useEffect(() => {
+    map.invalidateSize();
+  }, [map]);
+  return null;
 }
 
 function preloadImage(url: string): Promise<void> {
@@ -154,6 +162,7 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
   return (
     <div className="relative w-full h-96 bg-white rounded-lg shadow-sm border-2 border-gray-200">
       <MapContainer
+        key={city.id}
         center={mapCenter}
         zoom={7}
         className="h-full w-full rounded-lg"
@@ -165,6 +174,7 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
         minZoom={6}
         style={{ borderRadius: '8px' }}
       >
+        <InvalidateMapSize />
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
