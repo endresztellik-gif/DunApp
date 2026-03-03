@@ -1,10 +1,15 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // Load ALL env vars (including non-VITE_ prefixed ones) for server-side proxy use
+  const env = loadEnv(mode, process.cwd(), '')
+  const owmApiKey = env.OPENWEATHER_API_KEY ?? ''
+
+  return {
   plugins: [
     react(),
     VitePWA({
@@ -112,6 +117,20 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/met-img/, '/img'),
         secure: false
+      },
+      // OWM tile proxy (dev only) — adds API key server-side, same as Netlify edge function
+      '/owm-tiles': {
+        target: 'https://tile.openweathermap.org',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/owm-tiles\/(.+)$/, `/map/$1?appid=${owmApiKey}`),
+        secure: true
+      },
+      // OMSZ satellite proxy
+      '/met-satellite': {
+        target: 'https://odp.met.hu',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/met-satellite/, '/weather/satellite/Msg/InfraCloud'),
+        secure: true
       }
     }
   },
@@ -129,5 +148,6 @@ export default defineConfig({
     alias: {
       '@': '/src'
     }
+  }
   }
 })
