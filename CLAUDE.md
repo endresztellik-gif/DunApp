@@ -3,9 +3,20 @@
 > CENTRAL REFERENCE DOCUMENT
 > Claude Code: Read this file FIRST before every task.
 
-**Last updated:** 2026-03-02
-**Version:** 2.1.0
+**Last updated:** 2026-03-03
+**Version:** 3.0.0
 **Project status:** Production Ready (All modules operational, all cron jobs active)
+
+## WeatherMapsWidget v3.0 — kritikus konfiguráció
+
+**TILOS** a MapContainer-ben:
+- `preferCanvas={true}` → Canvas renderer TileLayer sub-pixel shift-et okoz
+- `maxBounds` + `maxBoundsViscosity` → koordináta eltolást okoz
+
+**Legend container:** soha ne használj `flex items-center`-t → mobil magasságszámítási hiba.
+Helyes: `<div className="... px-3 py-2.5">` (block layout).
+
+**Default view:** center `[45.85, 18.5]`, zoom 9, height `h-64 sm:h-96`
 
 ---
 
