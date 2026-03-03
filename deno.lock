@@ -4,7 +4,13 @@
     "https://deno.land/std@0.168.0/fmt/colors.ts": "03ad95e543d2808bc43c17a3dd29d25b43d0f16287fe562a0be89bf632454a12",
     "https://deno.land/std@0.168.0/testing/_diff.ts": "a23e7fc2b4d8daa3e158fa06856bedf5334ce2a2831e8bf9e509717f455adb2c",
     "https://deno.land/std@0.168.0/testing/_format.ts": "cd11136e1797791045e639e9f0f4640d5b4166148796cad37e6ef75f7d7f3832",
-    "https://deno.land/std@0.168.0/testing/asserts.ts": "51353e79437361d4b02d8e32f3fc83b22231bc8f8d4c841d86fd32b0b0afe940"
+    "https://deno.land/std@0.168.0/testing/asserts.ts": "51353e79437361d4b02d8e32f3fc83b22231bc8f8d4c841d86fd32b0b0afe940",
+    "https://edge.netlify.com/": "fd941d61d88673d5f28aab283fb86fcc50f08a3bc80ee5470498fcfa88c65cfb",
+    "https://edge.netlify.com/bootstrap/config.ts": "6a2ce0e544e15e8f8883a5c18da5948e37fd0f2619f68cb31f3af53c51817025",
+    "https://edge.netlify.com/bootstrap/context.ts": "e97240232121e2f369f6546ce961490f34d961ea1ea54be3ff09633e3f08373f",
+    "https://edge.netlify.com/bootstrap/cookie.ts": "8b0baae708989ca183c6f3b4ab3d029e6abcbc2e43f93edeb0ff447b3bbc3a05",
+    "https://edge.netlify.com/bootstrap/edge_function.ts": "b8253e86aa83c67341f5cfedeba5049d77fbf84dcab7eceff7566b7728ae9b39",
+    "https://edge.netlify.com/bootstrap/globals/types.ts": "eaa6148ded3121d8dee62dd91c86e7fe76601df0f3ca8d7962243a30f4c8935f"
   },
   "workspace": {
     "packageJson": {
@@ -20,6 +26,7 @@
         "npm:@types/node@^24.6.0",
         "npm:@types/react-dom@^19.1.9",
         "npm:@types/react@^19.1.16",
+        "npm:@types/suncalc@^1.9.2",
         "npm:@typescript-eslint/eslint-plugin@^8.46.2",
         "npm:@typescript-eslint/parser@^8.46.2",
         "npm:@vitejs/plugin-react@^5.0.4",
@@ -30,6 +37,8 @@
         "npm:eslint-plugin-react-refresh@~0.4.22",
         "npm:eslint-plugin-react@^7.37.5",
         "npm:eslint@^9.38.0",
+        "npm:esri-leaflet@^3.0.19",
+        "npm:framer-motion@^12.23.24",
         "npm:globals@^16.4.0",
         "npm:jsdom@^27.0.1",
         "npm:leaflet@^1.9.4",
@@ -42,6 +51,8 @@
         "npm:react-router-dom@^7.9.4",
         "npm:react@^19.1.1",
         "npm:recharts@^3.3.0",
+        "npm:rollup-plugin-visualizer@^6.0.5",
+        "npm:suncalc@^1.9.0",
         "npm:tailwindcss@^4.1.16",
         "npm:typescript-eslint@^8.45.0",
         "npm:typescript@~5.9.3",
