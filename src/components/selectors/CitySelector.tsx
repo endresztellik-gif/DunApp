@@ -1,11 +1,10 @@
 /**
  * CitySelector Component
  *
- * METEOROLOGY MODULE ONLY - Selector for 4 cities
+ * METEOROLOGY MODULE ONLY - Selector for meteorology cities
  *
  * CRITICAL ARCHITECTURE RULE:
  * This selector is ONLY for the Meteorology module.
- * It MUST have exactly 4 cities.
  * DO NOT use this as a generic location selector!
  */
 
@@ -26,10 +25,10 @@ export const CitySelector: React.FC<CitySelectorProps> = ({
   onCityChange,
   className = '',
 }) => {
-  // VALIDATION: MUST have exactly 4 cities for Meteorology module
-  if (cities.length !== 4) {
+  // VALIDATION: MUST have at least 1 city for Meteorology module
+  if (cities.length < 1) {
     throw new Error(
-      `CitySelector: Expected exactly 4 cities for Meteorology module, but received ${cities.length}. ` +
+      `CitySelector: Expected at least 1 city for Meteorology module, but received ${cities.length}. ` +
       'This selector is module-specific and cannot be used as a generic selector.'
     );
   }
