@@ -58,11 +58,6 @@ const defaultIcon = leafletIcon({
 const DEFAULT_MAP_CENTER: [number, number] = [45.85, 18.5];
 const DEFAULT_MAP_ZOOM = 9;
 
-// Map view bounds (all 4 modes use the same view)
-const MAP_BOUNDS: LatLngBoundsExpression = [
-  [44.0, 13.5],
-  [50.5, 25.5],
-];
 
 // Satellite image bounds (OMSZ MSG European sector)
 // Note: verify exact bounds from OMSZ Leiras_MSG-hu.pdf if image appears misaligned
@@ -471,20 +466,17 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
       </div>
 
       {/* Map container */}
-      <div className="relative w-full h-96 bg-white rounded-lg shadow-sm border-2 border-gray-200">
+      <div className="relative w-full h-64 sm:h-96 overflow-hidden bg-white rounded-lg shadow-sm border-2 border-gray-200">
         <MapContainer
           key={city.id}
           center={DEFAULT_MAP_CENTER}
           zoom={DEFAULT_MAP_ZOOM}
           className="h-full w-full rounded-lg"
           scrollWheelZoom={false}
-          preferCanvas={true}
           touchZoom={true}
           bounceAtZoomLimits={false}
           maxZoom={12}
           minZoom={6}
-          maxBounds={MAP_BOUNDS}
-          maxBoundsViscosity={0.3}
           style={{ borderRadius: '8px' }}
         >
           <InvalidateMapSize />
@@ -642,7 +634,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
       </div>
 
       {/* Legend bar */}
-      <div className="bg-white rounded-lg border border-gray-100 shadow-sm px-3 py-2 min-h-[2rem] flex items-center">
+      <div className="bg-white rounded-lg border border-gray-100 shadow-sm px-3 py-2.5">
         <LegendBar legendType={activeTab.legendType} />
       </div>
     </div>

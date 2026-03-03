@@ -31,21 +31,26 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_VAPID_PUBLIC_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY }}
 
-      - name: Deploy to Netlify
+      - name: Deploy to Netlify (with Edge Functions)
         id: deploy
-        uses: nwtgck/actions-netlify@v3.0
-        with:
-          publish-dir: './dist'
-          production-branch: main
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: 'Deploy from GitHub Actions - ${{ github.event.head_commit.message }}'
-          enable-pull-request-comment: true
-          enable-commit-comment: true
-          overwrites-pull-request-comment: true
+        run: |
+          # Use Netlify CLI directly so edge functions from netlify/edge-functions/
+          # are deployed alongside the static site (nwtgck/actions-netlify only
+          # uploads the publish-dir and skips edge functions).
+          DEPLOY_OUTPUT=$(npx netlify-cli@latest deploy \
+            --prod \
+            --dir=dist \
+            --json \
+            --message "$DEPLOY_MESSAGE")
+          echo "$DEPLOY_OUTPUT"
+          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | python3 -c \
+            "import sys,json; d=json.load(sys.stdin); print(d.get('deploy_url') or d.get('url',''))")
+          echo "deploy-url=$DEPLOY_URL" >> $GITHUB_OUTPUT
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        timeout-minutes: 5
+          DEPLOY_MESSAGE: ${{ github.event.head_commit.message }}
+        timeout-minutes: 10
 
       - name: Run Lighthouse CI
         continue-on-error: true
