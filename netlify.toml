@@ -5,6 +5,12 @@
   command = "npm run build"
   publish = "dist"
   functions = "netlify/functions"
+  edge_functions = "netlify/edge-functions"
+
+# OWM Tile Proxy Edge Function (keeps API key server-side)
+[[edge_functions]]
+  path = "/owm-tiles/*"
+  function = "owm-tile-proxy"
 
 [build.environment]
   NODE_VERSION = "22"
@@ -101,6 +107,13 @@
 [[redirects]]
   from = "/met-radar/*"
   to = "https://odp.met.hu/weather/radar/composite/png/refl2D/:splat"
+  status = 200
+  force = true
+
+# Proxy for OMSZ MSG InfraCloud satellite images (WeatherMapsWidget - Műhold tab)
+[[redirects]]
+  from = "/met-satellite/*"
+  to = "https://odp.met.hu/weather/satellite/MSG/png/InfraCloud/:splat"
   status = 200
   force = true
 
