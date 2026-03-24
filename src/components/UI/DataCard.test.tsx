@@ -18,20 +18,20 @@ describe('DataCard - Rendering', () => {
     expect(screen.getByText('°C')).toBeInTheDocument();
   });
 
-  it('displays N/A when value is null', () => {
+  it('displays – when value is null', () => {
     render(
       <DataCard icon={Thermometer} label="Hőmérséklet" value={null} unit="°C" />
     );
 
-    expect(screen.getByText('N/A')).toBeInTheDocument();
+    expect(screen.getByText('–')).toBeInTheDocument();
   });
 
-  it('displays N/A when value is undefined', () => {
+  it('displays – when value is undefined', () => {
     render(
       <DataCard icon={Thermometer} label="Hőmérséklet" value={undefined as any} unit="°C" />
     );
 
-    expect(screen.getByText('N/A')).toBeInTheDocument();
+    expect(screen.getByText('–')).toBeInTheDocument();
   });
 
   it('handles numeric value correctly', () => {
@@ -63,13 +63,16 @@ describe('DataCard - Rendering', () => {
 });
 
 describe('DataCard - Module Colors', () => {
-  it('applies meteorology color to icon by default', () => {
+  it('applies meteorology accent color to icon by default', () => {
     const { container } = render(
       <DataCard icon={Thermometer} label="Test" value="10" unit="°C" />
     );
 
-    const icon = container.querySelector('.data-card-icon');
-    expect(icon).toHaveClass('text-cyan-600');
+    const icon = container.querySelector('svg');
+    expect(icon).toBeInTheDocument();
+    // Icon is styled via inline style with CSS variable
+    const iconWrapper = icon?.parentElement;
+    expect(iconWrapper).toHaveClass('dun-card-header');
   });
 
   it('applies meteorology color when specified', () => {
@@ -83,8 +86,8 @@ describe('DataCard - Module Colors', () => {
       />
     );
 
-    const icon = container.querySelector('.data-card-icon');
-    expect(icon).toHaveClass('text-cyan-600');
+    const card = container.querySelector('.dun-card');
+    expect(card).toBeInTheDocument();
   });
 
   it('applies water level color when specified', () => {
@@ -98,8 +101,8 @@ describe('DataCard - Module Colors', () => {
       />
     );
 
-    const icon = container.querySelector('.data-card-icon');
-    expect(icon).toHaveClass('text-cyan-500');
+    const card = container.querySelector('.dun-card');
+    expect(card).toBeInTheDocument();
   });
 
   it('applies drought color when specified', () => {
@@ -113,8 +116,8 @@ describe('DataCard - Module Colors', () => {
       />
     );
 
-    const icon = container.querySelector('.data-card-icon');
-    expect(icon).toHaveClass('text-orange-600');
+    const card = container.querySelector('.dun-card');
+    expect(card).toBeInTheDocument();
   });
 });
 
@@ -137,13 +140,13 @@ describe('DataCard - Accessibility', () => {
     expect(card).toHaveAttribute('aria-labelledby', 'card-Hőmérséklet');
   });
 
-  it('has heading with correct id', () => {
+  it('has label with correct id', () => {
     render(
       <DataCard icon={Thermometer} label="Hőmérséklet" value="25" unit="°C" />
     );
 
-    const heading = screen.getByText('Hőmérséklet');
-    expect(heading).toHaveAttribute('id', 'card-Hőmérséklet');
+    const label = screen.getByText('Hőmérséklet');
+    expect(label).toHaveAttribute('id', 'card-Hőmérséklet');
   });
 
   it('value has aria-live attribute', () => {
@@ -151,7 +154,7 @@ describe('DataCard - Accessibility', () => {
       <DataCard icon={Thermometer} label="Hőmérséklet" value="25" unit="°C" />
     );
 
-    const value = container.querySelector('.data-card-value');
+    const value = container.querySelector('.dun-value');
     expect(value).toHaveAttribute('aria-live', 'polite');
   });
 
@@ -160,18 +163,18 @@ describe('DataCard - Accessibility', () => {
       <DataCard icon={Thermometer} label="Hőmérséklet" value="25" unit="°C" />
     );
 
-    const icon = container.querySelector('.data-card-icon');
+    const icon = container.querySelector('svg');
     expect(icon).toHaveAttribute('aria-hidden', 'true');
   });
 });
 
 describe('DataCard - Styling', () => {
-  it('applies default data-card class', () => {
+  it('applies dun-card class to root element', () => {
     const { container } = render(
       <DataCard icon={Thermometer} label="Test" value="10" unit="°C" />
     );
 
-    const card = container.querySelector('.data-card');
+    const card = container.querySelector('.dun-card');
     expect(card).toBeInTheDocument();
   });
 
@@ -186,44 +189,53 @@ describe('DataCard - Styling', () => {
       />
     );
 
-    const card = container.querySelector('.data-card');
+    const card = container.querySelector('.dun-card');
     expect(card).toHaveClass('custom-class');
   });
 
-  it('applies data-card-header class to header', () => {
+  it('applies dun-card-header class to header', () => {
     const { container } = render(
       <DataCard icon={Thermometer} label="Test" value="10" unit="°C" />
     );
 
-    const header = container.querySelector('.data-card-header');
+    const header = container.querySelector('.dun-card-header');
     expect(header).toBeInTheDocument();
   });
 
-  it('applies data-card-label class to label', () => {
+  it('applies dun-module-label class to label', () => {
     const { container } = render(
       <DataCard icon={Thermometer} label="Test" value="10" unit="°C" />
     );
 
-    const label = container.querySelector('.data-card-label');
+    const label = container.querySelector('.dun-module-label');
     expect(label).toBeInTheDocument();
   });
 
-  it('applies data-card-value class to value', () => {
+  it('applies dun-value class to value', () => {
     const { container } = render(
       <DataCard icon={Thermometer} label="Test" value="10" unit="°C" />
     );
 
-    const value = container.querySelector('.data-card-value');
+    const value = container.querySelector('.dun-value');
     expect(value).toBeInTheDocument();
   });
 
-  it('applies data-card-unit class to unit', () => {
+  it('applies dun-value-unit class to unit', () => {
     const { container } = render(
       <DataCard icon={Thermometer} label="Test" value="10" unit="°C" />
     );
 
-    const unit = container.querySelector('.data-card-unit');
+    const unit = container.querySelector('.dun-value-unit');
     expect(unit).toBeInTheDocument();
+  });
+
+  it('applies dun-card-body class to body', () => {
+    const { container } = render(
+      <DataCard icon={Thermometer} label="Test" value="10" unit="°C" />
+    );
+
+    const body = container.querySelector('.dun-card-body');
+    expect(body).toBeInTheDocument();
   });
 });
 

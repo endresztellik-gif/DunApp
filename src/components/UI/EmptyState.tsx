@@ -1,8 +1,5 @@
 /**
- * EmptyState Component
- *
- * Displays an empty state with icon and message when no data is available.
- * Used for handling cases where data hasn't loaded yet or doesn't exist.
+ * EmptyState Component — Redesign v2
  */
 
 import React from 'react';
@@ -28,16 +25,38 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`empty-state ${className}`} role="status" aria-live="polite">
-      <Icon className="empty-state-icon" aria-hidden="true" />
-      <p className="text-base font-medium text-gray-900 mb-1">{message}</p>
+    <div
+      className={`dun-card flex flex-col items-center justify-center text-center py-8 ${className}`}
+      role="status"
+      aria-live="polite"
+    >
+      <Icon
+        aria-hidden="true"
+        style={{ color: 'var(--text-tertiary)', width: '48px', height: '48px', marginBottom: '12px' }}
+      />
+      <p style={{ fontSize: 'var(--text-base)', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '4px' }}>
+        {message}
+      </p>
       {description && (
-        <p className="empty-state-text">{description}</p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>
+          {description}
+        </p>
       )}
       {action && (
         <button
           onClick={action.onClick}
-          className="mt-4 px-4 py-2 bg-cyan-600 text-white text-sm font-medium rounded-lg hover:bg-cyan-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
+          style={{
+            marginTop: 'var(--space-4)',
+            padding: 'var(--space-2) var(--space-4)',
+            background: 'var(--accent-primary)',
+            color: 'var(--text-inverse)',
+            fontSize: 'var(--text-sm)',
+            fontWeight: 500,
+            borderRadius: 'var(--radius-md)',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'var(--transition-fast)',
+          }}
           aria-label={action.label}
         >
           {action.label}

@@ -10,10 +10,11 @@
 /* Tailwind 4.0 - MUST be first for @apply to work */
 @import "tailwindcss";
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
+
 /* Import custom CSS files */
 @import './styles/design-tokens.css';
-/* TEMPORARILY DISABLED - Tailwind 4.0 @apply circular references */
-/* @import './styles/components.css'; */
+@import './styles/components.css';
 
 /* ========================================
    BASE STYLES
@@ -22,7 +23,7 @@
 @layer base {
   /* Root element */
   :root {
-    font-family: var(--font-main);
+    font-family: var(--font-ui);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -36,15 +37,18 @@
   body {
     @apply min-h-screen;
     margin: 0;
-    background-color: var(--color-bg-main);
-    color: var(--color-text-primary);
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Headings */
   h1 {
     font-size: 2.25rem;
     font-weight: 700;
-    color: #111827;
+    color: var(--text-primary);
   }
 
   @media (min-width: 768px) {
@@ -56,7 +60,7 @@
   h2 {
     font-size: 1.875rem;
     font-weight: 700;
-    color: #111827;
+    color: var(--text-primary);
   }
 
   @media (min-width: 768px) {
@@ -68,7 +72,7 @@
   h3 {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--text-primary);
   }
 
   @media (min-width: 768px) {
@@ -80,7 +84,7 @@
   h4 {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--text-primary);
   }
 
   @media (min-width: 768px) {
@@ -92,7 +96,7 @@
   h5 {
     font-size: 1.125rem;
     font-weight: 500;
-    color: #374151;
+    color: var(--text-secondary);
   }
 
   @media (min-width: 768px) {
@@ -104,7 +108,7 @@
   h6 {
     font-size: 1rem;
     font-weight: 500;
-    color: #374151;
+    color: var(--text-secondary);
   }
 
   @media (min-width: 768px) {
@@ -116,17 +120,17 @@
   /* Paragraphs */
   p {
     font-size: 1rem;
-    color: #374151;
+    color: var(--text-secondary);
   }
 
   /* Links */
   a {
-    color: #0891b2;
+    color: var(--accent-primary);
     transition: color 200ms;
   }
 
   a:hover {
-    color: #0e7490;
+    color: var(--accent-hover);
   }
 
   /* Buttons */
@@ -137,7 +141,7 @@
   /* Focus visible (for keyboard navigation) */
   :focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #3b82f6;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--accent-primary);
   }
 
   /* Remove default button styles */

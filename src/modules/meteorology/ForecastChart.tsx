@@ -46,7 +46,7 @@ export const ForecastChart = React.memo<ForecastChartProps>(({ cityId }) => {
   // Loading State
   if (isLoading) {
     return (
-      <div className="w-full h-96 bg-white rounded-lg shadow-sm border-2 border-gray-200 p-4 flex items-center justify-center">
+      <div className="w-full h-96 p-4 flex items-center justify-center" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
         <LoadingSpinner message="Előrejelzés betöltése..." />
       </div>
     );
@@ -55,13 +55,13 @@ export const ForecastChart = React.memo<ForecastChartProps>(({ cityId }) => {
   // Error State
   if (error) {
     return (
-      <div className="flex items-start gap-3 rounded-lg border-2 border-red-200 bg-red-50 p-4">
-        <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" />
+      <div className="flex items-start gap-3 p-4" style={{ background: 'var(--status-alert-bg)', color: 'var(--status-alert-text)', border: '0.5px solid var(--status-alert-border)', borderRadius: 'var(--radius-md)' }}>
+        <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" style={{ color: 'var(--status-alert-text)' }} />
         <div>
-          <h3 className="mb-1 text-base font-semibold text-red-900">
+          <h3 className="mb-1 text-base font-semibold">
             Hiba az előrejelzés betöltésekor
           </h3>
-          <p className="text-sm text-red-700">{error.message}</p>
+          <p className="text-sm">{error.message}</p>
         </div>
       </div>
     );
@@ -78,13 +78,13 @@ export const ForecastChart = React.memo<ForecastChartProps>(({ cityId }) => {
   }
 
   return (
-    <div className="w-full h-96 bg-white rounded-lg shadow-sm border-2 border-gray-200 p-4">
+    <div className="w-full h-96 p-4" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
       <ResponsiveContainer width="100%" height="100%" minHeight={350}>
         <LineChart data={forecastData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ed" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(26,95,122,.10)" />
           <XAxis
             dataKey="time"
-            stroke="#607d8b"
+            stroke="#7a9eaa"
             style={{ fontSize: '12px' }}
             angle={-45}
             textAnchor="end"
@@ -92,21 +92,21 @@ export const ForecastChart = React.memo<ForecastChartProps>(({ cityId }) => {
           />
           <YAxis
             yAxisId="temp"
-            stroke="#00a8cc"
+            stroke="#22a6b3"
             style={{ fontSize: '12px' }}
             label={{ value: '°C', angle: -90, position: 'insideLeft' }}
           />
           <YAxis
             yAxisId="precip"
             orientation="right"
-            stroke="#1e88e5"
+            stroke="#1a5f7a"
             style={{ fontSize: '12px' }}
             label={{ value: 'mm', angle: 90, position: 'insideRight' }}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: 'white',
-              border: '1px solid #e0e7ed',
+              backgroundColor: 'var(--bg-surface)',
+              border: '0.5px solid var(--border-default)',
               borderRadius: '8px',
               boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
             }}
@@ -130,19 +130,19 @@ export const ForecastChart = React.memo<ForecastChartProps>(({ cityId }) => {
             yAxisId="temp"
             type="monotone"
             dataKey="temperature"
-            stroke="#00a8cc"
+            stroke="#22a6b3"
             strokeWidth={2}
-            dot={{ fill: '#00a8cc', r: 4 }}
+            dot={{ fill: '#22a6b3', r: 4 }}
             activeDot={{ r: 6 }}
           />
           <Line
             yAxisId="precip"
             type="monotone"
             dataKey="precipitation"
-            stroke="#1e88e5"
+            stroke="#1a5f7a"
             strokeWidth={2}
             strokeDasharray="5 5"
-            dot={{ fill: '#1e88e5', r: 4 }}
+            dot={{ fill: '#1a5f7a', r: 4 }}
             activeDot={{ r: 6 }}
           />
         </LineChart>

@@ -71,13 +71,14 @@ export const DroughtLocationSelector: React.FC<DroughtLocationSelectorProps> = (
   return (
     <div
       ref={dropdownRef}
-      className={`selector-dropdown ${className}`}
+      className={`selector-dropdown relative w-full md:w-auto ${className}`}
       onKeyDown={handleKeyDown}
     >
       {/* Selector Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="selector-button-drought"
+        className="selector-button-drought flex items-center gap-2 px-4 py-2 w-full md:w-auto"
+        style={{ border: '0.5px solid rgba(212,133,28,.20)', color: 'var(--text-primary)', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', cursor: 'pointer', transition: 'var(--transition-fast)' }}
         aria-label="Monitoring helyszín kiválasztása"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
@@ -97,7 +98,8 @@ export const DroughtLocationSelector: React.FC<DroughtLocationSelectorProps> = (
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto flex flex-col"
+          className="absolute z-10 mt-2 w-full max-h-60 overflow-y-auto flex flex-col"
+          style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)' }}
           role="listbox"
           aria-label="Monitoring helyszínek listája"
         >
@@ -108,19 +110,16 @@ export const DroughtLocationSelector: React.FC<DroughtLocationSelectorProps> = (
               <button
                 key={location.id}
                 onClick={() => handleLocationSelect(location)}
-                className={`w-full px-4 py-2 cursor-pointer transition-colors duration-150 text-left ${
-                  isSelected
-                    ? 'bg-gray-100 font-medium hover:bg-gray-100'
-                    : 'hover:bg-gray-100 active:bg-gray-200'
-                }`}
+                className={`dun-selector-item${isSelected ? ' selector-dropdown-item-selected font-medium' : ' selector-dropdown-item'}`}
+                style={isSelected ? { background: 'var(--bg-surface-alt)' } : {}}
                 role="option"
                 aria-selected={isSelected}
               >
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-900">
+                  <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-primary)' }}>
                     {location.locationName}
                   </span>
-                  <span className="text-xs text-gray-600">
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>
                     {location.county} megye
                   </span>
                 </div>

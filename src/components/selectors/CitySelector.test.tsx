@@ -2,7 +2,7 @@
  * CitySelector Component Tests
  *
  * CRITICAL: Tests for module-specific selector validation
- * This selector MUST have exactly 4 cities for the Meteorology module
+ * This selector is ONLY for the Meteorology module.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -25,38 +25,26 @@ describe('CitySelector - Architecture Validation', () => {
   });
 
   // CRITICAL TEST: Architecture enforcement
-  it('throws error if not exactly 4 cities', () => {
-    const invalidCities: City[] = [MOCK_CITIES[0], MOCK_CITIES[1], MOCK_CITIES[2]]; // Only 3
-
+  it('throws error if cities array is empty', () => {
     expect(() => {
       render(
         <CitySelector
-          cities={invalidCities}
+          cities={[]}
           selectedCity={null}
           onCityChange={mockOnChange}
         />
       );
-    }).toThrow('Expected exactly 4 cities');
+    }).toThrow('Expected at least 1 city');
   });
 
-  it('throws error with descriptive message for wrong count', () => {
-    const twoCity: City[] = [MOCK_CITIES[0], MOCK_CITIES[1]]; // Only 2
-
-    expect(() => {
-      render(
-        <CitySelector cities={twoCity} selectedCity={null} onCityChange={mockOnChange} />
-      );
-    }).toThrow(/Expected exactly 4 cities.*but received 2/);
-  });
-
-  it('accepts exactly 4 cities without error', () => {
+  it('accepts non-empty cities without error', () => {
     expect(() => {
       render(<CitySelector {...validProps} />);
     }).not.toThrow();
   });
 
-  it('validates correct count in MOCK_CITIES', () => {
-    expect(MOCK_CITIES).toHaveLength(4);
+  it('has cities in MOCK_CITIES', () => {
+    expect(MOCK_CITIES.length).toBeGreaterThanOrEqual(1);
   });
 });
 

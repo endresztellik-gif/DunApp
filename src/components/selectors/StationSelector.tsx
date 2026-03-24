@@ -69,13 +69,14 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
   return (
     <div
       ref={dropdownRef}
-      className={`relative w-full md:w-auto ${className}`}
+      className={`selector-dropdown ${className}`}
       onKeyDown={handleKeyDown}
     >
       {/* Selector Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-cyan-300 text-cyan-700 rounded-lg font-medium transition-all duration-200 w-full md:w-auto hover:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
+        className="selector-button-water flex items-center gap-2 px-4 py-2 w-full md:w-auto"
+        style={{ border: '0.5px solid rgba(26,95,122,.20)', color: 'var(--text-primary)', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', cursor: 'pointer', transition: 'var(--transition-fast)' }}
         aria-label="Állomás kiválasztása"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
@@ -95,7 +96,8 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto flex flex-col"
+          className="absolute z-10 mt-2 w-full max-h-60 overflow-y-auto flex flex-col"
+          style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)' }}
           role="listbox"
           aria-label="Állomások listája"
         >
@@ -106,26 +108,23 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
               <button
                 key={station.id}
                 onClick={() => handleStationSelect(station)}
-                className={`w-full px-4 py-2 cursor-pointer transition-colors duration-150 text-left ${
-                  isSelected
-                    ? 'bg-gray-100 font-medium hover:bg-gray-100'
-                    : 'hover:bg-gray-100 active:bg-gray-200'
-                }`}
+                className={`dun-selector-item${isSelected ? ' selector-dropdown-item-selected font-medium' : ' selector-dropdown-item'}`}
+                style={isSelected ? { background: 'var(--bg-surface-alt)' } : {}}
                 role="option"
                 aria-selected={isSelected}
               >
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-900">
+                  <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-primary)' }}>
                     {station.name}
                   </span>
-                  <span className="text-xs text-gray-600">
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>
                     {station.river} ({station.riverKm ? `${station.riverKm} fkm` : 'N/A'})
                   </span>
                   {/* Critical levels tooltip */}
-                  <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                  <div className="flex items-center gap-1 mt-1" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
                     <Info className="h-3 w-3" aria-hidden="true" />
                     <span>
-                      LNV: {station.lowWaterLevelCm ?? 'N/A'}cm | KKV: {station.highWaterLevelCm ?? 'N/A'}cm
+                      LNV: {station.lowWaterLevelCm ?? 'N/A'}cm | KKV: {station.highWaterLevelCm ?? 'N/A'}cm | NV: {station.dangerLevelCm ?? 'N/A'}cm
                     </span>
                   </div>
                 </div>

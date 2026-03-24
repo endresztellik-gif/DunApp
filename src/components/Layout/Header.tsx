@@ -1,83 +1,149 @@
 /**
- * Header Component
+ * Header Component — Redesign v2
  *
- * Modern centered header with logo and module navigation.
- * Features:
- * - Centered layout with DunApp logo and 3 module buttons
- * - Clean, minimal design
- * - Sticky positioning
+ * Sötét sticky header, DM Serif Display branding.
+ * Dark mode toggle + értesítés gomb.
+ * A modul navigáció a BottomNav-ban van (ModuleTabs komponens).
  */
 
-import React from 'react';
-import { Cloud, Droplet, Sprout } from 'lucide-react';
+import React, { useState } from 'react';
+import { Sun, Moon, X } from 'lucide-react';
+import { Icon } from '../Icon';
+import { NotificationSettings } from '../NotificationSettings';
 import type { ModuleType } from '../../types';
 
 interface HeaderProps {
   currentModule: ModuleType | null;
   onModuleChange: (module: ModuleType | null) => void;
+  isDark: boolean;
+  onToggleDark: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  currentModule,
+  currentModule: _currentModule,
   onModuleChange,
+  isDark,
+  onToggleDark,
 }) => {
+  const [showNotifications, setShowNotifications] = useState(false);
+  const today = new Date().toLocaleDateString('hu-HU', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  });
+
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 py-4">
-        {/* Centered layout */}
-        <div className="flex flex-col items-center gap-4">
-          {/* Logo */}
-          <button
-            onClick={() => onModuleChange(null)}
-            className="flex flex-col items-center hover:opacity-80 transition-opacity"
+    <header
+      style={{
+        background: 'var(--color-dun-deep-800)',
+        borderBottom: '0.5px solid rgba(126,207,199,.15)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 'var(--z-nav)',
+      }}
+    >
+      <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
+        {/* Logo */}
+        <button
+          onClick={() => onModuleChange(null)}
+          className="flex flex-col hover:opacity-80 transition-opacity text-left"
+          aria-label="DunApp főoldal"
+        >
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '22px',
+              color: 'var(--color-dun-ripple-200)',
+              lineHeight: 1,
+            }}
           >
-            <span className="text-3xl font-bold">
-              <span className="text-cyan-600">Dun</span>
-              <span className="text-gray-900">App</span>
-            </span>
-            <span className="text-xs text-gray-400">v 3.0</span>
+            DunApp
+          </span>
+          <span
+            style={{
+              fontFamily: 'var(--font-ui)',
+              fontSize: '10px',
+              color: 'rgba(255,255,255,.35)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              marginTop: '2px',
+            }}
+          >
+            Déli Duna-völgy · {today}
+          </span>
+        </button>
+
+        {/* Jobb oldal: dark mode toggle + értesítés */}
+        <div className="flex items-center gap-2">
+          {/* Dark mode toggle */}
+          <button
+            onClick={onToggleDark}
+            aria-label={isDark ? 'Váltás világos módra' : 'Váltás sötét módra'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 8px',
+              borderRadius: 'var(--radius-full)',
+              border: '0.5px solid rgba(126,207,199,.25)',
+              background: 'rgba(34,166,179,.15)',
+              color: 'var(--color-dun-ripple-200)',
+              cursor: 'pointer',
+              transition: 'var(--transition-fast)',
+            }}
+          >
+            {isDark
+              ? <Sun size={16} aria-hidden />
+              : <Moon size={16} aria-hidden />
+            }
           </button>
 
-          {/* Module Tabs - Always visible */}
-          <nav className="flex items-center gap-3" aria-label="Modul navigáció">
-            <button
-              onClick={() => onModuleChange('meteorology')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                currentModule === 'meteorology'
-                  ? 'bg-cyan-500 text-white shadow-md'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}
-            >
-              <Cloud className="w-5 h-5" />
-              <span className="hidden sm:inline">Meteorológia</span>
-            </button>
-
-            <button
-              onClick={() => onModuleChange('water-level')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                currentModule === 'water-level'
-                  ? 'bg-sky-500 text-white shadow-md'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}
-            >
-              <Droplet className="w-5 h-5" />
-              <span className="hidden sm:inline">Vízállás</span>
-            </button>
-
-            <button
-              onClick={() => onModuleChange('drought')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                currentModule === 'drought'
-                  ? 'bg-orange-500 text-white shadow-md'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}
-            >
-              <Sprout className="w-5 h-5" />
-              <span className="hidden sm:inline">Aszály</span>
-            </button>
-          </nav>
+          {/* Értesítések gomb */}
+          <button
+            aria-label="Értesítések"
+            onClick={() => setShowNotifications(true)}
+            style={{
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '50%',
+              border: '0.5px solid rgba(126,207,199,.2)',
+              background: 'transparent',
+              color: 'var(--color-dun-ripple-200)',
+              cursor: 'pointer',
+              transition: 'var(--transition-fast)',
+            }}
+          >
+            <Icon id="icon-alert-bell" size={18} />
+          </button>
         </div>
       </div>
+
+      {/* Notification modal overlay */}
+      {showNotifications && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4"
+          style={{ background: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setShowNotifications(false)}
+        >
+          <div
+            className="w-full max-w-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-2 px-1">
+              <span className="text-sm font-semibold text-white">Értesítések</span>
+              <button
+                onClick={() => setShowNotifications(false)}
+                aria-label="Bezárás"
+                className="text-white/70 hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <NotificationSettings />
+          </div>
+        </div>
+      )}
     </header>
   );
 };

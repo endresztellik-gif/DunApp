@@ -12,6 +12,7 @@
 
 import { useState, lazy, Suspense, useEffect } from 'react';
 import { Header } from './components/Layout/Header';
+import { ModuleTabs } from './components/Layout/ModuleTabs';
 import { HomePage } from './components/HomePage';
 import { InstallPrompt } from './components/InstallPrompt';
 import { LoadingSpinner } from './components/UI/LoadingSpinner';
@@ -51,6 +52,18 @@ function App() {
 
   const [activeModule, setActiveModule] = useState<ModuleType | null>(null);
 
+  // Dark mode: localStorage + prefers-color-scheme
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    const saved = localStorage.getItem('dunapp-theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    localStorage.setItem('dunapp-theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
+
   // Fetch real data from Supabase
   const { cities, isLoading: citiesLoading, error: citiesError } = useCities();
   const { locations: droughtLocations, isLoading: locationsLoading, error: locationsError } = useDroughtLocations();
@@ -81,9 +94,9 @@ function App() {
   // Show loading spinner while data is loading
   if (activeModule === 'meteorology' && citiesLoading) {
     return (
-      <div className="min-h-screen bg-bg-main">
-        <Header currentModule={activeModule} onModuleChange={setActiveModule} />
-        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">
+      <div className="min-h-screen" style={{ background: 'var(--bg-app)' }}>
+        <Header currentModule={activeModule} onModuleChange={setActiveModule} isDark={isDark} onToggleDark={() => setIsDark(d => !d)} />
+        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8 pb-24">
           <LoadingSpinner message="Városok betöltése..." />
         </main>
       </div>
@@ -92,9 +105,9 @@ function App() {
 
   if (activeModule === 'drought' && (locationsLoading || wellsLoading)) {
     return (
-      <div className="min-h-screen bg-bg-main">
-        <Header currentModule={activeModule} onModuleChange={setActiveModule} />
-        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">
+      <div className="min-h-screen" style={{ background: 'var(--bg-app)' }}>
+        <Header currentModule={activeModule} onModuleChange={setActiveModule} isDark={isDark} onToggleDark={() => setIsDark(d => !d)} />
+        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8 pb-24">
           <LoadingSpinner message="Aszály adatok betöltése..." />
         </main>
       </div>
@@ -104,9 +117,9 @@ function App() {
   // Show error if data failed to load
   if (activeModule === 'meteorology' && citiesError) {
     return (
-      <div className="min-h-screen bg-bg-main">
-        <Header currentModule={activeModule} onModuleChange={setActiveModule} />
-        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">
+      <div className="min-h-screen" style={{ background: 'var(--bg-app)' }}>
+        <Header currentModule={activeModule} onModuleChange={setActiveModule} isDark={isDark} onToggleDark={() => setIsDark(d => !d)} />
+        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8 pb-24">
           <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 text-red-900">
             <h3 className="font-semibold">Hiba a városok betöltésekor</h3>
             <p className="text-sm">{citiesError.message}</p>
@@ -118,9 +131,9 @@ function App() {
 
   if (activeModule === 'drought' && (locationsError || wellsError)) {
     return (
-      <div className="min-h-screen bg-bg-main">
-        <Header currentModule={activeModule} onModuleChange={setActiveModule} />
-        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">
+      <div className="min-h-screen" style={{ background: 'var(--bg-app)' }}>
+        <Header currentModule={activeModule} onModuleChange={setActiveModule} isDark={isDark} onToggleDark={() => setIsDark(d => !d)} />
+        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8 pb-24">
           <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 text-red-900">
             <h3 className="font-semibold">Hiba az aszály adatok betöltésekor</h3>
             <p className="text-sm">{locationsError?.message || wellsError?.message}</p>
@@ -141,12 +154,21 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-main">
+    <div className="min-h-screen" style={{ background: 'var(--bg-app)' }}>
       {/* Header with Module Navigation */}
-      <Header currentModule={activeModule} onModuleChange={setActiveModule} />
+      <Header
+        currentModule={activeModule}
+        onModuleChange={setActiveModule}
+        isDark={isDark}
+        onToggleDark={() => setIsDark(d => !d)}
+      />
+
+      {activeModule && (
+        <ModuleTabs currentModule={activeModule} onModuleChange={setActiveModule} />
+      )}
 
       {/* Main Content - Render Active Module with Suspense */}
-      <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">
+      <main className="mx-auto max-w-7xl px-4 py-6 md:py-8 pb-24">
         <Suspense fallback={<LoadingSpinner message="Modul betöltése..." />}>
           {activeModule === 'meteorology' && cities.length > 0 && (
             <MeteorologyModule cities={cities} initialCity={cities[0]} />

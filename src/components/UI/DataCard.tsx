@@ -1,11 +1,8 @@
 /**
- * DataCard Component
+ * DataCard Component — Redesign v2
  *
- * Reusable card component for displaying data values with icon, label, value, and unit.
- * Supports module-specific color schemes.
- *
- * PERFORMANCE: Memoized to prevent unnecessary re-renders.
- * Used 9+ times across modules - high optimization impact.
+ * Reusable card with dun-card + IBM Plex Mono értékek.
+ * LucideIcon prop interface VÁLTOZATLAN (visszafelé kompatibilitás).
  */
 
 import React from 'react';
@@ -18,11 +15,11 @@ export interface DataCardProps {
   unit: string;
   moduleColor?: 'meteorology' | 'water' | 'drought';
   className?: string;
-  children?: React.ReactNode; // For embedded dropdowns in drought module
+  children?: React.ReactNode;
 }
 
 export const DataCard = React.memo<DataCardProps>(({
-  icon: Icon,
+  icon: IconComponent,
   label,
   value,
   unit,
@@ -30,64 +27,49 @@ export const DataCard = React.memo<DataCardProps>(({
   className = '',
   children,
 }) => {
-  // Module-specific colors for icon background and border
-  const colorMap = {
-    meteorology: {
-      iconBg: 'bg-cyan-100',
-      iconColor: 'text-cyan-600',
-      borderColor: 'border-cyan-200',
-      accentColor: 'text-cyan-600',
-    },
-    water: {
-      iconBg: 'bg-cyan-100',
-      iconColor: 'text-cyan-500',
-      borderColor: 'border-cyan-200',
-      accentColor: 'text-cyan-500',
-    },
-    drought: {
-      iconBg: 'bg-orange-100',
-      iconColor: 'text-orange-600',
-      borderColor: 'border-orange-200',
-      accentColor: 'text-orange-600',
-    },
+  const accentColorMap = {
+    meteorology: 'var(--color-dun-wave-400)',
+    water: 'var(--color-dun-current-600)',
+    drought: 'var(--color-dun-amber-400)',
   };
-
-  const colors = colorMap[moduleColor];
-
-  // Format value for display
-  const displayValue = value !== null && value !== undefined ? value : 'N/A';
+  const accentColor = accentColorMap[moduleColor];
+  const displayValue = value !== null && value !== undefined ? value : '–';
 
   return (
     <div
-      className={`
-        bg-white rounded-xl shadow-md border-2 ${colors.borderColor}
-        p-6 min-h-[160px] transition-all duration-200
-        hover:shadow-lg hover:scale-[1.02] flex flex-col
-        ${className}
-      `}
+      className={`dun-card ${className}`}
       role="region"
       aria-labelledby={`card-${label}`}
     >
-      {/* Header with icon and label */}
-      <div className="flex items-center gap-3 mb-4">
-        {/* Icon with circular background */}
-        <div className={`${colors.iconBg} rounded-full p-2.5 flex items-center justify-center`}>
-          <Icon className={`h-6 w-6 ${colors.iconColor}`} aria-hidden="true" />
-        </div>
-        <h3 id={`card-${label}`} className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+      {/* Header */}
+      <div className="dun-card-header">
+        <IconComponent
+          size={20}
+          aria-hidden
+          style={{ color: accentColor, flexShrink: 0 }}
+        />
+        <span
+          id={`card-${label}`}
+          className="dun-module-label"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
           {label}
-        </h3>
+        </span>
       </div>
 
-      {/* Optional children (e.g., dropdown selector) */}
-      {children && <div className="mb-3">{children}</div>}
-
-      {/* Value and unit */}
-      <div className="mt-auto">
-        <p className={`text-4xl font-bold ${colors.accentColor} leading-none`} aria-live="polite">
-          {displayValue}
-        </p>
-        <p className="text-base text-gray-500 font-medium mt-2">{unit}</p>
+      {/* Body */}
+      <div className="dun-card-body">
+        {children && <div className="mb-3">{children}</div>}
+        <div className="mt-auto">
+          <p
+            className="dun-value"
+            style={{ color: 'var(--text-primary)' }}
+            aria-live="polite"
+          >
+            {displayValue}
+            <span className="dun-value-unit">{unit}</span>
+          </p>
+        </div>
       </div>
     </div>
   );

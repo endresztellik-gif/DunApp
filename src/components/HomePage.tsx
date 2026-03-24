@@ -1,16 +1,11 @@
 /**
- * HomePage Component
+ * HomePage Component — Redesign v2
  *
- * Modern landing page with centered layout.
- * Features:
- * - Large DunApp branding
- * - 3 module selection cards (Meteorológia, Vízállás, Aszály)
- * - Clean, minimal design with icons
- * - Responsive grid layout
+ * DM Serif Display branding, egyedi SVG ikonok, dun-card modul kártyák.
  */
 
 import React from 'react';
-import { Cloud, Droplet, Sprout } from 'lucide-react';
+import { Icon } from './Icon';
 import type { ModuleType } from '../types';
 
 interface HomePageProps {
@@ -19,87 +14,97 @@ interface HomePageProps {
 
 export const HomePage: React.FC<HomePageProps> = ({ onModuleSelect }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col items-center justify-center px-4 py-12">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
+      style={{ background: 'var(--bg-app)' }}
+    >
       {/* Brand */}
       <div className="text-center mb-12">
-        {/* Logo */}
         <div className="flex justify-center mb-4">
-          <img
-            src="/icons/icon-192x192.svg"
-            alt="DunApp Logo"
-            className="w-24 h-24 md:w-32 md:h-32"
-          />
+          <img src="/icons/icon-192x192.svg" alt="DunApp Logo" className="w-24 h-24 md:w-32 md:h-32" />
         </div>
-        <h1 className="text-5xl md:text-6xl font-bold mb-1">
-          <span className="text-cyan-600">Dun</span>
-          <span className="text-gray-900">App</span>
+        <h1
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(48px, 8vw, 72px)',
+            color: 'var(--color-dun-current-600)',
+            lineHeight: 1,
+            marginBottom: 'var(--space-2)',
+            fontWeight: 400,
+          }}
+        >
+          DunApp
         </h1>
-        <p className="text-sm text-gray-400 mb-3">v 2.8</p>
-        <p className="text-gray-600 text-lg">
+        <p className="dun-meta" style={{ marginBottom: 'var(--space-3)' }}>
+          v 3.2
+        </p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-lg)' }}>
           Meteorológiai és Vízügyi Monitoring
         </p>
       </div>
 
       {/* Module Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full">
-        {/* Meteorológia */}
-        <button
-          onClick={() => onModuleSelect('meteorology')}
-          className="group bg-white hover:bg-cyan-50 border-2 border-gray-200 hover:border-cyan-500 rounded-2xl p-8 transition-all duration-200 hover:shadow-xl hover:scale-105"
-        >
-          <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-cyan-500 transition-colors">
-              <Cloud className="w-8 h-8 text-cyan-600 group-hover:text-white" />
+        {[
+          {
+            module: 'meteorology' as ModuleType,
+            label: 'Meteorológia',
+            desc: 'Időjárás-előrejelzés és radar',
+            iconId: 'icon-meteo',
+            accent: 'var(--color-dun-wave-400)',
+          },
+          {
+            module: 'water-level' as ModuleType,
+            label: 'Vízállás',
+            desc: 'Dunai vízszint monitoring',
+            iconId: 'icon-water',
+            accent: 'var(--color-dun-current-600)',
+          },
+          {
+            module: 'drought' as ModuleType,
+            label: 'Aszály',
+            desc: 'HDI index és talajvíz',
+            iconId: 'icon-drought',
+            accent: 'var(--color-dun-amber-400)',
+          },
+        ].map(({ module, label, desc, iconId, accent }) => (
+          <button
+            key={module}
+            onClick={() => onModuleSelect(module)}
+            className="dun-card flex flex-col items-center text-center p-8"
+            style={{ cursor: 'pointer', border: 'none' }}
+          >
+            <div
+              className="flex items-center justify-center mb-4 rounded-full"
+              style={{
+                width: '64px',
+                height: '64px',
+                background: `color-mix(in srgb, ${accent} 12%, transparent)`,
+                color: accent,
+              }}
+            >
+              <Icon id={iconId} size={32} />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Meteorológia
+            <h2
+              style={{
+                fontSize: 'var(--text-xl)',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                marginBottom: 'var(--space-2)',
+              }}
+            >
+              {label}
             </h2>
-            <p className="text-gray-600 text-sm">
-              Időjárás-előrejelzés és radar
+            <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>
+              {desc}
             </p>
-          </div>
-        </button>
-
-        {/* Vízállás */}
-        <button
-          onClick={() => onModuleSelect('water-level')}
-          className="group bg-white hover:bg-sky-50 border-2 border-gray-200 hover:border-sky-500 rounded-2xl p-8 transition-all duration-200 hover:shadow-xl hover:scale-105"
-        >
-          <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-sky-500 transition-colors">
-              <Droplet className="w-8 h-8 text-sky-600 group-hover:text-white" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Vízállás
-            </h2>
-            <p className="text-gray-600 text-sm">
-              Dunai mérőállomások adatai
-            </p>
-          </div>
-        </button>
-
-        {/* Aszály */}
-        <button
-          onClick={() => onModuleSelect('drought')}
-          className="group bg-white hover:bg-orange-50 border-2 border-gray-200 hover:border-orange-500 rounded-2xl p-8 transition-all duration-200 hover:shadow-xl hover:scale-105"
-        >
-          <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-orange-500 transition-colors">
-              <Sprout className="w-8 h-8 text-orange-600 group-hover:text-white" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Aszály
-            </h2>
-            <p className="text-gray-600 text-sm">
-              Talajvíz és vízhiány monitoring
-            </p>
-          </div>
-        </button>
+          </button>
+        ))}
       </div>
 
-      {/* Footer Info */}
-      <div className="mt-16 text-center text-gray-500 text-sm">
-        <p>DunApp PWA - terepi embereknek</p>
+      {/* Footer */}
+      <div className="mt-16 text-center">
+        <p className="dun-meta">DunApp PWA · terepi embereknek</p>
       </div>
     </div>
   );

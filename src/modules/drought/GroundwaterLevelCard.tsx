@@ -59,7 +59,7 @@ export const GroundwaterLevelCard: React.FC<GroundwaterLevelCardProps> = ({
 
       {/* Additional info */}
       {selectedWell && (
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs mt-2" style={{ color: 'var(--text-tertiary)' }}>
           Kút: {selectedWell.wellName} (#{selectedWell.wellCode})
         </p>
       )}

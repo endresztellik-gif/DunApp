@@ -22,14 +22,14 @@ export const PrecipitationSummaryCard = React.memo<PrecipitationSummaryCardProps
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border-2 border-gray-200 bg-white p-6 shadow-sm">
+      <div className="p-6" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
         <div className="flex items-center gap-3 mb-4">
-          <CloudRain className="h-6 w-6 text-cyan-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Csapadék összesítés</h3>
+          <CloudRain className="h-6 w-6" style={{ color: 'var(--accent-primary)' }} />
+          <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Csapadék összesítés</h3>
         </div>
         <div className="flex items-center justify-center py-8">
-          <RefreshCw className="h-6 w-6 text-gray-400 animate-spin" />
-          <span className="ml-2 text-gray-500">Betöltés...</span>
+          <RefreshCw className="h-6 w-6 animate-spin" style={{ color: 'var(--text-tertiary)' }} />
+          <span className="ml-2" style={{ color: 'var(--text-tertiary)' }}>Betöltés...</span>
         </div>
       </div>
     );
@@ -37,15 +37,16 @@ export const PrecipitationSummaryCard = React.memo<PrecipitationSummaryCardProps
 
   if (error) {
     return (
-      <div className="rounded-lg border-2 border-red-200 bg-red-50 p-6 shadow-sm">
+      <div className="p-6" style={{ background: 'var(--status-alert-bg)', border: '0.5px solid var(--status-alert-border)', borderRadius: 'var(--radius-lg)' }}>
         <div className="flex items-center gap-3 mb-4">
-          <CloudRain className="h-6 w-6 text-red-600" />
-          <h3 className="text-lg font-semibold text-red-900">Csapadék összesítés</h3>
+          <CloudRain className="h-6 w-6" style={{ color: 'var(--status-alert-text)' }} />
+          <h3 className="text-lg font-semibold" style={{ color: 'var(--status-alert-text)' }}>Csapadék összesítés</h3>
         </div>
-        <p className="text-sm text-red-700">Nem sikerült betölteni az adatokat.</p>
+        <p className="text-sm" style={{ color: 'var(--status-alert-text)' }}>Nem sikerült betölteni az adatokat.</p>
         <button
           onClick={() => refetch()}
-          className="mt-3 text-sm text-red-600 hover:text-red-800 underline"
+          className="mt-3 text-sm underline"
+          style={{ color: 'var(--status-alert-text)' }}
         >
           Újrapróbálás
         </button>
@@ -55,12 +56,12 @@ export const PrecipitationSummaryCard = React.memo<PrecipitationSummaryCardProps
 
   if (!precipitationData) {
     return (
-      <div className="rounded-lg border-2 border-gray-200 bg-gray-50 p-6 shadow-sm">
+      <div className="p-6" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
         <div className="flex items-center gap-3 mb-4">
-          <CloudRain className="h-6 w-6 text-gray-400" />
-          <h3 className="text-lg font-semibold text-gray-500">Csapadék összesítés</h3>
+          <CloudRain className="h-6 w-6" style={{ color: 'var(--text-tertiary)' }} />
+          <h3 className="text-lg font-semibold" style={{ color: 'var(--text-tertiary)' }}>Csapadék összesítés</h3>
         </div>
-        <p className="text-sm text-gray-500">Nincs elérhető adat</p>
+        <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>Nincs elérhető adat</p>
       </div>
     );
   }
@@ -85,17 +86,17 @@ export const PrecipitationSummaryCard = React.memo<PrecipitationSummaryCardProps
   };
 
   return (
-    <div className="rounded-lg border-2 border-cyan-200 bg-white p-6 shadow-sm">
+    <div className="dun-card p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className="rounded-full bg-cyan-100 p-2">
-            <CloudRain className="h-6 w-6 text-cyan-600" />
+          <div className="p-2" style={{ background: 'var(--accent-muted)', borderRadius: '50%' }}>
+            <CloudRain className="h-6 w-6" style={{ color: 'var(--accent-primary)' }} />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">Csapadék összesítés</h3>
+          <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Csapadék összesítés</h3>
         </div>
         {precipitationData.updatedAt && (
-          <span className="text-xs text-gray-400">
+          <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
             {formatUpdateTime(precipitationData.updatedAt)}
           </span>
         )}
@@ -104,48 +105,49 @@ export const PrecipitationSummaryCard = React.memo<PrecipitationSummaryCardProps
       {/* Data Grid */}
       <div className="grid grid-cols-3 gap-4">
         {/* Last 7 Days */}
-        <div className="text-center p-3 rounded-lg bg-cyan-50">
+        <div className="text-center p-3" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-md)' }}>
           <div className="flex items-center justify-center mb-2">
-            <Calendar className="h-5 w-5 text-cyan-600" />
+            <Calendar className="h-5 w-5" style={{ color: 'var(--accent-primary)' }} />
           </div>
-          <div className="text-2xl font-bold text-cyan-700">
+          <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-data)', color: 'var(--text-data)' }}>
             {formatValue(precipitationData.last7Days)}
           </div>
-          <div className="text-xs text-gray-500 mt-1">mm</div>
-          <div className="text-xs font-medium text-gray-600 mt-2">Elmúlt 7 nap</div>
+          <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>mm</div>
+          <div className="text-xs font-medium mt-2" style={{ color: 'var(--text-secondary)' }}>Elmúlt 7 nap</div>
         </div>
 
         {/* Last 30 Days */}
-        <div className="text-center p-3 rounded-lg bg-cyan-50">
+        <div className="text-center p-3" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-md)' }}>
           <div className="flex items-center justify-center mb-2">
-            <CalendarDays className="h-5 w-5 text-cyan-600" />
+            <CalendarDays className="h-5 w-5" style={{ color: 'var(--accent-primary)' }} />
           </div>
-          <div className="text-2xl font-bold text-cyan-700">
+          <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-data)', color: 'var(--text-data)' }}>
             {formatValue(precipitationData.last30Days)}
           </div>
-          <div className="text-xs text-gray-500 mt-1">mm</div>
-          <div className="text-xs font-medium text-gray-600 mt-2">Elmúlt 30 nap</div>
+          <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>mm</div>
+          <div className="text-xs font-medium mt-2" style={{ color: 'var(--text-secondary)' }}>Elmúlt 30 nap</div>
         </div>
 
         {/* Year-to-Date */}
-        <div className="text-center p-3 rounded-lg bg-cyan-50">
+        <div className="text-center p-3" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-md)' }}>
           <div className="flex items-center justify-center mb-2">
-            <CalendarRange className="h-5 w-5 text-cyan-600" />
+            <CalendarRange className="h-5 w-5" style={{ color: 'var(--accent-primary)' }} />
           </div>
-          <div className="text-2xl font-bold text-cyan-700">
+          <div className="text-2xl font-bold" style={{ fontFamily: 'var(--font-data)', color: 'var(--text-data)' }}>
             {formatValue(precipitationData.yearToDate)}
           </div>
-          <div className="text-xs text-gray-500 mt-1">mm</div>
-          <div className="text-xs font-medium text-gray-600 mt-2">Tárgyév (YTD)</div>
+          <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>mm</div>
+          <div className="text-xs font-medium mt-2" style={{ color: 'var(--text-secondary)' }}>Tárgyév (YTD)</div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-        <span className="text-xs text-gray-400">Forrás: Open-Meteo Historical API</span>
+      <div className="mt-4 pt-3 border-t flex items-center justify-between" style={{ borderColor: 'var(--border-subtle)' }}>
+        <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Forrás: Open-Meteo Historical API</span>
         <button
           onClick={() => refetch()}
-          className="text-xs text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
+          className="text-xs flex items-center gap-1"
+          style={{ color: 'var(--accent-primary)' }}
         >
           <RefreshCw className="h-3 w-3" />
           Frissítés

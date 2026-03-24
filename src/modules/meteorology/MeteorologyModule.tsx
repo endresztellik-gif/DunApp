@@ -91,13 +91,13 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
 
       {/* Error State */}
       {weatherError && (
-        <div className="mb-6 flex items-start gap-3 rounded-lg border-2 border-red-200 bg-red-50 p-4">
-          <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" />
+        <div className="mb-6 flex items-start gap-3 p-4" style={{ background: 'var(--status-alert-bg)', color: 'var(--status-alert-text)', border: '0.5px solid var(--status-alert-border)', borderRadius: 'var(--radius-md)' }}>
+          <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" style={{ color: 'var(--status-alert-text)' }} />
           <div>
-            <h3 className="mb-1 text-base font-semibold text-red-900">
+            <h3 className="mb-1 text-base font-semibold">
               Hiba az adatok betöltésekor
             </h3>
-            <p className="text-sm text-red-700">
+            <p className="text-sm">
               {weatherError.message || 'Nem sikerült betölteni az időjárási adatokat.'}
             </p>
           </div>
@@ -106,10 +106,10 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
 
       {/* No City Selected State */}
       {!selectedCity && !weatherError && (
-        <div className="mb-6 rounded-lg border-2 border-blue-200 bg-blue-50 p-8 text-center">
-          <Thermometer className="mx-auto mb-3 h-12 w-12 text-blue-600" />
-          <h3 className="mb-2 text-lg font-semibold text-blue-900">Válassz várost</h3>
-          <p className="text-sm text-blue-700">
+        <div className="mb-6 p-8 text-center" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}>
+          <Thermometer className="mx-auto mb-3 h-12 w-12" style={{ color: 'var(--accent-primary)' }} />
+          <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Válassz várost</h3>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Válassz egy várost a fenti listából az időjárási adatok megtekintéséhez.
           </p>
         </div>
@@ -117,10 +117,10 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
 
       {/* No Data Available State */}
       {selectedCity && !weatherData && !isLoading && !weatherError && (
-        <div className="mb-6 rounded-lg border-2 border-blue-200 bg-blue-50 p-8 text-center">
-          <Thermometer className="mx-auto mb-3 h-12 w-12 text-blue-600" />
-          <h3 className="mb-2 text-lg font-semibold text-blue-900">Nincs elérhető adat</h3>
-          <p className="text-sm text-blue-700">
+        <div className="mb-6 p-8 text-center" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}>
+          <Thermometer className="mx-auto mb-3 h-12 w-12" style={{ color: 'var(--accent-primary)' }} />
+          <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Nincs elérhető adat</h3>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Jelenleg nincs időjárási adat ehhez a városhoz: {selectedCity.name}
           </p>
         </div>
@@ -195,13 +195,13 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
 
           {/* 3-Day Forecast Chart */}
           <div className="mb-6">
-            <h2 className="section-title mb-4">3 napos előrejelzés</h2>
+            <h2 className="section-title mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>3 napos előrejelzés</h2>
             <ForecastChart cityId={selectedCity?.id || ''} />
           </div>
 
           {/* Weather Maps */}
           <div className="mb-6">
-            <h2 className="section-title mb-4">Térképek</h2>
+            <h2 className="section-title mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Térképek</h2>
             <WeatherMapsWidget city={selectedCity} />
           </div>
         </>

@@ -54,19 +54,42 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       return (
-        <div className="error-card" role="alert" aria-live="assertive">
+        <div
+          role="alert"
+          aria-live="assertive"
+          style={{
+            background: 'var(--status-alert-bg)',
+            color: 'var(--status-alert-text)',
+            border: '0.5px solid var(--status-alert-border)',
+            borderRadius: 'var(--radius-md)',
+            padding: 'var(--space-4)',
+          }}
+        >
           <div className="flex items-start gap-3">
-            <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0" aria-hidden="true" />
+            <AlertTriangle
+              aria-hidden="true"
+              style={{ color: 'var(--color-dun-alert-500)', flexShrink: 0, width: '24px', height: '24px' }}
+            />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-red-800 mb-1">
+              <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, color: 'var(--status-alert-text)', marginBottom: 'var(--space-1)' }}>
                 Hiba történt
               </h3>
-              <p className="error-message">
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--status-alert-text)' }}>
                 {this.state.error?.message || 'Ismeretlen hiba történt. Kérjük, próbálja újra.'}
               </p>
               <button
                 onClick={this.handleReset}
-                className="error-retry-button"
+                style={{
+                  marginTop: 'var(--space-3)',
+                  padding: '4px var(--space-3)',
+                  background: 'var(--color-dun-alert-500)',
+                  color: '#fff',
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 500,
+                  borderRadius: 'var(--radius-sm)',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
                 aria-label="Újrapróbálkozás"
               >
                 Újrapróbálkozás

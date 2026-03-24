@@ -29,8 +29,8 @@ interface MultiStationChartProps {
   stations: WaterLevelStation[];
 }
 
-// Station colors - dynamically assigned
-const STATION_COLORS = ['#00BCD4', '#FF6F00', '#9C27B0']; // cyan, orange, purple
+// Station colors - design system values
+const STATION_COLORS = ['#22a6b3', '#d4851c', '#1a5f7a']; // dun-wave-400, dun-amber-400, dun-current-600
 
 /**
  * Aggregate forecast data from multiple stations into chart format
@@ -109,8 +109,11 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
 
   if (hasError) {
     return (
-      <div className="rounded-lg border-2 border-yellow-200 bg-yellow-50 p-4">
-        <p className="text-sm text-yellow-700">
+      <div
+        className="p-4"
+        style={{ background: 'var(--status-warn-bg)', border: '0.5px solid var(--status-warn-border)', borderRadius: 'var(--radius-md)', color: 'var(--status-warn-text)' }}
+      >
+        <p className="text-sm">
           Az előrejelzési adatok betöltése sikertelen. Próbáld újra később.
         </p>
       </div>
@@ -139,24 +142,27 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
   return (
     <div className="space-y-4">
       {/* Chart */}
-      <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-[400px]">
+      <div
+        className="w-full p-4 h-[400px]"
+        style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ed" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(26,95,122,.10)" />
             <XAxis
               dataKey="date"
-              stroke="#607d8b"
+              stroke="#7a9eaa"
               style={{ fontSize: '12px' }}
             />
             <YAxis
-              stroke="#607d8b"
+              stroke="#7a9eaa"
               style={{ fontSize: '12px' }}
               label={{ value: 'cm', angle: -90, position: 'insideLeft' }}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e0e7ed',
+                backgroundColor: 'var(--bg-surface)',
+                border: '0.5px solid var(--border-default)',
                 borderRadius: '8px',
                 boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
               }}
@@ -223,16 +229,17 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
         {stations.map((station, index) => (
           <div
             key={station.id}
-            className="rounded-lg border border-gray-200 bg-gray-50 p-3"
+            className="p-3"
+            style={{ background: 'var(--bg-surface-alt)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}
           >
             <div className="mb-2 flex items-center gap-2">
               <div
                 className="h-3 w-3 rounded-full"
                 style={{ backgroundColor: STATION_COLORS[index] }}
               />
-              <span className="text-sm font-semibold text-gray-900">{station.name}</span>
+              <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{station.name}</span>
             </div>
-            <div className="space-y-1 text-xs text-gray-600">
+            <div className="space-y-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
               {station.riverKm && (
                 <div>
                   <span className="font-medium">Fkm:</span> {station.riverKm}

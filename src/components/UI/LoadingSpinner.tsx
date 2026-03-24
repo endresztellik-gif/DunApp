@@ -1,8 +1,5 @@
 /**
- * LoadingSpinner Component
- *
- * Displays a loading spinner with optional message.
- * Centered by default, can be customized with className.
+ * LoadingSpinner Component — Redesign v2
  */
 
 import React from 'react';
@@ -30,18 +27,19 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       role="status"
       aria-live="polite"
     >
-      {/* Spinner */}
       <div
-        className={`spinner border-cyan-600 ${sizeClasses[size]}`}
+        className={`animate-spin rounded-full border-t-transparent ${sizeClasses[size]}`}
+        style={{
+          borderColor: 'var(--accent-primary)',
+          borderTopColor: 'transparent',
+        }}
         aria-hidden="true"
       />
-
-      {/* Message */}
       {message && (
-        <p className="text-sm text-gray-600">{message}</p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>
+          {message}
+        </p>
       )}
-
-      {/* Screen reader text */}
       <span className="sr-only">{message}</span>
     </div>
   );

@@ -46,23 +46,23 @@ export const SunTimesCards = React.memo(() => {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Sunrise skeleton */}
-        <div className="rounded-lg border-2 border-cyan-200 bg-white p-6 shadow-sm animate-pulse">
+        <div className="p-6 animate-pulse" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-cyan-100 rounded-full w-11 h-11"></div>
-            <div className="h-4 w-20 bg-gray-200 rounded"></div>
+            <div className="w-11 h-11" style={{ background: 'var(--bg-surface-alt)', borderRadius: '50%' }}></div>
+            <div className="h-4 w-20" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}></div>
           </div>
-          <div className="h-10 w-16 bg-gray-200 rounded mb-2"></div>
-          <div className="h-4 w-24 bg-gray-200 rounded"></div>
+          <div className="h-10 w-16 mb-2" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}></div>
+          <div className="h-4 w-24" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}></div>
         </div>
 
         {/* Sunset skeleton */}
-        <div className="rounded-lg border-2 border-cyan-200 bg-white p-6 shadow-sm animate-pulse">
+        <div className="p-6 animate-pulse" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-cyan-100 rounded-full w-11 h-11"></div>
-            <div className="h-4 w-20 bg-gray-200 rounded"></div>
+            <div className="w-11 h-11" style={{ background: 'var(--bg-surface-alt)', borderRadius: '50%' }}></div>
+            <div className="h-4 w-20" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}></div>
           </div>
-          <div className="h-10 w-16 bg-gray-200 rounded mb-2"></div>
-          <div className="h-4 w-24 bg-gray-200 rounded"></div>
+          <div className="h-10 w-16 mb-2" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}></div>
+          <div className="h-4 w-24" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}></div>
         </div>
       </div>
     );

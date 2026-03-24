@@ -55,7 +55,7 @@ const defaultIcon = leafletIcon({
 });
 
 // Default map view — centered on southern Hungary (Pécs–Baja–Mohács triangle)
-const DEFAULT_MAP_CENTER: [number, number] = [45.85, 18.5];
+const DEFAULT_MAP_CENTER: [number, number] = [46.17, 18.8];
 const DEFAULT_MAP_ZOOM = 9;
 
 
@@ -86,6 +86,11 @@ type MapMode = 'radar' | 'satellite' | 'wind' | 'temperature';
 interface WeatherFrame {
   timestamp: string;
   url: string;
+}
+
+interface RadarFrame {
+  time: number;
+  tileUrl: string;
 }
 
 interface Tab {
@@ -136,10 +141,14 @@ const TABS: Tab[] = [
 // Helper functions
 // ---------------------------------------------------------------------------
 
-async function fetchRainViewerTimestamps(): Promise<number[]> {
+async function fetchRainViewerFrames(): Promise<RadarFrame[]> {
   const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
   const data = await res.json();
-  return (data?.radar?.past ?? []).map((f: { time: number }) => f.time);
+  const host: string = data?.host ?? 'https://tilecache.rainviewer.com';
+  return (data?.radar?.past ?? []).map((f: { time: number; path: string }) => ({
+    time: f.time,
+    tileUrl: `${host}${f.path}/512/{z}/{x}/{y}/2/1_1.png`,
+  }));
 }
 
 function generateSatelliteFrames(): WeatherFrame[] {
@@ -360,7 +369,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
   const tempPoints = useTempMapData();
   const [mode, setMode] = useState<MapMode>('radar');
   const [frames, setFrames] = useState<WeatherFrame[]>([]);
-  const [radarTimestamps, setRadarTimestamps] = useState<number[]>([]);
+  const [radarFrames, setRadarFrames] = useState<RadarFrame[]>([]);
   const [frameIndex, setFrameIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -371,17 +380,17 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
   const loadFrames = useCallback(async (currentMode: MapMode) => {
     if (currentMode === 'wind' || currentMode === 'temperature') {
       setFrames([]);
-      setRadarTimestamps([]);
+      setRadarFrames([]);
       setIsLoading(false);
       return;
     }
 
     if (currentMode === 'radar') {
       setIsLoading(true);
-      const timestamps = await fetchRainViewerTimestamps();
-      setRadarTimestamps(timestamps);
+      const rf = await fetchRainViewerFrames();
+      setRadarFrames(rf);
       setFrames([]);
-      setFrameIndex(timestamps.length - 1);
+      setFrameIndex(rf.length - 1);
       setIsLoading(false);
       return;
     }
@@ -396,7 +405,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
     ]);
 
     setFrames(newFrames);
-    setRadarTimestamps([]);
+    setRadarFrames([]);
     setFrameIndex(newFrames.length - 1);
     setIsLoading(false);
 
@@ -411,7 +420,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
 
-    const frameCount = mode === 'radar' ? radarTimestamps.length : frames.length;
+    const frameCount = mode === 'radar' ? radarFrames.length : frames.length;
     if (!isPlaying || frameCount === 0) return;
 
     const interval = mode === 'satellite' ? SATELLITE_INTERVAL_MS : RADAR_INTERVAL_MS;
@@ -422,7 +431,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isPlaying, radarTimestamps.length, frames.length, mode]);
+  }, [isPlaying, radarFrames.length, frames.length, mode]);
 
   if (!city) {
     return (
@@ -437,7 +446,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
   const mapCenter: [number, number] = [city.latitude, city.longitude];
   const currentFrame = frames[frameIndex];
   const activeTab = TABS.find((t) => t.mode === mode)!;
-  const frameCount = mode === 'radar' ? radarTimestamps.length : frames.length;
+  const frameCount = mode === 'radar' ? radarFrames.length : frames.length;
 
   return (
     <div className="space-y-3">
@@ -466,7 +475,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
       </div>
 
       {/* Map container */}
-      <div className="relative w-full h-64 sm:h-96 overflow-hidden bg-white rounded-lg shadow-sm border-2 border-gray-200">
+      <div className="relative w-full h-64 sm:h-[520px] overflow-hidden bg-white rounded-lg shadow-sm border-2 border-gray-200">
         <MapContainer
           key={city.id}
           center={DEFAULT_MAP_CENTER}
@@ -475,7 +484,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
           scrollWheelZoom={false}
           touchZoom={true}
           bounceAtZoomLimits={false}
-          maxZoom={12}
+          maxZoom={16}
           minZoom={6}
           style={{ borderRadius: '8px' }}
         >
@@ -498,12 +507,15 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
           )}
 
           {/* Radar: RainViewer tile layers (opacity-based frame switching, smooth animation) */}
-          {mode === 'radar' && radarTimestamps.map((ts, idx) => (
+          {mode === 'radar' && radarFrames.map((rf, idx) => (
             <TileLayer
-              key={`rv-${ts}`}
-              url={`https://tilecache.rainviewer.com/v2/radar/${ts}/256/{z}/{x}/{y}/2/0_0.png`}
+              key={`rv-${rf.time}`}
+              url={rf.tileUrl}
               opacity={idx === frameIndex ? 0.80 : 0}
-              tileSize={256}
+              tileSize={512}
+              zoomOffset={-1}
+              maxNativeZoom={7}
+              maxZoom={16}
               attribution='<a href="https://www.rainviewer.com" target="_blank">RainViewer</a>'
             />
           ))}
@@ -585,8 +597,8 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
                 <span className="inline-block w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
                 Betöltés...
               </span>
-            ) : mode === 'radar' && radarTimestamps[frameIndex] ? (
-              <span>RainViewer Radar {formatRainViewerTime(radarTimestamps[frameIndex])}</span>
+            ) : mode === 'radar' && radarFrames[frameIndex] ? (
+              <span>RainViewer Radar {formatRainViewerTime(radarFrames[frameIndex].time)}</span>
             ) : mode === 'satellite' && currentFrame ? (
               <span>OMSZ Felhőtérkép {formatSatelliteTime(currentFrame.timestamp)}</span>
             ) : (
@@ -634,7 +646,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
       </div>
 
       {/* Legend bar */}
-      <div className="bg-white rounded-lg border border-gray-100 shadow-sm px-3 py-2.5">
+      <div className="px-3 py-2.5" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
         <LegendBar legendType={activeTab.legendType} />
       </div>
     </div>

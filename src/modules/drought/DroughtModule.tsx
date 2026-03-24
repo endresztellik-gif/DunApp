@@ -150,13 +150,13 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
     <div className="main-container">
       {/* Drought Data Error State */}
       {droughtError && (
-        <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+        <div className="mb-6 p-4 flex items-start gap-3" style={{ background: 'var(--status-alert-bg)', border: '1.5px solid var(--status-alert-border)', borderRadius: 'var(--radius-md)' }}>
+          <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--status-alert-text)' }} />
           <div>
-            <h3 className="text-base font-semibold text-red-900 mb-1">
+            <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--status-alert-text)' }}>
               Hiba az aszálymonitoring adatok betöltésekor
             </h3>
-            <p className="text-sm text-red-700">
+            <p className="text-sm" style={{ color: 'var(--status-alert-text)' }}>
               {droughtError.message || 'Nem sikerült betölteni az aszály adatokat.'}
             </p>
           </div>
@@ -165,13 +165,13 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
       {/* Groundwater Data Error State */}
       {groundwaterError && (
-        <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+        <div className="mb-6 p-4 flex items-start gap-3" style={{ background: 'var(--status-alert-bg)', border: '1.5px solid var(--status-alert-border)', borderRadius: 'var(--radius-md)' }}>
+          <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--status-alert-text)' }} />
           <div>
-            <h3 className="text-base font-semibold text-red-900 mb-1">
+            <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--status-alert-text)' }}>
               Hiba a talajvíz adatok betöltésekor
             </h3>
-            <p className="text-sm text-red-700">
+            <p className="text-sm" style={{ color: 'var(--status-alert-text)' }}>
               {groundwaterError.message || 'Nem sikerült betölteni a talajvíz adatokat.'}
             </p>
           </div>
@@ -180,10 +180,10 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
       {/* No Location Selected State */}
       {!selectedLocation && !droughtError && (
-        <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div className="mb-6 p-4 flex items-start gap-3" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}>
+          <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--text-secondary)' }} />
           <div>
-            <p className="text-sm text-blue-700">
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               Válassz ki egy helyszínt az aszálymonitoring adatok megjelenítéséhez.
             </p>
           </div>
@@ -192,10 +192,10 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
       {/* No Data Available States */}
       {selectedLocation && !droughtData && !isDroughtLoading && !droughtError && (
-        <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div className="mb-6 p-4 flex items-start gap-3" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}>
+          <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--text-secondary)' }} />
           <div>
-            <p className="text-sm text-blue-700">
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               Jelenleg nincs elérhető aszály adat: <strong>{selectedLocation.locationName}</strong>
             </p>
           </div>
@@ -204,7 +204,7 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
       {/* Aszály Adatok Section Header with Location Selector */}
       <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 className="section-title">Aszály Adatok</h2>
+        <h2 className="section-title" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Aszály Adatok</h2>
         <DroughtLocationSelector
           locations={locations}
           selectedLocation={selectedLocation}
@@ -231,19 +231,19 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
       {/* Maps Section - 3 ArcGIS Maps */}
       <div className="mb-6">
-        <h2 className="section-title mb-4">Aszály és Talajvíz Térképek</h2>
+        <h2 className="section-title mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Aszály és Talajvíz Térképek</h2>
         <DroughtMapsWidget />
       </div>
 
       {/* Water Deficit Section - met.hu Interactive Map */}
       <div className="mb-6">
-        <h2 className="section-title mb-4">Talaj Vízhiány Térkép (met.hu)</h2>
+        <h2 className="section-title mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Talaj Vízhiány Térkép (met.hu)</h2>
         <WaterDeficitDashboard />
       </div>
 
       {/* Talajvízkút Monitoring Section with Well Selector */}
       <div ref={wellSelectorRef} className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 className="section-title">Talajvízkút Monitoring (10 kút)</h2>
+        <h2 className="section-title" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Talajvízkút Monitoring (10 kút)</h2>
         <WellSelector
           wells={wells}
           selectedWell={selectedWell}
@@ -255,14 +255,20 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
       {/* Groundwater Chart - 60-Day Trend */}
       {selectedWell && (
         <div className="mb-6">
-          <GroundwaterChart well={selectedWell} />
+          <GroundwaterChart
+            well={selectedWell}
+            onWellSelect={(wellId) => {
+              const found = wells.find(w => w.id === wellId);
+              if (found) handleWellChange(found);
+            }}
+          />
         </div>
       )}
 
       {/* No Well Selected Info */}
       {!selectedWell && wells.length > 0 && (
-        <div className="mb-6 p-6 bg-gray-50 border-2 border-gray-200 rounded-lg text-center">
-          <p className="text-gray-600">
+        <div className="mb-6 p-6 text-center" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}>
+          <p style={{ color: 'var(--text-secondary)' }}>
             Válassz ki egy talajvízkövet a fenti legördülő menüből a 60 napos talajvízszint trend megjelenítéséhez.
           </p>
         </div>
