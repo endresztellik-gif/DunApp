@@ -18,7 +18,6 @@ import { StationSelector } from '../../components/selectors/StationSelector';
 import { DataCard } from '../../components/UI/DataCard';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { Footer } from '../../components/Layout/Footer';
-import { NotificationSettings } from '../../components/NotificationSettings';
 import { MultiStationChart } from './MultiStationChart';
 import { ForecastDataTable } from './ForecastDataTable';
 import { WaterBodiesTable } from './WaterBodiesTable';
@@ -122,10 +121,6 @@ export const WaterLevelModule: React.FC = () => {
         />
       </div>
 
-      {/* Push Notification Settings */}
-      <div className="mb-6">
-        <NotificationSettings />
-      </div>
 
       {/* Error State - Data Loading Error */}
       {dataError && (
