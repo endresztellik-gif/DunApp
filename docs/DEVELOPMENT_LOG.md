@@ -240,6 +240,34 @@ CSS Custom Properties alapú design system:
 
 ---
 
+## 7b. Bugfix session (2026-03-24)
+
+### Push értesítés UX javítás
+
+**Problémák:**
+1. `NotificationSettings` feliratkozás után `return null`-lal eltűnt → leiratkozás nem volt lehetséges
+2. A harang ikon mindig ugyanolyan színű volt, nem tükrözte az állapotot
+3. Sem feliratkozásnál, sem leiratkozásnál nem volt megerősítő lépés
+
+**Megoldás:**
+- `Header.tsx`: `usePushNotifications` hook behúzva, harang gomb dinamikus stílussal:
+  - Nem feliratkozott: halvány fehér (`rgba(255,255,255,.45)`)
+  - Feliratkozott: cián (`var(--color-dun-wave-400)`) + halvány cián háttér
+- `Header.tsx`: a modal tartalma egyszerű confirm dialog lett:
+  - Feliratkozatlan → „Szeretnél értesítést kapni...?" + **[Feliratkozás]** / **[Mégsem]**
+  - Feliratkozott → „Az értesítések aktívak..." + **[Leiratkozás]** / **[Mégsem]**
+  - Sikeres akció után automatikusan bezárul, harang szín azonnal vált
+- `NotificationSettings.tsx` (WaterLevelModule kártya): feliratkozott állapotban kompakt zöld sor jelenik meg (nem tűnik el); leiratkozáshoz a harang ikonhoz irányít
+
+**Commit:** `decf3e5`
+
+### Radar alaptérkép opacity
+
+- `WeatherMapsWidget.tsx`: OSM alaptérkép radar módban `opacity={0.45}` (korábban 1.0)
+- Indok: RainViewer csempéi átlátszók ahol nincs csapadék — a halvány háttér jobban kiemeli a radar színeket
+
+---
+
 ## 8. Folyamatban lévő / Nyitott kérdések
 
 ### Radar provider döntés (2026-03-23 — nyitott)
