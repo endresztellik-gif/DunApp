@@ -56,7 +56,7 @@ export default defineConfig(({ mode }) => {
       gzipSize: true,
       brotliSize: true,
       template: 'treemap'
-    })
+    }) as any
   ],
 
   // Build optimization
