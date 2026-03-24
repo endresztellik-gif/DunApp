@@ -3,13 +3,14 @@
  *
  * Sötét sticky header, DM Serif Display branding.
  * Dark mode toggle + értesítés gomb.
- * A modul navigáció a BottomNav-ban van (ModuleTabs komponens).
+ * A harang ikon cián színű ha feliratkozott, halványszürke ha nem.
+ * Kattintásra confirm dialog nyílik fel (feliratkozás / leiratkozás megerősítés).
  */
 
-import React, { useState } from 'react';
-import { Sun, Moon, X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Sun, Moon, X, Bell, BellOff, Loader2 } from 'lucide-react';
 import { Icon } from '../Icon';
-import { NotificationSettings } from '../NotificationSettings';
+import { usePushNotifications } from '../../hooks/usePushNotifications';
 import type { ModuleType } from '../../types';
 
 interface HeaderProps {
@@ -26,9 +27,62 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleDark,
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const { isSupported, permission, isSubscribed, subscribe, unsubscribe, isLoading, error } =
+    usePushNotifications();
+
+  // Track whether the user triggered an action (to distinguish loading from initial open)
+  const wasActingRef = useRef(false);
+
+  // Close modal after successful action (isLoading goes false + no error)
+  useEffect(() => {
+    if (!isLoading && wasActingRef.current) {
+      wasActingRef.current = false;
+      if (!error) {
+        setShowNotifications(false);
+      }
+    }
+  }, [isLoading, error]);
+
+  const handleAction = () => {
+    wasActingRef.current = true;
+    if (isSubscribed) {
+      unsubscribe();
+    } else {
+      subscribe();
+    }
+  };
+
   const today = new Date().toLocaleDateString('hu-HU', {
     year: 'numeric', month: 'long', day: 'numeric'
   });
+
+  const bellSubscribedStyle: React.CSSProperties = {
+    width: '32px',
+    height: '32px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '50%',
+    border: '0.5px solid var(--color-dun-wave-400)',
+    background: 'rgba(34,166,179,.18)',
+    color: 'var(--color-dun-wave-400)',
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
+  };
+
+  const bellDefaultStyle: React.CSSProperties = {
+    width: '32px',
+    height: '32px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '50%',
+    border: '0.5px solid rgba(126,207,199,.2)',
+    background: 'transparent',
+    color: 'rgba(255,255,255,.45)',
+    cursor: 'pointer',
+    transition: 'var(--transition-fast)',
+  };
 
   return (
     <header
@@ -96,51 +150,116 @@ export const Header: React.FC<HeaderProps> = ({
             }
           </button>
 
-          {/* Értesítések gomb */}
-          <button
-            aria-label="Értesítések"
-            onClick={() => setShowNotifications(true)}
-            style={{
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '50%',
-              border: '0.5px solid rgba(126,207,199,.2)',
-              background: 'transparent',
-              color: 'var(--color-dun-ripple-200)',
-              cursor: 'pointer',
-              transition: 'var(--transition-fast)',
-            }}
-          >
-            <Icon id="icon-alert-bell" size={18} />
-          </button>
+          {/* Értesítések gomb — cián ha feliratkozott, halvány ha nem */}
+          {isSupported && permission !== 'denied' && (
+            <button
+              aria-label={isSubscribed ? 'Értesítések kezelése (aktív)' : 'Feliratkozás értesítésekre'}
+              onClick={() => setShowNotifications(true)}
+              style={isSubscribed ? bellSubscribedStyle : bellDefaultStyle}
+            >
+              <Icon id="icon-alert-bell" size={18} />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Notification modal overlay */}
+      {/* Notification confirm modal */}
       {showNotifications && (
         <div
           className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4"
           style={{ background: 'rgba(0,0,0,0.5)' }}
-          onClick={() => setShowNotifications(false)}
+          onClick={() => !isLoading && setShowNotifications(false)}
         >
           <div
-            className="w-full max-w-sm"
+            className="w-full max-w-sm rounded-xl overflow-hidden shadow-xl"
+            style={{ background: 'var(--bg-surface)' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-2 px-1">
-              <span className="text-sm font-semibold text-white">Értesítések</span>
+            {/* Dialog fejléc */}
+            <div
+              className="flex items-center justify-between px-4 pt-4 pb-3"
+              style={{ borderBottom: '1px solid var(--border-subtle)' }}
+            >
+              <div className="flex items-center gap-2.5">
+                {isSubscribed
+                  ? <Bell className="h-4 w-4" style={{ color: 'var(--color-dun-wave-400)' }} />
+                  : <BellOff className="h-4 w-4 text-gray-400" />
+                }
+                <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  Vízállás riasztás
+                </span>
+              </div>
               <button
-                onClick={() => setShowNotifications(false)}
+                onClick={() => !isLoading && setShowNotifications(false)}
                 aria-label="Bezárás"
-                className="text-white/70 hover:text-white"
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                disabled={isLoading}
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
-            <NotificationSettings />
+
+            {/* Dialog törzs */}
+            <div className="px-4 py-4">
+              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+                {isSubscribed
+                  ? 'Az értesítések aktívak. Riasztást kapsz, ha Mohácsnál a vízállás eléri a 400 cm-t.'
+                  : 'Szeretnél értesítést kapni, ha a mohácsi vízállás eléri a 400 cm-t?'
+                }
+              </p>
+
+              {error && (
+                <p className="text-xs text-red-600 mb-3 rounded-md bg-red-50 px-3 py-2">{error}</p>
+              )}
+
+              <div className="flex gap-2">
+                {isSubscribed ? (
+                  <>
+                    <button
+                      onClick={handleAction}
+                      disabled={isLoading}
+                      className="flex-1 flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50"
+                      style={{ background: '#dc2626' }}
+                    >
+                      {isLoading
+                        ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Leiratkozás...</>
+                        : 'Leiratkozás'
+                      }
+                    </button>
+                    <button
+                      onClick={() => setShowNotifications(false)}
+                      disabled={isLoading}
+                      className="flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50"
+                      style={{ background: 'var(--bg-surface-alt)', color: 'var(--text-primary)' }}
+                    >
+                      Mégsem
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleAction}
+                      disabled={isLoading}
+                      className="flex-1 flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50"
+                      style={{ background: 'var(--color-dun-wave-400)' }}
+                    >
+                      {isLoading
+                        ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Feliratkozás...</>
+                        : 'Feliratkozás'
+                      }
+                    </button>
+                    <button
+                      onClick={() => setShowNotifications(false)}
+                      disabled={isLoading}
+                      className="flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50"
+                      style={{ background: 'var(--bg-surface-alt)', color: 'var(--text-primary)' }}
+                    >
+                      Mégsem
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

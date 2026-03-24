@@ -502,6 +502,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
             <TileLayer
               key="osm"
               url={OSM_TILE_URL}
+              opacity={mode === 'radar' ? 0.45 : 1}
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             />
           )}
