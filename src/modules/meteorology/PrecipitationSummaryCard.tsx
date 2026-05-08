@@ -9,8 +9,8 @@
  * Data source: Open-Meteo Historical API
  */
 
-import React from 'react';
-import { CloudRain, Calendar, CalendarDays, CalendarRange, RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { CloudRain, Calendar, CalendarDays, CalendarRange, RefreshCw, Info } from 'lucide-react';
 import { usePrecipitationSummary } from '../../hooks/usePrecipitationSummary';
 
 interface PrecipitationSummaryCardProps {
@@ -85,6 +85,8 @@ export const PrecipitationSummaryCard = React.memo<PrecipitationSummaryCardProps
     }
   };
 
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+
   return (
     <div className="dun-card p-6">
       {/* Header */}
@@ -94,6 +96,14 @@ export const PrecipitationSummaryCard = React.memo<PrecipitationSummaryCardProps
             <CloudRain className="h-6 w-6" style={{ color: 'var(--accent-primary)' }} />
           </div>
           <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Csapadék összesítés</h3>
+          <button
+            onClick={() => setShowDisclaimer(v => !v)}
+            className="p-1 rounded-full"
+            style={{ color: showDisclaimer ? 'var(--accent-primary)' : 'var(--text-tertiary)' }}
+            title="Adatforrás információ"
+          >
+            <Info className="h-4 w-4" />
+          </button>
         </div>
         {precipitationData.updatedAt && (
           <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
@@ -101,6 +111,13 @@ export const PrecipitationSummaryCard = React.memo<PrecipitationSummaryCardProps
           </span>
         )}
       </div>
+
+      {/* Disclaimer */}
+      {showDisclaimer && (
+        <div className="mb-4 p-3 text-xs rounded" style={{ background: 'var(--bg-surface-alt)', color: 'var(--text-secondary)', border: '0.5px solid var(--border-subtle)' }}>
+          Közelítő, modell-alapú adat (Open-Meteo rácsháló, ~5 km felbontás). Lokális záporoknál a valódi mérésektől ±50%-os eltérés is lehetséges.
+        </div>
+      )}
 
       {/* Data Grid */}
       <div className="grid grid-cols-3 gap-4">
