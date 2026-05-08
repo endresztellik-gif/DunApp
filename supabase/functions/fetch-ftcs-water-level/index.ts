@@ -1,160 +1,136 @@
-// Supabase Edge Function: Fetch FTCS (Karapancsa) Water Level from vizugy.hu
-// URL: https://www.vizugy.hu/?mapModule=OpFeGrafikon&AllomasVOA=16496103-97AB-11D4-BB62-00508BA24287&mapData=OrasIdosor
-// Schedule: Daily at 9:00 AM (using pg_cron)
+/**
+ * DunApp PWA - Fetch FTCS (Karapancsa) Water Level
+ *
+ * Primary:  vizugy.hu REST API — TSZ 130033 (Hercegszántó-Karapancsa alvíz, FTCS)
+ * Fallback: vizugy.hu HTML scraping — VOA 164960F8-97AB-11D4-BB62-00508BA24287
+ *
+ * The vmservice REST API may not carry data for smaller canal/pump stations,
+ * so the original HTML scraper is kept as a fallback.
+ * Schedule: Daily at 9:00 AM
+ */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { sanitizeError } from '../_shared/error-sanitizer.ts';
+import { fetchTimeSeries, DATA_TYPE } from '../_shared/vizugy-api-client.ts';
 
-const FTCS_STATION_URL =
+const FTCS_TSZ = 130033;
+const FTCS_VOA_URL =
   'https://www.vizugy.hu/?mapModule=OpGrafikon&AllomasVOA=164960F8-97AB-11D4-BB62-00508BA24287&mapData=OrasIdosor';
+const FETCH_DAYS = 7;
 
-interface MeasurementData {
-  timestamp: string;
-  waterLevel: number;
-  waterTemp?: number;
+interface DailyReading {
+  utcTime: string;
+  valueCm: number;
 }
 
-serve(async (req) => {
+/** Select one reading per day, preferring 04:00 UTC (= 06:00 Budapest). */
+function selectDailyReadings(
+  readings: { utcTime: string; valueCm: number }[]
+): Map<string, DailyReading> {
+  const map = new Map<string, DailyReading>();
+  for (const r of readings) {
+    const d = new Date(r.utcTime);
+    const dayKey = d.toISOString().split('T')[0];
+    const h = d.getUTCHours();
+    if (!map.has(dayKey)) {
+      map.set(dayKey, r);
+    } else {
+      const existingH = new Date(map.get(dayKey)!.utcTime).getUTCHours();
+      if (Math.abs(h - 4) < Math.abs(existingH - 4)) map.set(dayKey, r);
+    }
+  }
+  return map;
+}
+
+/** HTML scraping fallback — original method. */
+async function scrapeFromHtml(): Promise<Map<string, DailyReading>> {
+  const response = await fetch(FTCS_VOA_URL);
+  const html = await response.text();
+
+  const pattern =
+    /<tr[^>]*>\s*<td[^>]*><strong>([\d.]+\.\s+\d{2}:\d{2})<\/strong><\/td>\s*<td[^>]*><strong>(\d+)<\/strong><\/td>/gi;
+
+  const readings: DailyReading[] = [];
+  let m;
+  while ((m = pattern.exec(html)) !== null) {
+    const ts = m[1].trim();
+    const val = parseInt(m[2], 10);
+    const parts = ts.match(/(\d{4})\.(\d{2})\.(\d{2})\.\s+(\d{2}):(\d{2})/);
+    if (!parts || isNaN(val)) continue;
+    const [, y, mo, d, h, min] = parts;
+    readings.push({ utcTime: `${y}-${mo}-${d}T${h}:${min}:00Z`, valueCm: val });
+  }
+
+  if (readings.length === 0) throw new Error('No data in HTML scrape for FTCS');
+  return selectDailyReadings(readings);
+}
+
+serve(async () => {
   try {
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
 
-    // Fetch vizugy.hu FTCS station page
-    console.log('Fetching FTCS (Karapancsa) data from vizugy.hu...');
-    const response = await fetch(FTCS_STATION_URL);
-    const html = await response.text();
+    console.log('💧 Fetch FTCS (Karapancsa) Water Level - Starting');
 
-    // Parse HTML table data
-    // Format: <tr><td><strong>2025.11.20. 22:00</strong></td><td><strong>234</strong></td><td>...</td></tr>
-    const tableRowPattern = /<tr[^>]*>\s*<td[^>]*><strong>([\d.]+\.\s+\d{2}:\d{2})<\/strong><\/td>\s*<td[^>]*><strong>(\d+)<\/strong><\/td>/gi;
-    const measurements: MeasurementData[] = [];
+    let dailyMap: Map<string, DailyReading>;
+    let sourceUsed = 'vizugy.hu';
 
-    let match;
-    while ((match = tableRowPattern.exec(html)) !== null) {
-      const timestamp = match[1].trim();
-      const waterLevel = parseInt(match[2], 10);
+    // Try REST API first
+    try {
+      const endTime = new Date();
+      const startTime = new Date(endTime.getTime() - FETCH_DAYS * 24 * 3600 * 1000);
+      const [series] = await fetchTimeSeries([FTCS_TSZ], startTime, endTime, DATA_TYPE.WATER_LEVEL);
 
-      if (timestamp && !isNaN(waterLevel)) {
-        measurements.push({ timestamp, waterLevel });
+      if (!series || series.readings.length === 0) {
+        throw new Error('Empty response from vizugy API');
       }
+      dailyMap = selectDailyReadings(series.readings);
+      console.log(`✅ API: ${series.readings.length} readings`);
+    } catch (apiError) {
+      console.warn(`⚠️  REST API failed (${apiError.message}), falling back to HTML scraping`);
+      dailyMap = await scrapeFromHtml();
+      console.log(`✅ HTML scrape: ${dailyMap.size} daily readings`);
     }
 
-    if (measurements.length === 0) {
-      throw new Error('No valid water level data found in HTML table');
-    }
-
-    console.log(`Found ${measurements.length} measurements`);
-
-    // Group measurements by day and find the 6:00 AM measurement (or closest)
-    const dailyMeasurements: Map<string, MeasurementData> = new Map();
-
-    for (const measurement of measurements) {
-      const timestampParts = measurement.timestamp.match(
-        /(\d{4})\.(\d{2})\.(\d{2})\.\s+(\d{2}):(\d{2})/
-      );
-
-      if (!timestampParts) continue;
-
-      const [_, year, month, day, hour, minute] = timestampParts;
-      const dayKey = `${year}-${month}-${day}`;
-      const hourNum = parseInt(hour, 10);
-
-      // Prefer 6:00 AM measurement (or closest to 6:00 AM)
-      if (!dailyMeasurements.has(dayKey)) {
-        dailyMeasurements.set(dayKey, measurement);
-      } else {
-        const existing = dailyMeasurements.get(dayKey)!;
-        const existingHour = parseInt(existing.timestamp.match(/(\d{2}):(\d{2})/)![1], 10);
-        const existingDiff = Math.abs(existingHour - 6);
-        const currentDiff = Math.abs(hourNum - 6);
-
-        // Replace if current measurement is closer to 6:00 AM
-        if (currentDiff < existingDiff) {
-          dailyMeasurements.set(dayKey, measurement);
-        }
-      }
-    }
-
-    console.log(`Found ${dailyMeasurements.size} daily measurements (6:00 AM preferred)`);
-
-    // Find FTCS water body ID
-    const { data: ftcsWaterBody, error: waterBodyError } = await supabase
+    const { data: waterBody, error: wbError } = await supabase
       .from('water_bodies')
       .select('id')
       .eq('name', 'FTCS (Karapancsa)')
       .single();
 
-    if (waterBodyError) {
-      throw new Error(
-        `FTCS water body not found in database: ${waterBodyError.message}. Please add it first.`
-      );
-    }
+    if (wbError) throw new Error(`FTCS water body not found: ${wbError.message}`);
 
-    console.log('FTCS water body ID:', ftcsWaterBody.id);
+    const toInsert = Array.from(dailyMap.values()).map(r => ({
+      water_body_id: waterBody.id,
+      water_level_cm: r.valueCm,
+      measured_at: r.utcTime,
+      source: sourceUsed,
+    }));
 
-    // Prepare all daily measurements for bulk insert
-    const measurementsToInsert = Array.from(dailyMeasurements.values()).map((measurement) => {
-      const timestampParts = measurement.timestamp.match(
-        /(\d{4})\.(\d{2})\.(\d{2})\.\s+(\d{2}):(\d{2})/
-      );
-
-      if (!timestampParts) {
-        throw new Error(`Invalid timestamp format: ${measurement.timestamp}`);
-      }
-
-      const [_, year, month, day, hour, minute] = timestampParts;
-      const measurementDate = new Date(
-        `${year}-${month}-${day}T${hour}:${minute}:00.000Z`
-      );
-
-      return {
-        water_body_id: ftcsWaterBody.id,
-        water_level_cm: measurement.waterLevel,
-        measured_at: measurementDate.toISOString(),
-        source: 'vizugy.hu',
-      };
-    });
-
-    // Bulk insert (upsert to avoid duplicates)
-    const { data: insertedMeasurements, error: insertError } = await supabase
+    const { data: inserted, error: insertError } = await supabase
       .from('water_body_measurements')
-      .upsert(measurementsToInsert, {
-        onConflict: 'water_body_id,measured_at',
-        ignoreDuplicates: true,
-      })
+      .upsert(toInsert, { onConflict: 'water_body_id,measured_at', ignoreDuplicates: true })
       .select();
 
-    if (insertError) {
-      throw new Error(`Insert failed: ${insertError.message}`);
-    }
+    if (insertError) throw new Error(`Insert failed: ${insertError.message}`);
 
-    console.log(`Inserted ${insertedMeasurements?.length || 0} measurements`);
+    console.log(`✅ Inserted ${inserted?.length ?? 0} measurements`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'FTCS measurements imported successfully',
-        data: {
-          measurementsFound: measurements.length,
-          dailyMeasurements: dailyMeasurements.size,
-          inserted: insertedMeasurements?.length || 0,
-        },
+        data: { dailySelected: dailyMap.size, inserted: inserted?.length ?? 0 },
       }),
       { headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('❌ FTCS error:', error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ success: false, error: sanitizeError(error, 'Failed to fetch FTCS data') }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 });

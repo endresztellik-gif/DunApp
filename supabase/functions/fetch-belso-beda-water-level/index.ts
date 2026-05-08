@@ -1,161 +1,103 @@
-// Supabase Edge Function: Fetch Belső-Béda Water Level from vizugy.hu
-// URL: https://www.vizugy.hu/?mapModule=OpGrafikon&AllomasVOA=B19559E3-1536-11D5-A7DF-00A0C9FC1E7B&mapData=OrasIdosor
-// Station ID: 150035 (Bédai szivattyútelep Béda)
-// Schedule: Daily at 9:00 AM (using pg_cron)
+/**
+ * DunApp PWA - Fetch Belső-Béda Water Level
+ *
+ * Data source: vizugy.hu REST API (replaces HTML scraping)
+ * TSZ: 150035 (Bédai szivattyútelep Béda)
+ * Schedule: Daily at 9:00 AM
+ *
+ * Fetches last 7 days of hourly readings, selects the 06:00 Budapest time
+ * measurement per day, upserts into water_body_measurements.
+ */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { sanitizeError } from '../_shared/error-sanitizer.ts';
+import { fetchTimeSeries, DATA_TYPE } from '../_shared/vizugy-api-client.ts';
 
-const BELSO_BEDA_STATION_URL =
-  'https://www.vizugy.hu/?mapModule=OpGrafikon&AllomasVOA=B19559E3-1536-11D5-A7DF-00A0C9FC1E7B&mapData=OrasIdosor';
+const BELSO_BEDA_TSZ = 150035;
+const FETCH_DAYS = 7;
 
-interface MeasurementData {
-  timestamp: string;
-  waterLevel: number;
-  waterTemp?: number;
-}
-
-serve(async (req) => {
+serve(async () => {
   try {
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
 
-    // Fetch vizugy.hu Belső-Béda station page
-    console.log('Fetching Belső-Béda data from vizugy.hu...');
-    const response = await fetch(BELSO_BEDA_STATION_URL);
-    const html = await response.text();
+    console.log('💧 Fetch Belső-Béda Water Level - Starting (vizugy API)');
 
-    // Parse HTML table data
-    // Format: <tr><td><strong>2025.11.20. 22:00</strong></td><td><strong>139</strong></td><td>...</td></tr>
-    const tableRowPattern = /<tr[^>]*>\s*<td[^>]*><strong>([\d.]+\.\s+\d{2}:\d{2})<\/strong><\/td>\s*<td[^>]*><strong>(\d+)<\/strong><\/td>/gi;
-    const measurements: MeasurementData[] = [];
+    const endTime = new Date();
+    const startTime = new Date(endTime.getTime() - FETCH_DAYS * 24 * 3600 * 1000);
 
-    let match;
-    while ((match = tableRowPattern.exec(html)) !== null) {
-      const timestamp = match[1].trim();
-      const waterLevel = parseInt(match[2], 10);
+    const [levelSeries] = await fetchTimeSeries(
+      [BELSO_BEDA_TSZ],
+      startTime,
+      endTime,
+      DATA_TYPE.WATER_LEVEL
+    );
 
-      if (timestamp && !isNaN(waterLevel)) {
-        measurements.push({ timestamp, waterLevel });
-      }
+    if (!levelSeries || levelSeries.readings.length === 0) {
+      throw new Error('No readings returned from vizugy API for Belső-Béda');
     }
 
-    if (measurements.length === 0) {
-      throw new Error('No valid water level data found in HTML table');
-    }
+    console.log(`Received ${levelSeries.readings.length} readings`);
 
-    console.log(`Found ${measurements.length} measurements`);
+    // Select one measurement per day: prefer 04:00 UTC (= 06:00 Budapest summer time)
+    const dailyMap = new Map<string, { utcTime: string; valueCm: number }>();
 
-    // Group measurements by day and find the 6:00 AM measurement (or closest)
-    const dailyMeasurements: Map<string, MeasurementData> = new Map();
+    for (const reading of levelSeries.readings) {
+      const d = new Date(reading.utcTime);
+      const dayKey = d.toISOString().split('T')[0];
+      const hourUTC = d.getUTCHours();
 
-    for (const measurement of measurements) {
-      const timestampParts = measurement.timestamp.match(
-        /(\d{4})\.(\d{2})\.(\d{2})\.\s+(\d{2}):(\d{2})/
-      );
-
-      if (!timestampParts) continue;
-
-      const [_, year, month, day, hour, minute] = timestampParts;
-      const dayKey = `${year}-${month}-${day}`;
-      const hourNum = parseInt(hour, 10);
-
-      // Prefer 6:00 AM measurement (or closest to 6:00 AM)
-      if (!dailyMeasurements.has(dayKey)) {
-        dailyMeasurements.set(dayKey, measurement);
+      if (!dailyMap.has(dayKey)) {
+        dailyMap.set(dayKey, reading);
       } else {
-        const existing = dailyMeasurements.get(dayKey)!;
-        const existingHour = parseInt(existing.timestamp.match(/(\d{2}):(\d{2})/)![1], 10);
-        const existingDiff = Math.abs(existingHour - 6);
-        const currentDiff = Math.abs(hourNum - 6);
-
-        // Replace if current measurement is closer to 6:00 AM
-        if (currentDiff < existingDiff) {
-          dailyMeasurements.set(dayKey, measurement);
+        const existing = new Date(dailyMap.get(dayKey)!.utcTime).getUTCHours();
+        if (Math.abs(hourUTC - 4) < Math.abs(existing - 4)) {
+          dailyMap.set(dayKey, reading);
         }
       }
     }
 
-    console.log(`Found ${dailyMeasurements.size} daily measurements (6:00 AM preferred)`);
+    console.log(`Selected ${dailyMap.size} daily measurements`);
 
-    // Find Belső-Béda water body ID
-    const { data: belsoBedaWaterBody, error: waterBodyError } = await supabase
+    const { data: waterBody, error: wbError } = await supabase
       .from('water_bodies')
       .select('id')
       .eq('name', 'Belső-Béda')
       .single();
 
-    if (waterBodyError) {
-      throw new Error(
-        `Belső-Béda water body not found in database: ${waterBodyError.message}. Please add it first.`
-      );
-    }
+    if (wbError) throw new Error(`Belső-Béda water body not found: ${wbError.message}`);
 
-    console.log('Belső-Béda water body ID:', belsoBedaWaterBody.id);
+    const toInsert = Array.from(dailyMap.values()).map(r => ({
+      water_body_id: waterBody.id,
+      water_level_cm: r.valueCm,
+      measured_at: r.utcTime,
+      source: 'vizugy.hu',
+    }));
 
-    // Prepare all daily measurements for bulk insert
-    const measurementsToInsert = Array.from(dailyMeasurements.values()).map((measurement) => {
-      const timestampParts = measurement.timestamp.match(
-        /(\d{4})\.(\d{2})\.(\d{2})\.\s+(\d{2}):(\d{2})/
-      );
-
-      if (!timestampParts) {
-        throw new Error(`Invalid timestamp format: ${measurement.timestamp}`);
-      }
-
-      const [_, year, month, day, hour, minute] = timestampParts;
-      const measurementDate = new Date(
-        `${year}-${month}-${day}T${hour}:${minute}:00.000Z`
-      );
-
-      return {
-        water_body_id: belsoBedaWaterBody.id,
-        water_level_cm: measurement.waterLevel,
-        measured_at: measurementDate.toISOString(),
-        source: 'vizugy.hu',
-      };
-    });
-
-    // Bulk insert (upsert to avoid duplicates)
-    const { data: insertedMeasurements, error: insertError } = await supabase
+    const { data: inserted, error: insertError } = await supabase
       .from('water_body_measurements')
-      .upsert(measurementsToInsert, {
-        onConflict: 'water_body_id,measured_at',
-        ignoreDuplicates: true,
-      })
+      .upsert(toInsert, { onConflict: 'water_body_id,measured_at', ignoreDuplicates: true })
       .select();
 
-    if (insertError) {
-      throw new Error(`Insert failed: ${insertError.message}`);
-    }
+    if (insertError) throw new Error(`Insert failed: ${insertError.message}`);
 
-    console.log(`Inserted ${insertedMeasurements?.length || 0} measurements`);
+    console.log(`✅ Inserted ${inserted?.length ?? 0} measurements`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Belső-Béda measurements imported successfully',
-        data: {
-          measurementsFound: measurements.length,
-          dailyMeasurements: dailyMeasurements.size,
-          inserted: insertedMeasurements?.length || 0,
-        },
+        data: { readingsReceived: levelSeries.readings.length, dailySelected: dailyMap.size, inserted: inserted?.length ?? 0 },
       }),
       { headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('❌ Belső-Béda error:', error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ success: false, error: sanitizeError(error, 'Failed to fetch Belső-Béda data') }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 });

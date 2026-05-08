@@ -2,31 +2,27 @@
  * DunApp PWA - Fetch Precipitation Summary Edge Function
  *
  * PURPOSE:
- * - Fetches historical precipitation data from Open-Meteo Archive API
- * - Calculates 3 aggregations per city:
- *   - Last 7 days
- *   - Last 30 days
- *   - Year-to-date (YTD)
- * - Stores in precipitation_summary table
+ * - Fetches historical precipitation data and calculates:
+ *   - Last 7 days  → Open-Meteo Forecast API (no lag, real-time)
+ *   - Last 30 days → Open-Meteo Forecast API (no lag, real-time)
+ *   - Year-to-date → Archive API (Jan 1 to 3 days ago) + Forecast last 3 days
  *
- * DATA SOURCE:
- * Open-Meteo Historical Weather API (free, no API key required)
- * URL: https://archive-api.open-meteo.com/v1/archive
- * Data available from: 1940-present
+ * WHY TWO APIS:
+ * The Archive API has a 2-5 day lag — recent days return null (summed as 0).
+ * The Forecast API (past_days param) has no lag and covers the recent window.
+ * For YTD we combine both to avoid gaps without double-counting.
  *
  * SCHEDULE:
- * Run daily via pg_cron (recommended: 6:00 AM local time)
+ * Run daily via pg_cron at 6:00 AM UTC
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { sanitizeError } from '../_shared/error-sanitizer.ts';
 
-// Environment variables
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-// Cities to fetch precipitation for (same as meteorology)
 const CITIES = [
   { name: 'Szekszárd', lat: 46.3481, lon: 18.7097 },
   { name: 'Baja', lat: 46.1811, lon: 18.9550 },
@@ -34,13 +30,13 @@ const CITIES = [
   { name: 'Mohács', lat: 45.9928, lon: 18.6836 },
 ];
 
-// Retry configuration
-const MAX_RETRIES = 3;
-const INITIAL_RETRY_DELAY = 1000; // ms
+// Archive API is reliably lag-free up to this many days ago
+const ARCHIVE_SAFE_LAG_DAYS = 3;
+const FORECAST_WINDOW_DAYS = 30;
 
-/**
- * Fetch with retry logic (exponential backoff)
- */
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000;
+
 async function fetchWithRetry(
   fetchFn: () => Promise<Response>,
   retries = MAX_RETRIES,
@@ -49,98 +45,94 @@ async function fetchWithRetry(
   try {
     return await fetchFn();
   } catch (error) {
-    if (retries === 0) {
-      throw error;
-    }
+    if (retries === 0) throw error;
     console.warn(`Fetch failed, retrying in ${delay}ms... (${retries} retries left)`);
     await new Promise(resolve => setTimeout(resolve, delay));
     return fetchWithRetry(fetchFn, retries - 1, delay * 2);
   }
 }
 
-/**
- * Format date as YYYY-MM-DD
- */
 function formatDate(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
 /**
- * Fetch precipitation data from Open-Meteo Historical API
+ * Forecast API — no lag, covers recent days accurately.
+ * Returns daily precipitation for the last `pastDays` days.
  */
-async function fetchPrecipitationData(
+async function fetchForecastPrecipitation(
+  city: { name: string; lat: number; lon: number },
+  pastDays: number
+): Promise<number[]> {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&daily=precipitation_sum&past_days=${pastDays}&forecast_days=0&timezone=Europe/Budapest`;
+
+  console.log(`[Forecast] Fetching last ${pastDays} days for ${city.name}...`);
+  const response = await fetchWithRetry(() => fetch(url));
+
+  if (!response.ok) {
+    throw new Error(`Open-Meteo Forecast API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.daily?.precipitation_sum || [];
+}
+
+/**
+ * Archive API — has 2-5 day lag. Use only for older data (safe end = today - ARCHIVE_SAFE_LAG_DAYS).
+ */
+async function fetchArchivePrecipitation(
   city: { name: string; lat: number; lon: number },
   startDate: string,
   endDate: string
 ): Promise<number[]> {
   const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${city.lat}&longitude=${city.lon}&start_date=${startDate}&end_date=${endDate}&daily=precipitation_sum&timezone=Europe/Budapest`;
 
-  console.log(`Fetching precipitation for ${city.name} (${startDate} to ${endDate})...`);
-
+  console.log(`[Archive] Fetching ${city.name} (${startDate} to ${endDate})...`);
   const response = await fetchWithRetry(() => fetch(url));
 
   if (!response.ok) {
-    throw new Error(`Open-Meteo API error: ${response.status} ${response.statusText}`);
+    throw new Error(`Open-Meteo Archive API error: ${response.status} ${response.statusText}`);
   }
 
   const data = await response.json();
-
-  // Return array of daily precipitation values
   return data.daily?.precipitation_sum || [];
 }
 
-/**
- * Sum precipitation values, handling null values
- */
 function sumPrecipitation(values: (number | null)[]): number {
-  return values.reduce((sum: number, val: number | null) => {
-    return sum + (val ?? 0);
-  }, 0);
+  return values.reduce((sum: number, val: number | null) => sum + (val ?? 0), 0);
 }
 
-/**
- * Fetch and calculate precipitation summary for a city
- */
 async function fetchCityPrecipitationSummary(city: { name: string; lat: number; lon: number }) {
   const now = new Date();
 
-  // Calculate date ranges
-  const sevenDaysAgo = new Date(now);
-  sevenDaysAgo.setDate(now.getDate() - 7);
+  // --- 7-day and 30-day: Forecast API (no lag) ---
+  const forecastData = await fetchForecastPrecipitation(city, FORECAST_WINDOW_DAYS);
+  const last7Days = sumPrecipitation(forecastData.slice(-7));
+  const last30Days = sumPrecipitation(forecastData);
 
-  const thirtyDaysAgo = new Date(now);
-  thirtyDaysAgo.setDate(now.getDate() - 30);
+  // --- YTD: Archive (Jan 1 to today-ARCHIVE_SAFE_LAG_DAYS) + Forecast last N days ---
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+  const archiveSafeEnd = new Date(now);
+  archiveSafeEnd.setDate(now.getDate() - ARCHIVE_SAFE_LAG_DAYS);
 
-  const yearStart = new Date(now.getFullYear(), 0, 1); // January 1st
+  const archiveStartStr = formatDate(yearStart);
+  const archiveEndStr = formatDate(archiveSafeEnd);
 
-  // Use yesterday as end date to ensure data is available
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  const endDate = formatDate(yesterday);
+  const archiveData = await fetchArchivePrecipitation(city, archiveStartStr, archiveEndStr);
+  const archiveSum = sumPrecipitation(archiveData);
 
-  // Fetch all data in one request (from Jan 1 to yesterday)
-  // This is more efficient than 3 separate requests
-  const startDate = formatDate(yearStart);
-  const allPrecipitation = await fetchPrecipitationData(city, startDate, endDate);
+  // Recent days not covered by archive (last ARCHIVE_SAFE_LAG_DAYS from forecast)
+  const recentDays = forecastData.slice(-ARCHIVE_SAFE_LAG_DAYS);
+  const recentSum = sumPrecipitation(recentDays);
 
-  // Calculate days for each period
-  const daysInLast7 = 7;
-  const daysInLast30 = 30;
+  const yearToDate = archiveSum + recentSum;
 
-  // Extract relevant slices
-  const last7DaysData = allPrecipitation.slice(-daysInLast7);
-  const last30DaysData = allPrecipitation.slice(-daysInLast30);
-  const ytdData = allPrecipitation;
-
-  // Calculate sums
-  const last7Days = sumPrecipitation(last7DaysData);
-  const last30Days = sumPrecipitation(last30DaysData);
-  const yearToDate = sumPrecipitation(ytdData);
-
-  console.log(`✅ ${city.name}: 7d=${last7Days.toFixed(1)}mm, 30d=${last30Days.toFixed(1)}mm, YTD=${yearToDate.toFixed(1)}mm`);
+  console.log(
+    `✅ ${city.name}: 7d=${last7Days.toFixed(1)}mm, 30d=${last30Days.toFixed(1)}mm, YTD=${yearToDate.toFixed(1)}mm`
+  );
 
   return {
-    last_7_days: Math.round(last7Days * 100) / 100,  // Round to 2 decimal places
+    last_7_days: Math.round(last7Days * 100) / 100,
     last_30_days: Math.round(last30Days * 100) / 100,
     year_to_date: Math.round(yearToDate * 100) / 100,
   };
@@ -150,7 +142,6 @@ serve(async (req) => {
   try {
     console.log('🌧️  Fetch Precipitation Summary Edge Function - Starting');
 
-    // Initialize Supabase client
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error('Missing Supabase credentials');
     }
@@ -161,10 +152,8 @@ serve(async (req) => {
     let successCount = 0;
     let failureCount = 0;
 
-    // Process each city
     for (const city of CITIES) {
       try {
-        // Get city_id from database
         const { data: cityData, error: cityError } = await supabase
           .from('meteorology_cities')
           .select('id')
@@ -175,10 +164,8 @@ serve(async (req) => {
           throw new Error(`City not found in database: ${city.name}`);
         }
 
-        // Fetch precipitation summary
         const summary = await fetchCityPrecipitationSummary(city);
 
-        // Upsert into database
         const { error: upsertError } = await supabase
           .from('precipitation_summary')
           .upsert({
@@ -187,20 +174,12 @@ serve(async (req) => {
             last_30_days: summary.last_30_days,
             year_to_date: summary.year_to_date,
             updated_at: new Date().toISOString(),
-          }, {
-            onConflict: 'city_id',
-          });
+          }, { onConflict: 'city_id' });
 
-        if (upsertError) {
-          throw upsertError;
-        }
+        if (upsertError) throw upsertError;
 
         successCount++;
-        results.push({
-          city: city.name,
-          status: 'success',
-          data: summary,
-        });
+        results.push({ city: city.name, status: 'success', data: summary });
       } catch (error) {
         failureCount++;
         results.push({
@@ -211,7 +190,6 @@ serve(async (req) => {
         console.error(`❌ Error for ${city.name}:`, error.message);
       }
 
-      // Small delay between requests to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
@@ -222,31 +200,20 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         timestamp: new Date().toISOString(),
-        summary: {
-          total: CITIES.length,
-          success: successCount,
-          failed: failureCount,
-        },
+        summary: { total: CITIES.length, success: successCount, failed: failureCount },
         results,
       }),
-      {
-        headers: { 'Content-Type': 'application/json' },
-        status: 200,
-      }
+      { headers: { 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error) {
     console.error('❌ Fetch Precipitation Summary Error:', error);
-
     return new Response(
       JSON.stringify({
         success: false,
         error: sanitizeError(error, 'Failed to fetch precipitation summary'),
         timestamp: new Date().toISOString(),
       }),
-      {
-        headers: { 'Content-Type': 'application/json' },
-        status: 500,
-      }
+      { headers: { 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
