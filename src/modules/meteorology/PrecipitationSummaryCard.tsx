@@ -19,6 +19,7 @@ interface PrecipitationSummaryCardProps {
 
 export const PrecipitationSummaryCard = React.memo<PrecipitationSummaryCardProps>(({ cityId }) => {
   const { precipitationData, isLoading, error, refetch } = usePrecipitationSummary(cityId);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   if (isLoading) {
     return (
@@ -84,8 +85,6 @@ export const PrecipitationSummaryCard = React.memo<PrecipitationSummaryCardProps
       return '';
     }
   };
-
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   return (
     <div className="dun-card p-6">
