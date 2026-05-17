@@ -16,6 +16,7 @@ import { ModuleTabs } from './components/Layout/ModuleTabs';
 import { HomePage } from './components/HomePage';
 import { InstallPrompt } from './components/InstallPrompt';
 import { LoadingSpinner } from './components/UI/LoadingSpinner';
+import { ErrorBoundary } from './components/UI/ErrorBoundary';
 import { useCities } from './hooks/useCities';
 import { useDroughtLocations } from './hooks/useDroughtLocations';
 import { useGroundwaterWells } from './hooks/useGroundwaterWells';
@@ -91,58 +92,6 @@ function App() {
     checkWaterLevelAlert();
   }, []); // Empty dependency array - only run once on mount
 
-  // Show loading spinner while data is loading
-  if (activeModule === 'meteorology' && citiesLoading) {
-    return (
-      <div className="min-h-screen" style={{ background: 'var(--bg-app)' }}>
-        <Header currentModule={activeModule} onModuleChange={setActiveModule} isDark={isDark} onToggleDark={() => setIsDark(d => !d)} />
-        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8 pb-24">
-          <LoadingSpinner message="Városok betöltése..." />
-        </main>
-      </div>
-    );
-  }
-
-  if (activeModule === 'drought' && (locationsLoading || wellsLoading)) {
-    return (
-      <div className="min-h-screen" style={{ background: 'var(--bg-app)' }}>
-        <Header currentModule={activeModule} onModuleChange={setActiveModule} isDark={isDark} onToggleDark={() => setIsDark(d => !d)} />
-        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8 pb-24">
-          <LoadingSpinner message="Aszály adatok betöltése..." />
-        </main>
-      </div>
-    );
-  }
-
-  // Show error if data failed to load
-  if (activeModule === 'meteorology' && citiesError) {
-    return (
-      <div className="min-h-screen" style={{ background: 'var(--bg-app)' }}>
-        <Header currentModule={activeModule} onModuleChange={setActiveModule} isDark={isDark} onToggleDark={() => setIsDark(d => !d)} />
-        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8 pb-24">
-          <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 text-red-900">
-            <h3 className="font-semibold">Hiba a városok betöltésekor</h3>
-            <p className="text-sm">{citiesError.message}</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (activeModule === 'drought' && (locationsError || wellsError)) {
-    return (
-      <div className="min-h-screen" style={{ background: 'var(--bg-app)' }}>
-        <Header currentModule={activeModule} onModuleChange={setActiveModule} isDark={isDark} onToggleDark={() => setIsDark(d => !d)} />
-        <main className="mx-auto max-w-7xl px-4 py-6 md:py-8 pb-24">
-          <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 text-red-900">
-            <h3 className="font-semibold">Hiba az aszály adatok betöltésekor</h3>
-            <p className="text-sm">{locationsError?.message || wellsError?.message}</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   // Show HomePage if no module selected
   if (!activeModule) {
     return (
@@ -169,22 +118,49 @@ function App() {
 
       {/* Main Content - Render Active Module with Suspense */}
       <main className="mx-auto max-w-7xl px-4 py-6 md:py-8 pb-24">
-        <Suspense fallback={<LoadingSpinner message="Modul betöltése..." />}>
-          {activeModule === 'meteorology' && cities.length > 0 && (
-            <MeteorologyModule cities={cities} initialCity={cities[0]} />
-          )}
-          {activeModule === 'water-level' && (
-            <WaterLevelModule />
-          )}
-          {activeModule === 'drought' && droughtLocations.length > 0 && groundwaterWells.length > 0 && (
-            <DroughtModule
-              locations={droughtLocations}
-              wells={groundwaterWells}
-              initialLocation={droughtLocations[0]}
-              initialWell={groundwaterWells[0]}
-            />
-          )}
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingSpinner message="Modul betöltése..." />}>
+            {activeModule === 'meteorology' && (
+              citiesLoading ? (
+                <LoadingSpinner message="Városok betöltése..." />
+              ) : citiesError ? (
+                <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 text-red-900">
+                  <h3 className="font-semibold">Hiba a városok betöltésekor</h3>
+                  <p className="text-sm">{citiesError.message}</p>
+                </div>
+              ) : cities.length === 0 ? (
+                <div className="rounded-lg border-2 border-yellow-200 bg-yellow-50 p-4 text-yellow-900">
+                  <h3 className="font-semibold">Nincsenek elérhető városok</h3>
+                  <p className="text-sm">Nem sikerült betölteni a városlistát. Kérjük, töltse újra az oldalt.</p>
+                </div>
+              ) : (
+                <MeteorologyModule cities={cities} initialCity={cities[0]} />
+              )
+            )}
+            {activeModule === 'water-level' && (
+              <WaterLevelModule />
+            )}
+            {activeModule === 'drought' && (
+              (locationsLoading || wellsLoading) ? (
+                <LoadingSpinner message="Aszály adatok betöltése..." />
+              ) : (locationsError || wellsError) ? (
+                <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 text-red-900">
+                  <h3 className="font-semibold">Hiba az aszály adatok betöltésekor</h3>
+                  <p className="text-sm">{locationsError?.message || wellsError?.message}</p>
+                </div>
+              ) : droughtLocations.length > 0 && groundwaterWells.length > 0 ? (
+                <DroughtModule
+                  locations={droughtLocations}
+                  wells={groundwaterWells}
+                  initialLocation={droughtLocations[0]}
+                  initialWell={groundwaterWells[0]}
+                />
+              ) : (
+                <LoadingSpinner message="Adatok betöltése..." />
+              )
+            )}
+          </Suspense>
+        </ErrorBoundary>
       </main>
 
       {/* PWA Install Prompt */}

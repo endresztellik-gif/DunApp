@@ -74,14 +74,6 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
     return `${directions[index]} (${degrees}°)`
   }
 
-  if (isLoading) {
-    return (
-      <div className="main-container">
-        <LoadingSpinner message="Időjárási adatok betöltése..." />
-      </div>
-    )
-  }
-
   return (
     <div className="main-container">
       {/* City Selector */}
@@ -89,8 +81,13 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
         <CitySelector cities={cities} selectedCity={selectedCity} onCityChange={setSelectedCity} />
       </div>
 
+      {/* Loading State */}
+      {isLoading && (
+        <LoadingSpinner message="Időjárási adatok betöltése..." />
+      )}
+
       {/* Error State */}
-      {weatherError && (
+      {!isLoading && weatherError && (
         <div className="mb-6 flex items-start gap-3 p-4" style={{ background: 'var(--status-alert-bg)', color: 'var(--status-alert-text)', border: '0.5px solid var(--status-alert-border)', borderRadius: 'var(--radius-md)' }}>
           <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" style={{ color: 'var(--status-alert-text)' }} />
           <div>
