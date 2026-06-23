@@ -11,6 +11,13 @@
  */
 export type ModuleType = 'meteorology' | 'water-level' | 'drought';
 
+/**
+ * Region
+ * App-level Duna / Dráva region. Filters meteorology cities and groundwater wells
+ * (by `region`) and water-level stations (by `river`: 'Duna' / 'Dráva').
+ */
+export type Region = 'duna' | 'drava';
+
 // ============================================================================
 // METEOROLOGY MODULE TYPES
 // ============================================================================
@@ -27,6 +34,7 @@ export interface City {
   longitude: number;
   population: number | null;
   isActive: boolean;
+  region?: Region;
 }
 
 /**
@@ -162,6 +170,7 @@ export interface GroundwaterWell {
   wellType: string;
   isActive: boolean;
   enabled?: boolean; // Data quality-based visibility (added 2026-01-23)
+  region?: Region;
 }
 
 /**

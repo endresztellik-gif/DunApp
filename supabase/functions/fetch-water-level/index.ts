@@ -5,9 +5,14 @@
  * Forecasts (6-day, with uncertainty bands):   hydroinfo.hu scraping (no API alternative)
  *
  * TSZ identifiers (vizugy API):
- *   Nagybajcs  TSZ 3     (hydroinfo 442502)
- *   Baja       TSZ 1344  (hydroinfo 442031)
- *   Mohács     TSZ 831   (hydroinfo 442032)
+ *   Nagybajcs  TSZ 3     (hydroinfo 442502)   Duna
+ *   Baja       TSZ 1344  (hydroinfo 442031)   Duna
+ *   Mohács     TSZ 831   (hydroinfo 442032)   Duna
+ *   Őrtilos    TSZ 833   (hydroinfo 446198)   Dráva (fkm 235.9)
+ *   Barcs      TSZ 835   (hydroinfo 446199)   Dráva (fkm 154.1)
+ *
+ * Dráva forecasts come from per-station hydroinfo detail tables (446198H/446199H),
+ * not the Duna-only consolidated dunelotH.html (useConsolidatedTable: false).
  *
  * Cron: every hour at :10
  */
@@ -41,6 +46,21 @@ const STATIONS = [
     stationId: '442010',
     tsz: 831,
     hydroinfoId: '442032',
+    useConsolidatedTable: false,
+  },
+  // ── Dráva (region='drava') ───────────────────────────────────────────────
+  {
+    name: 'Őrtilos',
+    stationId: '446198',         // matches water_level_stations.station_id (migration 027)
+    tsz: 833,
+    hydroinfoId: '446198',       // per-station 6-day forecast detail table
+    useConsolidatedTable: false,
+  },
+  {
+    name: 'Barcs',
+    stationId: '446199',
+    tsz: 835,
+    hydroinfoId: '446199',
     useConsolidatedTable: false,
   },
 ];

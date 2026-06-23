@@ -1,11 +1,11 @@
 /**
  * StationSelector Component
  *
- * WATER LEVEL MODULE ONLY - Selector for 3 stations
+ * WATER LEVEL MODULE ONLY — selector for the region's stations.
  *
  * CRITICAL ARCHITECTURE RULE:
- * This selector is ONLY for the Water Level module.
- * It MUST have exactly 3 stations.
+ * This selector is ONLY for the Water Level module, and the station list it
+ * receives is already region-filtered (Duna: 3, Dráva: 2). The count is dynamic.
  * DO NOT use this as a generic location selector!
  */
 
@@ -26,14 +26,6 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
   onStationChange,
   className = '',
 }) => {
-  // VALIDATION: MUST have exactly 3 stations for Water Level module
-  if (stations.length !== 3) {
-    throw new Error(
-      `StationSelector: Expected exactly 3 stations for Water Level module, but received ${stations.length}. ` +
-      'This selector is module-specific and cannot be used as a generic selector.'
-    );
-  }
-
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 

@@ -3,8 +3,49 @@
 > **Cél:** Az összes fejlesztési döntés, hotfix, architektúrális választás és tanulság egy helyen.
 > Minden jövőbeli fejlesztés előtt érdemes átolvasni.
 
-**Utolsó frissítés:** 2026-03-24
-**Projekt verzió:** 3.2.x
+**Utolsó frissítés:** 2026-06-23
+**Projekt verzió:** 3.3.0
+
+---
+
+## 2026-06-23 — Duna / Dráva régió-kiterjesztés (develop ág, prod érintetlen)
+
+Kezdőoldali **Duna / Dráva** régióválasztó (első indításkor kötelező, fejlécben váltható). A régió
+szűri a meteorológia-városokat (`region`), a vízállás-állomásokat (`river`) és a talajvízkutakat
+(`region`); az aszály soil-monitoring + országos térképek közösek maradnak. **Dizájn változatlan.**
+
+**Felderítés (data.vizugy REST):**
+- Talajvíz állomáslista típusszám = **`InternetVmo/12`** (felszíni 11), talajvízszint **`adatFajtaKod=69`**.
+- A REST és a régi PHP-scrape **ugyanazt a jelet** adja, de **kutanként állandó eltolással** (~48–84 cm,
+  más referenciapont). A PHP **helyi idő** (CEST), a REST **UTC** — időben illesztve a deltÁk állandók.
+- Döntés (user): **REST-first minden kútra** (Duna is, időtálló), PHP fallback; egyszeri **~400 napos
+  REST-backfill** (`?backfill=true`) cseréli a PHP-datumú történetet → egységes referencia, nincs varrat.
+  Leállt kutak (forrásnál is): Decs 658, Nagybaracska 4479, Szeremle 132042.
+- Dráva vízállás megerősítve: Őrtilos tsz `833` (hydroinfo 446198), Barcs tsz `835` (hydroinfo 446199).
+- Dráva talajvíz: 9 friss-adatú kút (Gyékényes 885, Berzence 3487, Szenta 3660, Somogyszob 4000,
+  Babócsa 878, Mike 4230, Szulok 3484, Darány 4004, Lad 3659). A terv eredeti nevei (Barcs/Őrtilos/
+  Drávaszentes/Bolhó) nem adnak friss adatot vagy nincs kútjuk.
+
+**Megvalósítás:**
+- `RegionContext` (`src/contexts/`) + `useRegion`, provider a `main.tsx`-ben; HomePage régióválasztó,
+  Header régió-pill. Régió a contextből (App nincs új korai return — mobil-flash szabály).
+- Migráció `027_drava_region_expansion.sql`: `region` oszlop (cities, wells) + a soha nem committolt
+  `enabled` oszlop pótlása; Dráva sorok seed **`is_active=false`/`enabled=false`** (prod-biztonság).
+- Edge Functions: `fetch-groundwater-vizugy` REST-first + backfill; `fetch-water-level` STATIONS +Őrtilos/
+  Barcs; `fetch-meteorology` +Barcs/Őrtilos/Vízvár. `_shared/vizugy-api-client.ts`: `GROUNDWATER_LEVEL=69`,
+  `fetchGroundwaterStations()`.
+- Vízállás „pontosan 3 állomás" feltételezés **dinamikussá** téve: StationSelector dobás eltávolítva,
+  MultiStationChart / ForecastDataTable `useQueries`-re (hook-szabály), WaterBodiesTable rejtve Dráván.
+- Régió-tudatos hookok: `useCities`/`useStations`/`useGroundwaterWells` `region` paraméterrel; a `drava`
+  ág a legacy `is_active/enabled` szűrőt **átmenetileg** átlépi (go-live-ig), a `duna` ág változatlan.
+
+**Verifikáció:** `npm run build` ✅, `tsc --noEmit` ✅, tesztek: nulla új hiba (a meglévő 71 környezeti/
+hálózati bukás main-en is megvan; StationSelector teszt frissítve).
+
+**Nyitott (go-live, külön jóváhagyással):** (1) élesítő migráció `is_active=true`/`enabled=true`;
+(2) egyszeri groundwater REST-backfill futtatása; (3) a régió-tudatos hookok `drava` `is_active/enabled`
+kivételének eltávolítása; (4) Dráva push-riasztás hatókörön kívül. **PROD-figyelmeztetés mérlegelendő:**
+a groundwater REST-fix a Duna-kutak frissességét is javítja.
 
 ---
 
@@ -165,6 +206,41 @@ RÉGI: chartView([values], [timestamps], [], [metadata])
 
 **Javítás:** Fájl visszanevezve `deploy.yml`-re.
 
+### 2026-05-17: Meteorológia modul csak felvillan mobilon (PWA)
+
+**Szimptóma:** PWA indításkor (mobil) a meteorológia modul csak egy pillanatra villan fel, majd nem elérhető. Desktop-on probléma nélkül működik.
+
+**Gyök ok — React early-return anti-pattern:**
+
+Az `App.tsx` 4 különböző React fát adott vissza a loading/error állapotokra. Amikor `citiesLoading` `true`-ról `false`-ra váltott, a React **lebontotta az egész loading tree-t és újraépítette a main tree-t** (teljes unmount+remount). Ez mobilon (lassabb hardver + hálózat) látható villanásként jelentkezett. Desktop-on a folyamat annyira gyors volt, hogy észrevehetetlen.
+
+Három egymást követő loading állapot volt, mindegyik tree-switchez kötve:
+1. `App.tsx` early return → "Városok betöltése..." spinner (külön tree)
+2. Suspense lazy-load → "Modul betöltése..." spinner
+3. `MeteorologyModule` early return → időjárás spinner (teljes modult elfedve, városlista is eltűnt)
+
+Másodlagos problémák:
+- `cities.length === 0` esetén (ha a fetch sikerül, de üres eredménnyel) a modul csendben nem renderelt
+- Nem volt `ErrorBoundary` — ha bármi elszállt (pl. Leaflet mobilon), az app fehér képernyőre esett
+
+**Javítás:**
+
+`src/App.tsx`:
+- A 4 early return törlése — egyetlen konzisztens render tree a modul nézetnél
+- Loading/error state-ek a `<main>` tartalmon belülre kerültek (nem cserélik le a teljes fát)
+- `cities.length === 0` fallback üzenet hozzáadva
+- `<ErrorBoundary>` wrapper a Suspense tartalom köré
+
+`src/modules/meteorology/MeteorologyModule.tsx`:
+- Az időjárás-adat loading early return eltávolítva
+- Spinner inline jelenik meg a városlista alatt (a városlista mindig látható marad)
+
+**Eredmény:**
+- Homepage → Meteorológia: **egyetlen tree-váltás** (ez elkerülhetetlen)
+- Összes loading állapot ezután a fán belül, vizuális flash nélkül
+
+**Commit:** `0072329` | **TypeScript:** 0 hiba | **Security review:** tiszta
+
 ---
 
 ## 5. Backend / Adatforrás változások
@@ -265,6 +341,52 @@ CSS Custom Properties alapú design system:
 
 - `WeatherMapsWidget.tsx`: OSM alaptérkép radar módban `opacity={0.45}` (korábban 1.0)
 - Indok: RainViewer csempéi átlátszók ahol nincs csapadék — a halvány háttér jobban kiemeli a radar színeket
+
+---
+
+## 9. v3.3.0 — vizugy.hu REST API + csapadék javítás (2026-05-07)
+
+### Csapadék összesítés fix
+
+**Probléma:** Az Open-Meteo Archive API 2-5 napos késéssel dolgozik. A legutóbbi napok `null`-ként (= 0 mm) szerepeltek az összesítőkben, ezért esős napok után sem jelent meg csapadék.
+
+**Megoldás — kettős API stratégia:**
+- **7 nap / 30 nap:** `api.open-meteo.com/v1/forecast?past_days=30` → valós idejű, nincs lag
+- **YTD:** Archive API (jan. 1 – ma-3 nap) + Forecast API utolsó 3 nap
+
+**Fájl:** `supabase/functions/fetch-precipitation-summary/index.ts`
+
+---
+
+### vizugy.hu REST API migráció
+
+A `data.vizugy.hu` 2026 elején nyílt REST API-vá vált. A PecApp már implementálta; a shared klienst (`vizugy-api-client.ts`) átvettük DunApp-ba.
+
+**Új shared modul:** `supabase/functions/_shared/vizugy-api-client.ts`
+
+**TSZ azonosítók** (az API belső kódjai — ≠ hydroinfo kódok):
+
+| Állomás | TSZ | Hydroinfo kód |
+|---|---|---|
+| Nagybajcs | 3 | 442502 |
+| Baja | 1344 | 442031 |
+| Mohács | 831 | 442032 |
+| Belső-Béda | 150035 | (VOA GUID) |
+| FTCS (Karapancsa) | 130033 | (VOA GUID) |
+| Kadia | 130038 | (VOA GUID) |
+
+**Átállított edge functionök:**
+
+| Function | Régi forrás | Új forrás |
+|---|---|---|
+| `fetch-water-level` | hydroinfo.hu HTML scraping | vizugy.hu REST API (TSZ 3/1344/831) |
+| `fetch-belso-beda-water-level` | vizugy.hu HTML scraping | vizugy.hu REST API (TSZ 150035) |
+| `fetch-ftcs-water-level` | vizugy.hu HTML scraping | REST API-próba + HTML fallback |
+| `fetch-kadia-water-level` | vizugy.hu HTML scraping | REST API-próba + HTML fallback |
+
+> **Megjegyzés:** Az FTCS és Kadia kisebb csatorna/szivattyútelep állomások — a vmservice REST API nem adja vissza az adataikat, ezért automatikus HTML fallback van.
+
+> **DB constraint:** `water_level_data.source` CHECK: csak `'vizugy.hu'`, `'hydroinfo.hu'`, `'manual'`, `'other'` engedélyezett.
 
 ---
 

@@ -10,7 +10,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import type { WaterLevelStation } from '../types';
+import type { WaterLevelStation, Region } from '../types';
 
 interface UseStationsReturn {
   stations: WaterLevelStation[];
@@ -18,15 +18,27 @@ interface UseStationsReturn {
   error: Error | null;
 }
 
+const RIVER_BY_REGION: Record<Region, string> = { duna: 'Duna', drava: 'Dráva' };
+
 /**
- * Fetch all active water level monitoring stations from Supabase
+ * Fetch water level monitoring stations from Supabase, optionally filtered by region.
+ *
+ * Region maps to the station's river: duna→'Duna', drava→'Dráva'.
+ * - region='drava' skips the is_active filter — Dráva stations ship is_active=false
+ *   until go-live, yet the develop build must surface them.
+ *   (TODO go-live: drop this exception once Dráva stations are is_active=true.)
  */
-async function fetchStations(): Promise<WaterLevelStation[]> {
-  const { data, error } = await supabase
-    .from('water_level_stations')
-    .select('*')
-    .eq('is_active', true)
-    .order('name');
+async function fetchStations(region?: Region | null): Promise<WaterLevelStation[]> {
+  let query = supabase.from('water_level_stations').select('*');
+
+  if (region) {
+    query = query.eq('river', RIVER_BY_REGION[region]);
+    if (region === 'duna') query = query.eq('is_active', true);
+  } else {
+    query = query.eq('is_active', true);
+  }
+
+  const { data, error } = await query.order('name');
 
   if (error) {
     throw new Error(`Failed to fetch stations: ${error.message}`);
@@ -58,10 +70,10 @@ async function fetchStations(): Promise<WaterLevelStation[]> {
  * Stations are static data that rarely changes, so we cache for 24 hours.
  * This reduces API calls and improves offline experience.
  */
-export function useStations(): UseStationsReturn {
+export function useStations(region?: Region | null): UseStationsReturn {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['waterLevelStations'],
-    queryFn: fetchStations,
+    queryKey: ['waterLevelStations', region ?? 'all'],
+    queryFn: () => fetchStations(region),
     staleTime: 24 * 60 * 60 * 1000, // 24 hours (static data)
     gcTime: 24 * 60 * 60 * 1000, // Keep in cache for 24 hours
     retry: 3, // Retry failed requests 3 times

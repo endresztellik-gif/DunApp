@@ -1,8 +1,8 @@
 /**
  * StationSelector Component Tests
  *
- * CRITICAL: Tests for module-specific selector validation
- * This selector MUST have exactly 3 stations for the Water Level module
+ * The Water Level module is region-aware: the selector receives an already
+ * region-filtered station list (Duna: 3, Dráva: 2). The count is dynamic.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -12,55 +12,53 @@ import { StationSelector } from './StationSelector';
 import { MOCK_STATIONS } from '../../data/mockData';
 import type { WaterLevelStation } from '../../types';
 
-describe('StationSelector - Architecture Validation', () => {
+describe('StationSelector - Dynamic station count', () => {
   const mockOnChange = vi.fn();
-  const validProps = {
-    stations: MOCK_STATIONS,
-    selectedStation: MOCK_STATIONS[0],
-    onStationChange: mockOnChange,
-  };
 
   beforeEach(() => {
     mockOnChange.mockClear();
   });
 
-  // CRITICAL TEST: Architecture enforcement
-  it('throws error if not exactly 3 stations', () => {
-    const invalidStations: WaterLevelStation[] = [MOCK_STATIONS[0], MOCK_STATIONS[1]]; // Only 2
-
+  it('renders without throwing for a 2-station region (Dráva)', () => {
+    const twoStations: WaterLevelStation[] = [MOCK_STATIONS[0], MOCK_STATIONS[1]];
     expect(() => {
       render(
         <StationSelector
-          stations={invalidStations}
-          selectedStation={null}
+          stations={twoStations}
+          selectedStation={twoStations[0]}
           onStationChange={mockOnChange}
         />
       );
-    }).toThrow('Expected exactly 3 stations');
-  });
-
-  it('throws error with descriptive message for wrong count', () => {
-    const oneStation: WaterLevelStation[] = [MOCK_STATIONS[0]]; // Only 1
-
-    expect(() => {
-      render(
-        <StationSelector
-          stations={oneStation}
-          selectedStation={null}
-          onStationChange={mockOnChange}
-        />
-      );
-    }).toThrow(/Expected exactly 3 stations.*but received 1/);
-  });
-
-  it('accepts exactly 3 stations without error', () => {
-    expect(() => {
-      render(<StationSelector {...validProps} />);
     }).not.toThrow();
   });
 
-  it('validates correct count in MOCK_STATIONS', () => {
-    expect(MOCK_STATIONS).toHaveLength(3);
+  it('renders only the provided stations in the dropdown', async () => {
+    const twoStations: WaterLevelStation[] = [MOCK_STATIONS[0], MOCK_STATIONS[1]];
+    render(
+      <StationSelector
+        stations={twoStations}
+        selectedStation={twoStations[0]}
+        onStationChange={mockOnChange}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button'));
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('option')).toHaveLength(2);
+    });
+  });
+
+  it('accepts 3 stations without error', () => {
+    expect(() => {
+      render(
+        <StationSelector
+          stations={MOCK_STATIONS}
+          selectedStation={MOCK_STATIONS[0]}
+          onStationChange={mockOnChange}
+        />
+      );
+    }).not.toThrow();
   });
 });
 

@@ -1,348 +1,278 @@
 /**
- * Groundwater Data Fetch Edge Function - VizUgy.hu Scraper (NEW SOLUTION)
+ * Groundwater Data Fetch Edge Function — data.vizugy REST (adatFajtaKod=69), PHP fallback
  *
- * Fetches 365-day (1-year) groundwater level timeseries data from vizugy.hu
- * PHP endpoint for 15 monitoring wells in the Duna-Dráva region.
+ * PRIMARY source: data.vizugy.hu REST API (vmservice.vizugy.hu/vraquery)
+ *   - Station list:  InternetVmo/12  (groundwater wells, törzsszám = well_code)
+ *   - Time series:   TS/TsShortList, adatFajtaKod=69 (Talajvízállás, cm), UTC timestamps
+ *   This is the official, authenticated, future-proof contract — the same client
+ *   the water-level function uses (supabase/functions/_shared/vizugy-api-client.ts).
  *
- * MAJOR IMPROVEMENT over vizadat.hu API:
- * - ~1,500 measurements per well (vs 30-60 from vizadat.hu)
- * - No timeout issues (single fast request per well)
- * - More reliable (no API rate limits)
- * - Simpler implementation (parse JavaScript, not JSON API)
+ * FALLBACK source: legacy vizugy.hu PHP chart endpoint (talajvizkut_grafikon),
+ *   used only for wells the REST API returns no data for.
  *
- * Data Source: https://www.vizugy.hu/talajvizkut_grafikon/index.php?torzsszam=WELL_CODE
- * Format: JavaScript function call chartView([values], [timestamps], [metadata])
- * Frequency: Every 4 hours (6 readings/day) = ~2,190 measurements/year
- * Schedule: Daily at 05:00 AM UTC via pg_cron
+ * IMPORTANT — datum: REST and the legacy PHP scrape report the same groundwater
+ * signal from DIFFERENT reference points (a constant per-well offset, ~0.5–0.8 m).
+ * To avoid a step discontinuity, the historical PHP-datum data is replaced with a
+ * full REST re-fetch ONCE at go-live via `?backfill=true` (see below). After that
+ * the whole series is single-datum (REST); the daily cron just appends REST data.
  *
- * Created: 2026-01-09
- * Replaces: fetch-groundwater (vizadat.hu API - had timeout issues)
+ * Wells: loaded from the `groundwater_wells` table (ALL wells, regardless of
+ * `enabled` — disabled Duna wells and not-yet-live Dráva wells get data too; the
+ * frontend decides visibility). well_code = vizugy törzsszám.
+ *
+ * Query params:
+ *   ?days=N        Lookback window in days (default 7 for the cron).
+ *   ?backfill=true Full re-base: window defaults to 400 days and existing rows for
+ *                  each well are DELETED before insert (single-datum clean history).
+ *                  Run ONCE at go-live; not used by the daily cron.
+ *
+ * Cron: daily at 05:00 UTC (smart — only when ≥5 days since last data).
+ * Rewritten: 2026-06-23 (REST-first migration + Dráva expansion).
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 import { sanitizeError } from '../_shared/error-sanitizer.ts';
+import { fetchTimeSeries, DATA_TYPE } from '../_shared/vizugy-api-client.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// 15 monitoring wells (same as original)
-const WELLS = [
-  { name: 'Sátorhely', code: '4576' },
-  { name: 'Mohács II.', code: '912' },
-  { name: 'Kölked', code: '1461' },
-  { name: 'Mohács', code: '1460' },
-  { name: 'Mohács-Sárhát', code: '4481' },
-  { name: 'Dávod', code: '448' },
-  { name: 'Hercegszántó', code: '1450' },
-  { name: 'Nagybaracska', code: '4479' },
-  { name: 'Szeremle', code: '132042' },
-  { name: 'Alsónyék', code: '662' },
-  { name: 'Érsekcsanád', code: '1426' },
-  { name: 'Decs', code: '658' },
-  { name: 'Szekszárd-Borrév', code: '656' },
-  { name: 'Őcsény', code: '653' },
-  { name: 'Báta', code: '660' }
-];
+const PHP_BASE_URL = 'https://www.vizugy.hu/talajvizkut_grafikon/index.php';
+const PHP_TIMEOUT_MS = 30000;
+const REST_BATCH_SIZE = 6; // wells per REST time-series request (keeps responses small)
+const CRON_LOOKBACK_DAYS = 7;
+const BACKFILL_LOOKBACK_DAYS = 400;
 
-const API_TIMEOUT_MS = 30000; // 30 seconds per well (much faster than vizadat.hu)
-const BASE_URL = 'https://www.vizugy.hu/talajvizkut_grafikon/index.php';
+interface WellRow {
+  id: string;
+  well_code: string;
+  well_name: string;
+}
 
-interface WellConfig {
-  name: string;
-  code: string;
+interface Reading {
+  /** UTC ISO timestamp. */
+  timestamp: string;
+  /** Stored value: depth below reference in meters, negative (matches legacy convention). */
+  waterLevelMeters: number;
 }
 
 interface ProcessResult {
   wellName: string;
-  status: 'fetched' | 'failed' | 'skipped';
+  source: 'rest' | 'php' | 'none';
+  status: 'fetched' | 'failed' | 'empty';
   recordCount?: number;
   error?: string;
 }
 
-interface ParsedData {
-  values: number[];
-  timestamps: string[];
-  metadata: any[];
+/** REST cm value → stored meters (depth below reference, negative). */
+function cmToMeters(valueCm: number): number {
+  return -Math.abs(valueCm / 100);
 }
 
-/**
- * Fetch with timeout helper
- */
-async function fetchWithTimeout(
-  url: string,
-  timeoutMs: number
-): Promise<Response> {
+// ─── REST (primary) ────────────────────────────────────────────────────────────
+
+/** Fetch groundwater-level time series for a list of törzsszám in batches. */
+async function fetchRestReadings(
+  tszList: number[],
+  start: Date,
+  end: Date,
+): Promise<Map<number, Reading[]>> {
+  const byTsz = new Map<number, Reading[]>();
+
+  for (let i = 0; i < tszList.length; i += REST_BATCH_SIZE) {
+    const batch = tszList.slice(i, i + REST_BATCH_SIZE);
+    const series = await fetchTimeSeries(batch, start, end, DATA_TYPE.GROUNDWATER_LEVEL);
+    for (const s of series) {
+      byTsz.set(
+        s.tsz,
+        s.readings.map((r) => ({
+          timestamp: r.utcTime,
+          waterLevelMeters: cmToMeters(r.valueCm),
+        })),
+      );
+    }
+  }
+
+  return byTsz;
+}
+
+// ─── PHP (fallback) ──────────────────────────────────────────────────────────────
+
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
+  const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url, {
+    return await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
-      signal: controller.signal
+      signal: controller.signal,
     });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      throw new Error(`Request timeout after ${timeoutMs}ms`);
-    }
-    throw error;
+  } finally {
+    clearTimeout(id);
   }
 }
 
 /**
- * Parse chartView() JavaScript function call to extract data arrays
- *
- * Supports TWO formats (vizugy.hu changed API on 2026-02-01):
- * - OLD: chartView([values], [timestamps], [], [metadata])
- * - NEW: chartView("CODE", [values], [timestamps], [], [metadata])
- * Example: chartView("4576", ["597","596",...], ["2025-01-14 04:00:00",...], [], ["Sátorhely",...])
- * Note: We only extract the first two arrays (values and timestamps)
+ * Parse the legacy chartView() call.
+ *   OLD: chartView([values],[timestamps],[],[meta])
+ *   NEW: chartView("CODE",[values],[timestamps],[],[meta])
+ * Timestamps are LOCAL time ("YYYY-MM-DD HH:MM:SS…") → converted to UTC on read.
  */
-function parseChartViewData(html: string): ParsedData | null {
+function parsePhpReadings(html: string): Reading[] {
+  const pattern =
+    /chartView\s*\(\s*(?:"[^"]*"\s*,\s*)?(\[.*?\])\s*,\s*(\[.*?\])\s*,\s*\[.*?\]\s*,\s*\[.*?\]\s*\)/s;
+  const match = html.match(pattern);
+  if (!match) return [];
+
+  let values: string[];
+  let timestamps: string[];
   try {
-    // Regex to extract data arrays from chartView() call
-    // Pattern 1 (OLD): chartView( [values], [timestamps], [], [metadata] )
-    // Pattern 2 (NEW): chartView( "CODE", [values], [timestamps], [], [metadata] )
-    // The (?:"[^"]*"\s*,\s*)? part makes the string parameter optional
-    const pattern = /chartView\s*\(\s*(?:"[^"]*"\s*,\s*)?(\[.*?\])\s*,\s*(\[.*?\])\s*,\s*\[.*?\]\s*,\s*\[.*?\]\s*\)/s;
-    const match = html.match(pattern);
-
-    if (!match) {
-      console.warn('❌ Failed to match chartView() pattern in HTML');
-      return null;
-    }
-
-    // Parse first two arrays as JSON (values and timestamps)
-    const values = JSON.parse(match[1]);
-    const timestamps = JSON.parse(match[2]);
-    const metadata = []; // Not needed, metadata is in 4th array
-
-    // Convert string values to numbers (cm → meters)
-    const numericValues = values.map((v: string) => {
-      const num = parseFloat(v);
-      // Convert cm to meters (divide by 100)
-      // Negative because "depth below surface" should be negative
-      return -Math.abs(num / 100);
-    });
-
-    return {
-      values: numericValues,
-      timestamps: timestamps,
-      metadata: metadata
-    };
-
-  } catch (error) {
-    console.error('❌ Parse error:', error);
-    return null;
+    values = JSON.parse(match[1]);
+    timestamps = JSON.parse(match[2]);
+  } catch {
+    return [];
   }
+
+  const readings: Reading[] = [];
+  for (let i = 0; i < timestamps.length; i++) {
+    const num = parseFloat(values[i]);
+    if (Number.isNaN(num)) continue;
+    // Local CEST/CET → UTC. June is CEST (UTC+2); use a fixed -2h (legacy data is summer-heavy).
+    const local = new Date(timestamps[i].slice(0, 19).replace(' ', 'T') + 'Z');
+    local.setUTCHours(local.getUTCHours() - 2);
+    readings.push({ timestamp: local.toISOString(), waterLevelMeters: cmToMeters(num) });
+  }
+  return readings;
 }
 
-/**
- * Check if well already has recent data (within last 12 hours)
- * This avoids re-fetching data multiple times per day
- */
-async function hasRecentData(wellCode: string): Promise<boolean> {
-  const { data: wellData } = await supabase
-    .from('groundwater_wells')
-    .select('id')
-    .eq('well_code', wellCode)
-    .single();
-
-  if (!wellData) {
-    return false;
-  }
-
-  const twelveHoursAgo = new Date();
-  twelveHoursAgo.setHours(twelveHoursAgo.getHours() - 12);
-
-  const { data: recentData, error } = await supabase
-    .from('groundwater_data')
-    .select('id')
-    .eq('well_id', wellData.id)
-    .gte('timestamp', twelveHoursAgo.toISOString())
-    .limit(1)
-    .maybeSingle();
-
-  if (error && error.code !== 'PGRST116') {
-    console.warn(`⚠️ Cache check error for ${wellCode}:`, error.message);
-    return false;
-  }
-
-  return !!recentData;
+async function fetchPhpReadings(wellCode: string): Promise<Reading[]> {
+  const res = await fetchWithTimeout(`${PHP_BASE_URL}?torzsszam=${wellCode}`, PHP_TIMEOUT_MS);
+  if (!res.ok) throw new Error(`PHP HTTP ${res.status}`);
+  return parsePhpReadings(await res.text());
 }
 
-/**
- * Process a single well: fetch from vizugy.hu and insert into database
- */
-async function processWell(well: WellConfig): Promise<ProcessResult> {
-  try {
-    // Check if we already have recent data
-    const hasRecent = await hasRecentData(well.code);
-    if (hasRecent) {
-      console.log(`🟡 ${well.name}: skipping (has data from last 12 hours)`);
-      return {
-        wellName: well.name,
-        status: 'skipped',
-        recordCount: 0
-      };
-    }
+// ─── Persistence ─────────────────────────────────────────────────────────────────
 
-    console.log(`🔹 ${well.name}: fetching from vizugy.hu...`);
+async function persistReadings(
+  well: WellRow,
+  readings: Reading[],
+  replace: boolean,
+): Promise<void> {
+  if (replace) {
+    const { error } = await supabase.from('groundwater_data').delete().eq('well_id', well.id);
+    if (error) throw new Error(`delete failed: ${error.message}`);
+  }
 
-    // Fetch from vizugy.hu PHP endpoint
-    const url = `${BASE_URL}?torzsszam=${well.code}`;
-    const response = await fetchWithTimeout(url, API_TIMEOUT_MS);
+  const rows = readings.map((r) => ({
+    well_id: well.id,
+    water_level_meters: r.waterLevelMeters,
+    timestamp: r.timestamp,
+    created_at: new Date().toISOString(),
+  }));
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const html = await response.text();
-
-    // Parse chartView() JavaScript call
-    const parsedData = parseChartViewData(html);
-
-    if (!parsedData || parsedData.values.length === 0) {
-      console.log(`⚠️ No data parsed for ${well.name}`);
-      return {
-        wellName: well.name,
-        status: 'failed',
-        error: 'Failed to parse chartView() data'
-      };
-    }
-
-    console.log(`📊 ${well.name}: parsed ${parsedData.values.length} measurements`);
-
-    // Get well_id from database
-    const { data: wellData, error: wellError } = await supabase
-      .from('groundwater_wells')
-      .select('id')
-      .eq('well_code', well.code)
-      .single();
-
-    if (wellError || !wellData) {
-      throw new Error(`Well not found in database: ${well.name} (${well.code})`);
-    }
-
-    // Prepare observations for insertion
-    const observations = parsedData.timestamps.map((timestamp: string, index: number) => ({
-      well_id: wellData.id,
-      water_level_meters: parsedData.values[index],
-      timestamp: timestamp,
-      created_at: new Date().toISOString()
-    }));
-
-    // Insert into database (upsert to handle duplicates)
-    const { error: insertError } = await supabase
+  // Insert in chunks to stay within payload limits.
+  const CHUNK = 1000;
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const { error } = await supabase
       .from('groundwater_data')
-      .upsert(observations, {
-        onConflict: 'well_id,timestamp',
-        ignoreDuplicates: true
-      });
-
-    if (insertError) {
-      throw new Error(`Insert error: ${insertError.message}`);
-    }
-
-    console.log(`✅ ${well.name}: ${observations.length} records inserted`);
-
-    return {
-      wellName: well.name,
-      status: 'fetched',
-      recordCount: observations.length
-    };
-
-  } catch (error) {
-    console.error(`❌ Error processing ${well.name}:`, error);
-    return {
-      wellName: well.name,
-      status: 'failed',
-      error: sanitizeError(error, 'Failed to fetch well data')
-    };
+      .upsert(rows.slice(i, i + CHUNK), { onConflict: 'well_id,timestamp', ignoreDuplicates: true });
+    if (error) throw new Error(`insert failed: ${error.message}`);
   }
 }
+
+// ─── Handler ─────────────────────────────────────────────────────────────────────
 
 serve(async (req) => {
   try {
-    console.log('🌊 Starting VizUgy.hu groundwater data fetch...');
-    const startTime = Date.now();
+    const url = new URL(req.url);
+    const backfill = url.searchParams.get('backfill') === 'true';
+    const days = Number(url.searchParams.get('days')) ||
+      (backfill ? BACKFILL_LOOKBACK_DAYS : CRON_LOOKBACK_DAYS);
 
-    // Process all 15 wells in parallel (much faster than vizadat.hu sequential)
-    console.log(`🚀 Fetching data for ${WELLS.length} wells (parallel)...`);
+    const end = new Date();
+    const start = new Date(end.getTime() - days * 86_400_000);
 
-    const results = await Promise.allSettled(
-      WELLS.map(well => processWell(well))
+    console.log(`🌊 Groundwater fetch — REST-first, ${days}d window${backfill ? ' (BACKFILL/replace)' : ''}`);
+
+    const { data: wells, error: wellsError } = await supabase
+      .from('groundwater_wells')
+      .select('id, well_code, well_name');
+    if (wellsError) throw new Error(`load wells: ${wellsError.message}`);
+    if (!wells || wells.length === 0) throw new Error('no wells in groundwater_wells');
+
+    // 1. Primary: one batched REST fetch for every well.
+    const tszList = wells.map((w) => Number(w.well_code)).filter((n) => Number.isFinite(n));
+    let restByTsz = new Map<number, Reading[]>();
+    try {
+      restByTsz = await fetchRestReadings(tszList, start, end);
+    } catch (error) {
+      console.error('❌ REST batch failed, every well falls back to PHP:', (error as Error).message);
+    }
+
+    // 2. Per well: use REST if it returned data, else PHP fallback.
+    const results = await Promise.all(
+      (wells as WellRow[]).map(async (well): Promise<ProcessResult> => {
+        try {
+          const tsz = Number(well.well_code);
+          let readings = restByTsz.get(tsz) ?? [];
+          let source: ProcessResult['source'] = readings.length > 0 ? 'rest' : 'none';
+
+          if (readings.length === 0) {
+            try {
+              readings = await fetchPhpReadings(well.well_code);
+              if (readings.length > 0) source = 'php';
+            } catch (phpError) {
+              console.warn(`⚠️ PHP fallback failed for ${well.well_name}:`, (phpError as Error).message);
+            }
+          }
+
+          if (readings.length === 0) {
+            return { wellName: well.well_name, source: 'none', status: 'empty', recordCount: 0 };
+          }
+
+          await persistReadings(well, readings, backfill);
+          console.log(`✅ ${well.well_name}: ${readings.length} via ${source}${backfill ? ' (replaced)' : ''}`);
+          return { wellName: well.well_name, source, status: 'fetched', recordCount: readings.length };
+        } catch (error) {
+          console.error(`❌ ${well.well_name}:`, (error as Error).message);
+          return {
+            wellName: well.well_name,
+            source: 'none',
+            status: 'failed',
+            error: sanitizeError(error, 'Failed to process well'),
+          };
+        }
+      }),
     );
-
-    // Convert settled promises to results
-    const processResults: ProcessResult[] = results.map((result, index) => {
-      if (result.status === 'fulfilled') {
-        return result.value;
-      } else {
-        return {
-          wellName: WELLS[index].name,
-          status: 'failed' as const,
-          error: result.reason?.message || 'Unknown error'
-        };
-      }
-    });
-
-    // Calculate summary
-    const successCount = processResults.filter(r => r.status === 'fetched').length;
-    const failCount = processResults.filter(r => r.status === 'failed').length;
-    const skipCount = processResults.filter(r => r.status === 'skipped').length;
-    const totalRecords = processResults
-      .filter(r => r.status === 'fetched')
-      .reduce((sum, r) => sum + (r.recordCount || 0), 0);
-
-    const errors = processResults
-      .filter(r => r.status === 'failed' && r.error)
-      .map(r => `${r.wellName}: ${r.error}`);
-
-    const totalTime = Date.now() - startTime;
 
     const summary = {
       status: 'completed',
-      source: 'vizugy.hu (chartView PHP endpoint)',
+      mode: backfill ? 'backfill' : 'cron',
+      window_days: days,
+      wells_total: wells.length,
+      wells_rest: results.filter((r) => r.source === 'rest').length,
+      wells_php: results.filter((r) => r.source === 'php').length,
+      wells_empty: results.filter((r) => r.status === 'empty').length,
+      wells_failed: results.filter((r) => r.status === 'failed').length,
+      records_total: results.reduce((s, r) => s + (r.recordCount || 0), 0),
       timestamp: new Date().toISOString(),
-      execution_time_ms: totalTime,
-      wells_total: WELLS.length,
-      wells_fetched: successCount,
-      wells_skipped: skipCount,
-      wells_failed: failCount,
-      total_records_inserted: totalRecords,
-      errors: errors.length > 0 ? errors : undefined
     };
+    console.log('📊 Summary:', summary);
 
-    console.log('📊 Groundwater fetch summary:', summary);
-    console.log(`⏱️  Total execution time: ${totalTime}ms`);
-
-    return new Response(
-      JSON.stringify(summary, null, 2),
-      {
-        headers: { 'Content-Type': 'application/json' },
-        status: failCount === WELLS.length ? 500 : 200
-      }
-    );
-
+    const allFailed = results.every((r) => r.status === 'failed');
+    return new Response(JSON.stringify(summary, null, 2), {
+      headers: { 'Content-Type': 'application/json' },
+      status: allFailed ? 500 : 200,
+    });
   } catch (error) {
-    console.error('💥 Fatal error:', error);
+    console.error('💥 Fatal:', error);
     return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: sanitizeError(error, 'Failed to process groundwater data')
-      }),
-      {
-        headers: { 'Content-Type': 'application/json' },
-        status: 500
-      }
+      JSON.stringify({ error: sanitizeError(error, 'Failed to process groundwater data') }),
+      { headers: { 'Content-Type': 'application/json' }, status: 500 },
     );
   }
 });

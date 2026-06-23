@@ -23,11 +23,13 @@ import { ForecastDataTable } from './ForecastDataTable';
 import { WaterBodiesTable } from './WaterBodiesTable';
 import { useStations } from '../../hooks/useStations';
 import { useWaterLevelData } from '../../hooks/useWaterLevelData';
+import { useRegion } from '../../contexts/RegionContext';
 import type { DataSource } from '../../types';
 
 export const WaterLevelModule: React.FC = () => {
-  // Fetch all stations from Supabase
-  const { stations, isLoading: stationsLoading, error: stationsError } = useStations();
+  // Region-filtered stations (Duna: 3, Dráva: 2 — the count is dynamic everywhere)
+  const { region } = useRegion();
+  const { stations, isLoading: stationsLoading, error: stationsError } = useStations(region);
 
   const [selectedStation, setSelectedStation] = useState<string | null>(null);
 
@@ -207,7 +209,7 @@ export const WaterLevelModule: React.FC = () => {
       <div className="mb-6">
         <h2 className="section-title mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>5 Napos Előrejelzés</h2>
         <p className="section-subtitle mb-4" style={{ color: 'var(--text-tertiary)' }}>
-          Nagybajcs, Baja, Mohács - vízállás előrejelzés
+          {stations.map(s => s.name).join(', ')} - vízállás előrejelzés
         </p>
 
         {/* Forecast Chart */}
@@ -219,14 +221,16 @@ export const WaterLevelModule: React.FC = () => {
         <ForecastDataTable stations={stations} />
       </div>
 
-      {/* Water Bodies 3-Day Summary */}
-      <div className="mb-6">
-        <h2 className="section-title mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Víztestek Napi Vízállása</h2>
-        <p className="section-subtitle mb-4" style={{ color: 'var(--text-tertiary)' }}>
-          Kadia, FTCS (Karapancsa), Belső-Béda - 3 napos összegzés
-        </p>
-        <WaterBodiesTable />
-      </div>
+      {/* Water Bodies 3-Day Summary — Duna-specific monitoring points (no Dráva equivalent) */}
+      {region !== 'drava' && (
+        <div className="mb-6">
+          <h2 className="section-title mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Víztestek Napi Vízállása</h2>
+          <p className="section-subtitle mb-4" style={{ color: 'var(--text-tertiary)' }}>
+            Kadia, FTCS (Karapancsa), Belső-Béda - 3 napos összegzés
+          </p>
+          <WaterBodiesTable />
+        </div>
+      )}
 
       {/* Footer with data source */}
       <Footer dataSources={dataSources} />

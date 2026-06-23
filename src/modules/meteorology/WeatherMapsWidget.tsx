@@ -38,6 +38,7 @@ import { CloudRain, Globe2, Wind, Thermometer, Play, Pause } from 'lucide-react'
 import { EmptyState } from '../../components/UI/EmptyState';
 import { MapPin } from 'lucide-react';
 import type { City } from '../../types';
+import { useRegion } from '../../contexts/RegionContext';
 import bordersData from '../../data/centralEuropeBorders.json';
 
 // ---------------------------------------------------------------------------
@@ -56,6 +57,8 @@ const defaultIcon = leafletIcon({
 
 // Default map view — centered on southern Hungary (Pécs–Baja–Mohács triangle)
 const DEFAULT_MAP_CENTER: [number, number] = [46.17, 18.8];
+// Dráva region default view (Barcs–Vízvár–Őrtilos corridor)
+const DRAVA_MAP_CENTER: [number, number] = [46.1, 17.2];
 const DEFAULT_MAP_ZOOM = 9;
 
 
@@ -365,6 +368,9 @@ interface WeatherMapsWidgetProps {
 }
 
 export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) => {
+  const { region } = useRegion();
+  // Region-dependent default map view (the city marker still sits on the city itself).
+  const regionCenter = region === 'drava' ? DRAVA_MAP_CENTER : DEFAULT_MAP_CENTER;
   const windPoints = useWindMapData();
   const tempPoints = useTempMapData();
   const [mode, setMode] = useState<MapMode>('radar');
@@ -478,7 +484,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
       <div className="relative w-full h-64 sm:h-[520px] overflow-hidden bg-white rounded-lg shadow-sm border-2 border-gray-200">
         <MapContainer
           key={city.id}
-          center={DEFAULT_MAP_CENTER}
+          center={regionCenter}
           zoom={DEFAULT_MAP_ZOOM}
           className="h-full w-full rounded-lg"
           scrollWheelZoom={false}

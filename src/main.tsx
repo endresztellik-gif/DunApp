@@ -5,6 +5,7 @@ import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 import App from './App.tsx'
 import { SvgSprite } from './components/SvgSprite.tsx'
+import { RegionProvider } from './contexts/RegionContext.tsx'
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -48,7 +49,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <SvgSprite />
     <QueryClientProvider client={queryClient}>
-      <App />
+      <RegionProvider>
+        <App />
+      </RegionProvider>
     </QueryClientProvider>
   </StrictMode>
 )

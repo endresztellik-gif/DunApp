@@ -24,9 +24,10 @@ interface UseWaterLevelDataReturn {
 }
 
 /**
- * Fetch the latest water level data for a station
+ * Fetch the latest water level data for a station.
+ * Exported so a dynamic list of stations can be queried via React Query `useQueries`.
  */
-async function fetchWaterLevelData(stationId: string) {
+export async function fetchWaterLevelData(stationId: string) {
   // Get station data
   const { data: stationData, error: stationError } = await supabase
     .from('water_level_stations')
