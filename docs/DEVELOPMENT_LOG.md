@@ -3,8 +3,42 @@
 > **Cél:** Az összes fejlesztési döntés, hotfix, architektúrális választás és tanulság egy helyen.
 > Minden jövőbeli fejlesztés előtt érdemes átolvasni.
 
-**Utolsó frissítés:** 2026-06-23
+**Utolsó frissítés:** 2026-06-24
 **Projekt verzió:** 3.3.0
+
+---
+
+## 2026-06-24 — Duna / Dráva régió-kiterjesztés: PROD GO-LIVE
+
+A `feat/drava-region` ág mergelve `main`-be (PR #1) → auto-deploy. A Dráva-oldal élesedett:
+régióválasztó, Barcs/Őrtilos/Vízvár meteorológia, Őrtilos/Barcs vízállás, 9 somogyi talajvízkút.
+
+**Végrehajtott go-live lépések (közös prod Supabase `zpwoicpajmvbtmtumsah`):**
+1. `027` migráció alkalmazva — **`supabase db query --linked`** módszerrel (lásd infra-megjegyzés).
+   Verifikálva: Dráva 3 város / 2 állomás / 9 kút, mind `is_active/enabled=false` (prod-safe seed).
+2. Edge Functions deploy `--use-api`-val (Docker nélkül): `fetch-water-level`, `fetch-meteorology`,
+   `fetch-groundwater-vizugy`. Invoke-teszt: vízállás 5/5, meteo 8/8.
+3. Groundwater **REST-backfill** (`?backfill=true`): 24 kút (23 REST / 1 PHP), 0 empty / 0 fail,
+   43 241 rekord. Egységes REST-datum (nincs varrat); Duna kutanként ~0,4–0,9 m konstans eltolás.
+4. UI-fix: `DroughtMapsWidget` dupla jelmagyarázat megszüntetve (overlay törölve, térkép alatti marad).
+
+**Infra-megjegyzés (fontos jövőre):** a Supabase **MCP nem éri el** ezt a projektet (más org); a CLI
+`db push` **használhatatlan** (törött remote migrációs history: árva `20260412161023`, 005–026 nincs
+trackelve, dup 012/015 fájl). Prod SQL futtatása: **`supabase db query --linked`**. Docker nem fut →
+`functions deploy --use-api`. A CLI-ben **nincs** `functions invoke` → HTTP-n hívd a `.env` anon kulcsával.
+
+**↩️ VISSZAÁLLÍTÁS (ha a go-live gondot okoz):**
+- **Frontend:** `pre-drava-golive` tag = a merge előtti `main` (`88cf0bb`). Visszaállás:
+  `git checkout main && git reset --hard pre-drava-golive && git push --force-with-lease origin main`
+  → auto-deploy a régi állapotra. (A `feat/drava-region` ág megmarad GitHubon.)
+- **Talajvíz-adat:** backup tábla **`groundwater_data_backup_20260623`** (25 681 sor). Visszaállás:
+  `TRUNCATE groundwater_data; INSERT INTO groundwater_data SELECT * FROM groundwater_data_backup_20260623;`
+  (a 027 additív oszlopai maradhatnak). A backup eldobható, ha minden stabil.
+- A Dráva flagek **false**-ok maradtak; a frontend a hookok `drava`-kivételein át mutatja a Drávát.
+
+**Hátralévő (külön fast-follow, NEM sürgős):** élesítő migráció (Dráva flag-flip `true`) + a hookok
+`drava`-kivételeinek (`// TODO go-live`) eltávolítása. ⚠️ Csak ebben a sorrendben (a flag-flip a
+régió-tudatos frontend élesedése UTÁN biztonságos).
 
 ---
 
