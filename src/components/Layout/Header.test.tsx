@@ -3,10 +3,15 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render as rtlRender, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Header } from './Header';
+import { RegionProvider } from '../../contexts/RegionContext';
+import type { ReactElement } from 'react';
 import type { ModuleType } from '../../types';
+
+// Header reads the Duna/Dráva region from context — wrap every render in the provider.
+const render = (ui: ReactElement) => rtlRender(<RegionProvider>{ui}</RegionProvider>);
 
 const defaultProps = {
   currentModule: 'meteorology' as ModuleType,

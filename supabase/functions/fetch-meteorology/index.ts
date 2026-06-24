@@ -41,11 +41,16 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 // Cities to fetch weather for
 const CITIES = [
+  // Duna (region='duna')
   { name: 'Szekszárd', lat: 46.3481, lon: 18.7097 },
   { name: 'Baja', lat: 46.1811, lon: 18.9550 },
   { name: 'Dunaszekcső', lat: 46.0833, lon: 18.7667 },
   { name: 'Mohács', lat: 45.9928, lon: 18.6836 },
   { name: 'Bátaapáti', lat: 46.1900, lon: 18.5700 },
+  // Dráva (region='drava') — coordinates match migration 027 seed
+  { name: 'Barcs', lat: 45.9600, lon: 17.4600 },
+  { name: 'Őrtilos', lat: 46.2800, lon: 16.8600 },
+  { name: 'Vízvár', lat: 46.1100, lon: 17.2000 },
 ];
 
 // Retry configuration

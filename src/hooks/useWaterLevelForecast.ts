@@ -23,9 +23,11 @@ interface UseWaterLevelForecastReturn {
 }
 
 /**
- * Fetch the latest 5-day forecast for a station
+ * Fetch the latest 5-day forecast for a station.
+ * Exported so a dynamic list of stations can be queried via React Query `useQueries`
+ * (hook rules forbid calling `useWaterLevelForecast` in a loop).
  */
-async function fetchWaterLevelForecast(stationId: string): Promise<WaterLevelForecast[]> {
+export async function fetchWaterLevelForecast(stationId: string): Promise<WaterLevelForecast[]> {
   // Get the latest issued forecast (newest issued_at)
   const { data: latestIssue, error: issueError } = await supabase
     .from('water_level_forecasts')

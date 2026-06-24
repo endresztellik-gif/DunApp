@@ -20,6 +20,7 @@ import { ErrorBoundary } from './components/UI/ErrorBoundary';
 import { useCities } from './hooks/useCities';
 import { useDroughtLocations } from './hooks/useDroughtLocations';
 import { useGroundwaterWells } from './hooks/useGroundwaterWells';
+import { useRegion } from './contexts/RegionContext';
 import { supabase } from './lib/supabase';
 
 // Lazy load modules for better initial load performance
@@ -65,10 +66,13 @@ function App() {
     localStorage.setItem('dunapp-theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
-  // Fetch real data from Supabase
-  const { cities, isLoading: citiesLoading, error: citiesError } = useCities();
+  // Active Duna / Dráva region (filters cities + wells; drought locations stay shared)
+  const { region } = useRegion();
+
+  // Fetch real data from Supabase (region-filtered)
+  const { cities, isLoading: citiesLoading, error: citiesError } = useCities(region);
   const { locations: droughtLocations, isLoading: locationsLoading, error: locationsError } = useDroughtLocations();
-  const { wells: groundwaterWells, isLoading: wellsLoading, error: wellsError } = useGroundwaterWells();
+  const { wells: groundwaterWells, isLoading: wellsLoading, error: wellsError } = useGroundwaterWells(region);
 
   // Check water level alert when app loads (user request)
   useEffect(() => {
@@ -134,11 +138,11 @@ function App() {
                   <p className="text-sm">Nem sikerült betölteni a városlistát. Kérjük, töltse újra az oldalt.</p>
                 </div>
               ) : (
-                <MeteorologyModule cities={cities} initialCity={cities[0]} />
+                <MeteorologyModule key={region} cities={cities} initialCity={cities[0]} />
               )
             )}
             {activeModule === 'water-level' && (
-              <WaterLevelModule />
+              <WaterLevelModule key={region} />
             )}
             {activeModule === 'drought' && (
               (locationsLoading || wellsLoading) ? (
@@ -150,6 +154,7 @@ function App() {
                 </div>
               ) : droughtLocations.length > 0 && groundwaterWells.length > 0 ? (
                 <DroughtModule
+                  key={region}
                   locations={droughtLocations}
                   wells={groundwaterWells}
                   initialLocation={droughtLocations[0]}

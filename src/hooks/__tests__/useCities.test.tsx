@@ -387,7 +387,8 @@ describe('useCities - React Query Configuration', () => {
     renderHook(() => useCities(), { wrapper });
 
     await waitFor(() => {
-      const queryState = queryClient.getQueryState(['cities']);
+      // Query key includes the region segment ('all' when no region is passed)
+      const queryState = queryClient.getQueryState(['cities', 'all']);
       expect(queryState).toBeDefined();
     });
   });

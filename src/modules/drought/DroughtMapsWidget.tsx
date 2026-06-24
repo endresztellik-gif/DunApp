@@ -323,7 +323,7 @@ export const DroughtMapsWidget: React.FC = () => {
         </div>
       </div>
 
-      {/* Map Container with Legend Overlay */}
+      {/* Map Container */}
       <div className="relative w-full h-96 rounded-lg overflow-hidden">
         {/* Loading Overlay */}
         {state.loading && (
@@ -344,15 +344,9 @@ export const DroughtMapsWidget: React.FC = () => {
         {/* Leaflet Map */}
         <div ref={ref} className="w-full h-full rounded-lg" style={{ position: 'relative', zIndex: 1 }} />
 
-        {/* Legend Overlay (inside map container) - HIGH Z-INDEX */}
-        {legend && !state.loading && !state.error && (
-          <div className="map-legend" style={{ zIndex: 9999 }}>
-            {legend}
-          </div>
-        )}
       </div>
 
-      {/* Legend Below Map (fallback if overlay doesn't show) */}
+      {/* Legend (a térkép alatt) */}
       {legend && !state.loading && !state.error && (
         <div className="mt-3 px-3 py-2.5" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
           {legend}

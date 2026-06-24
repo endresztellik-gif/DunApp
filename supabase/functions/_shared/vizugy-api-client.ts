@@ -10,13 +10,17 @@
  *               → returns { access_token: string }  (JWT, ~15 min TTL)
  *   Stations: GET  https://vmservice.vizugy.hu/vraquery/Vra/InternetVmo/{type}/false
  *               → type 11 = surface water stations (~1190 stations)
+ *               → type 12 = groundwater wells (talajvízkutak, ~2030 wells)
+ *                 (verified 2026-06-23: all 15 known DunApp wells are in type 12)
  *   Data:     POST https://vmservice.vizugy.hu/vraquery/TS/TsShortList
  *               → hourly time series for any station list + date range
  *
  * Data type codes (adatFajtaKod):
  *   68  = Felszíni vízállás (cm)
+ *   69  = Talajvízállás (cm)            ← groundwater level
  *   87  = Felszíni vízhozam (m³/s)
  *   85  = Vízhő a vízfelszín közelében (°C)
+ *  147  = Talajvíz-hőmérséklet (°C)     ← groundwater temperature
  *
  * TSZ IDs for DunApp stations (from PecApp hydroinfo_stations mapping):
  *   Nagybajcs   TSZ 3      (hydroinfo 442502)
@@ -62,9 +66,29 @@ export interface StationTimeSeries {
 
 export const DATA_TYPE = {
   WATER_LEVEL: 68,
+  GROUNDWATER_LEVEL: 69,
   FLOW_RATE: 87,
   WATER_TEMP: 85,
+  GROUNDWATER_TEMP: 147,
 } as const;
+
+/** InternetVmo station-list type numbers. */
+export const STATION_LIST = {
+  SURFACE_WATER: 11,
+  GROUNDWATER: 12,
+} as const;
+
+export interface GroundwaterStation {
+  tsz: number;
+  name: string;
+  town: string;
+  lat: number;
+  lon: number;
+  /** Terrain elevation at well head (mBf), if provided. */
+  terrainElevation?: number;
+  /** Water directorate id (Vizig). */
+  directorate?: number;
+}
 
 // ─── Token cache (process-level, reused within one function invocation) ───────
 
@@ -129,6 +153,36 @@ export async function fetchStations(): Promise<VizugyStation[]> {
     alertLevel: s['KF1'] as number | undefined,
     dangerLevel: s['KF2'] as number | undefined,
     majorLevel: s['KF3'] as number | undefined,
+  }));
+}
+
+/**
+ * Fetch the groundwater-well station list (InternetVmo type 12).
+ *
+ * The well törzsszám (`tsz`) is the same identifier DunApp stores as `well_code`.
+ * Time series for a well is fetched via `fetchTimeSeries(tszList, …, DATA_TYPE.GROUNDWATER_LEVEL)`.
+ */
+export async function fetchGroundwaterStations(): Promise<GroundwaterStation[]> {
+  const token = await getToken();
+  const res = await fetch(`${API_BASE}/Vra/InternetVmo/${STATION_LIST.GROUNDWATER}/false`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Origin: ORIGIN_HEADER,
+      'User-Agent': USER_AGENT,
+    },
+  });
+
+  if (!res.ok) throw new Error(`fetchGroundwaterStations: ${res.status}`);
+
+  const raw = await res.json();
+  return raw.map((s: Record<string, unknown>) => ({
+    tsz: s['Tsz'] as number,
+    name: s['Nev'] as string,
+    town: (s['Telepules'] as string) ?? '',
+    lat: s['Lat'] as number,
+    lon: s['Lon'] as number,
+    terrainElevation: s['Npt'] as number | undefined,
+    directorate: s['Vizig'] as number | undefined,
   }));
 }
 

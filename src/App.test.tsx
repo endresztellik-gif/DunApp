@@ -14,6 +14,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import App from './App';
 import * as mockData from './data/mockData';
+import { RegionProvider } from './contexts/RegionContext';
 import type { ReactNode } from 'react';
 
 // Mock useCities hook to return mock cities
@@ -43,12 +44,16 @@ let queryClient: QueryClient;
 
 function renderWithQueryClient(ui: ReactNode) {
   return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <RegionProvider>{ui}</RegionProvider>
+    </QueryClientProvider>
   );
 }
 
 describe('App Component', () => {
   beforeEach(() => {
+    // App reads the region from context; default to Duna so the home screen shows modules.
+    localStorage.setItem('dunapp-region', 'duna');
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {

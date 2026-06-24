@@ -19,18 +19,20 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { useQueries } from '@tanstack/react-query';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { TrendingUp } from 'lucide-react';
-import { useWaterLevelForecast } from '../../hooks/useWaterLevelForecast';
+import { fetchWaterLevelForecast } from '../../hooks/useWaterLevelForecast';
 import type { WaterLevelStation, WaterLevelForecast } from '../../types';
 
 interface MultiStationChartProps {
   stations: WaterLevelStation[];
 }
 
-// Station colors - design system values
+// Station colors - design system values (cycled if there are more stations than colors)
 const STATION_COLORS = ['#22a6b3', '#d4851c', '#1a5f7a']; // dun-wave-400, dun-amber-400, dun-current-600
+const colorFor = (index: number) => STATION_COLORS[index % STATION_COLORS.length];
 
 /**
  * Aggregate forecast data from multiple stations into chart format
@@ -82,23 +84,28 @@ const aggregateChartData = (
 };
 
 export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }) => {
-  // Fetch forecasts for all 3 stations
-  const forecast1 = useWaterLevelForecast(stations[0]?.id || null);
-  const forecast2 = useWaterLevelForecast(stations[1]?.id || null);
-  const forecast3 = useWaterLevelForecast(stations[2]?.id || null);
+  // Fetch forecasts for any number of stations (Duna: 3, Dráva: 2 …) via useQueries,
+  // since hook rules forbid calling useWaterLevelForecast in a loop.
+  const forecastQueries = useQueries({
+    queries: stations.map((station) => ({
+      queryKey: ['waterLevelForecast', station.id],
+      queryFn: () => fetchWaterLevelForecast(station.id),
+      enabled: !!station.id,
+      staleTime: 60 * 60 * 1000,
+      refetchInterval: 60 * 60 * 1000,
+      retry: 3,
+    })),
+  });
 
-  // Check loading states
-  const isLoading = forecast1.isLoading || forecast2.isLoading || forecast3.isLoading;
+  const isLoading = forecastQueries.some((q) => q.isLoading);
+  const hasError = forecastQueries.some((q) => q.error);
 
-  // Check errors
-  const hasError = forecast1.error || forecast2.error || forecast3.error;
-
-  if (stations.length !== 3) {
+  if (stations.length === 0) {
     return (
       <EmptyState
         icon={TrendingUp}
         message="Nincs összehasonlítási adat"
-        description="3 állomás adatai szükségesek a grafikon megjelenítéséhez"
+        description="Legalább egy állomás adatai szükségesek a grafikon megjelenítéséhez"
       />
     );
   }
@@ -120,12 +127,11 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
     );
   }
 
-  // Aggregate forecast data
-  const aggregatedForecasts = [
-    { stationName: stations[0].name, forecasts: forecast1.forecasts },
-    { stationName: stations[1].name, forecasts: forecast2.forecasts },
-    { stationName: stations[2].name, forecasts: forecast3.forecasts },
-  ];
+  // Aggregate forecast data (one entry per station, in order)
+  const aggregatedForecasts = stations.map((station, index) => ({
+    stationName: station.name,
+    forecasts: forecastQueries[index].data ?? [],
+  }));
 
   const chartData = aggregateChartData(aggregatedForecasts);
 
@@ -183,7 +189,7 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
                 <Line
                   type="monotone"
                   dataKey={`${station.name}_min`}
-                  stroke={STATION_COLORS[index]}
+                  stroke={colorFor(index)}
                   strokeWidth={1}
                   strokeDasharray="3 3"
                   dot={false}
@@ -197,7 +203,7 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
                 <Line
                   type="monotone"
                   dataKey={`${station.name}_max`}
-                  stroke={STATION_COLORS[index]}
+                  stroke={colorFor(index)}
                   strokeWidth={1}
                   strokeDasharray="3 3"
                   dot={false}
@@ -211,9 +217,9 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
                 <Line
                   type="monotone"
                   dataKey={station.name}
-                  stroke={STATION_COLORS[index]}
+                  stroke={colorFor(index)}
                   strokeWidth={2}
-                  dot={{ fill: STATION_COLORS[index], r: 5 }}
+                  dot={{ fill: colorFor(index), r: 5 }}
                   activeDot={{ r: 7 }}
                   connectNulls
                   name={station.name}
@@ -235,7 +241,7 @@ export const MultiStationChart: React.FC<MultiStationChartProps> = ({ stations }
             <div className="mb-2 flex items-center gap-2">
               <div
                 className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: STATION_COLORS[index] }}
+                style={{ backgroundColor: colorFor(index) }}
               />
               <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{station.name}</span>
             </div>

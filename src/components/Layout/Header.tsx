@@ -11,6 +11,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Sun, Moon, X, Bell, BellOff, Loader2 } from 'lucide-react';
 import { Icon } from '../Icon';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
+import { useRegion } from '../../contexts/RegionContext';
 import type { ModuleType } from '../../types';
 
 interface HeaderProps {
@@ -27,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleDark,
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const { region, setRegion } = useRegion();
   const { isSupported, permission, isSubscribed, subscribe, unsubscribe, isLoading, error } =
     usePushNotifications();
 
@@ -121,12 +123,50 @@ export const Header: React.FC<HeaderProps> = ({
               marginTop: '2px',
             }}
           >
-            Déli Duna-völgy · {today}
+            {region === 'drava' ? 'Dráva-mente' : 'Déli Duna-völgy'} · {today}
           </span>
         </button>
 
-        {/* Jobb oldal: dark mode toggle + értesítés */}
+        {/* Jobb oldal: régió-váltó + dark mode toggle + értesítés */}
         <div className="flex items-center gap-2">
+          {/* Régió-váltó pill (Duna | Dráva) */}
+          <div
+            role="group"
+            aria-label="Régió választó"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '2px',
+              borderRadius: 'var(--radius-full)',
+              border: '0.5px solid rgba(126,207,199,.25)',
+              background: 'rgba(34,166,179,.10)',
+            }}
+          >
+            {(['duna', 'drava'] as const).map((r) => {
+              const active = region === r;
+              return (
+                <button
+                  key={r}
+                  onClick={() => setRegion(r)}
+                  aria-pressed={active}
+                  style={{
+                    padding: '3px 10px',
+                    borderRadius: 'var(--radius-full)',
+                    border: 'none',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'var(--transition-fast)',
+                    background: active ? 'rgba(34,166,179,.30)' : 'transparent',
+                    color: active ? 'var(--color-dun-ripple-200)' : 'rgba(255,255,255,.45)',
+                  }}
+                >
+                  {r === 'duna' ? 'Duna' : 'Dráva'}
+                </button>
+              );
+            })}
+          </div>
+
           {/* Dark mode toggle */}
           <button
             onClick={onToggleDark}
