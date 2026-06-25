@@ -4,7 +4,7 @@
 > Minden jövőbeli fejlesztés előtt érdemes átolvasni.
 
 **Utolsó frissítés:** 2026-06-24
-**Projekt verzió:** 3.3.0
+**Projekt verzió:** 4.0.0
 
 ---
 
