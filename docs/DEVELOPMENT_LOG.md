@@ -3,8 +3,38 @@
 > **Cél:** Az összes fejlesztési döntés, hotfix, architektúrális választás és tanulság egy helyen.
 > Minden jövőbeli fejlesztés előtt érdemes átolvasni.
 
-**Utolsó frissítés:** 2026-06-24
+**Utolsó frissítés:** 2026-06-25
 **Projekt verzió:** 4.0.0
+
+---
+
+## 2026-06-25 — Dráva fast-follow: legend olvashatóság + aktiválás + v4.0
+
+A go-live utáni rendrakás, egy preview-ban észrevett UI-bug és verzióemelés. Két PR (#2 cleanup, #3 verzió).
+
+**Dupla jelmagyarázat + olvashatóság (UI-fix, PR #2) — `DroughtMapsWidget` + `components.css`:**
+Előbb a `renderMap` KÉT helyen renderelte a jelmagyarázatot (térképre úszó overlay + térkép-alatti blokk) →
+az overlay törölve, csak a térkép-alatti maradt (nagyobb hasznos képterület, user-döntés). Majd kiderült,
+hogy a megmaradt doboz szövege hardcode-olt `text-gray-900`/`text-gray-700` → **dark mode**-ban olvashatatlan
+a sötét `--bg-surface`-en. Javítás: téma-tudatos szöveg (`var(--text-primary)` cím, `var(--text-secondary)`
+tételek), scope-olt **`.map-legend-below`** osztályon — a megosztott `.map-legend-item`-et NEM bántja, így a
+`GroundwaterMap` fehér on-map overlay-e érintetlen. Mindkét aszály-térképre (HUGEO + Aszályindex) érvényes.
+
+**Dráva aktiválás (PR #2, migráció `028`):** a 027-ben prod-safe `is_active/enabled=false`-szal seedelt Dráva
+sorok átbillentve `true`-ra. A flag-flipet a **Supabase Dashboard SQL Editorban** futtattuk — az MCP/CLI
+`db query --linked` írást a prod-write guard (auto classifier) **blokkolta**, ezért manuálisan. Verifikálva:
+Dráva 3 város / 2 állomás / 9 kút aktív; Duna érintetlen (5 város).
+
+**Hook-cleanup (PR #2):** a `useCities`/`useStations`/`useGroundwaterWells` `drava` `// TODO go-live`
+flag-átlépő kivételei eltávolítva → **uniform `is_active=true` (+`enabled=true`) szűrés** minden régióra.
+A Dráva azért látszik, mert a flagei már `true`. A legacy no-region ág (csak tesztek) változatlan.
+`useCities` teszt 11/11, `tsc` zöld.
+
+**Verzió v4.0 (PR #3):** a megjelenített/jelzett verzió mindenhol 4.0-ra — HomePage `v 4.0`, `package.json`
+4.0.0, CLAUDE.md / DEVELOPMENT_LOG / README 4.0.0. Historikus changelog-bejegyzések érintetlenek.
+
+**Deploy:** mind mergelve `main`-be, `origin/main`=`7169c86`, prod HTTP 200. Restore-pontok továbbra is állnak:
+git tag `pre-drava-golive` (88cf0bb) + DB `groundwater_data_backup_20260623` (eldobható, ha stabil).
 
 ---
 
