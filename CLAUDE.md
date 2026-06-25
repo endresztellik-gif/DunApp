@@ -4,7 +4,7 @@
 > Claude Code: Read this file FIRST before every task.
 
 **Last updated:** 2026-03-03
-**Version:** 3.0.0
+**Version:** 4.0.0
 **Project status:** Production Ready (All modules operational, all cron jobs active)
 
 ## WeatherMapsWidget v3.0 — kritikus konfiguráció

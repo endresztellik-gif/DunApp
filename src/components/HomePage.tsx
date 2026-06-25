@@ -118,7 +118,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onModuleSelect }) => {
           DunApp
         </h1>
         <p className="dun-meta" style={{ marginBottom: 'var(--space-3)' }}>
-          v 3.2
+          v 4.0
         </p>
         <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-lg)' }}>
           Meteorológiai és Vízügyi Monitoring
