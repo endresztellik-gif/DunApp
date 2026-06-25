@@ -24,18 +24,13 @@ const RIVER_BY_REGION: Record<Region, string> = { duna: 'Duna', drava: 'Dráva' 
  * Fetch water level monitoring stations from Supabase, optionally filtered by region.
  *
  * Region maps to the station's river: duna→'Duna', drava→'Dráva'.
- * - region='drava' skips the is_active filter — Dráva stations ship is_active=false
- *   until go-live, yet the develop build must surface them.
- *   (TODO go-live: drop this exception once Dráva stations are is_active=true.)
+ * Always filters is_active=true. (Dráva stations are is_active=true since migration 028.)
  */
 async function fetchStations(region?: Region | null): Promise<WaterLevelStation[]> {
-  let query = supabase.from('water_level_stations').select('*');
+  let query = supabase.from('water_level_stations').select('*').eq('is_active', true);
 
   if (region) {
     query = query.eq('river', RIVER_BY_REGION[region]);
-    if (region === 'duna') query = query.eq('is_active', true);
-  } else {
-    query = query.eq('is_active', true);
   }
 
   const { data, error } = await query.order('name');

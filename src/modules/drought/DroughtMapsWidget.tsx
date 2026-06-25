@@ -348,7 +348,7 @@ export const DroughtMapsWidget: React.FC = () => {
 
       {/* Legend (a térkép alatt) */}
       {legend && !state.loading && !state.error && (
-        <div className="mt-3 px-3 py-2.5" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
+        <div className="map-legend-below mt-3 px-3 py-2.5" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
           {legend}
         </div>
       )}

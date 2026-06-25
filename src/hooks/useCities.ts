@@ -18,20 +18,14 @@ interface UseCitiesReturn {
 /**
  * Fetch meteorology cities from Supabase, optionally filtered by region.
  *
- * - No region (legacy): only is_active=true rows (all of which are Duna in prod).
- * - region='duna': region='duna' AND is_active=true (unchanged behaviour).
- * - region='drava': region='drava' WITHOUT the is_active filter — Dráva rows ship
- *   is_active=false until the go-live migration, so the region-aware develop build
- *   must surface them. (TODO go-live: drop this exception once Dráva is_active=true.)
+ * Always filters is_active=true; adds the region filter when a region is given.
+ * (Dráva rows are is_active=true since migration 028 — no special-casing needed.)
  */
 async function fetchCities(region?: Region | null): Promise<City[]> {
-  let query = supabase.from('meteorology_cities').select('*');
+  let query = supabase.from('meteorology_cities').select('*').eq('is_active', true);
 
   if (region) {
     query = query.eq('region', region);
-    if (region === 'duna') query = query.eq('is_active', true);
-  } else {
-    query = query.eq('is_active', true);
   }
 
   const { data, error } = await query.order('name');
