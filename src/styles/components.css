@@ -208,6 +208,17 @@
     flex-shrink: 0; /* Prevent shrinking */
   }
 
+  /* Below-map legend (DroughtMapsWidget): theme-aware text so the title/labels stay
+     readable on the dark --bg-surface in dark mode. Scoped here (not on the shared
+     .map-legend-item) to avoid breaking the white on-map overlay in GroundwaterMap. */
+  .map-legend-below h4 {
+    color: var(--text-primary);
+  }
+
+  .map-legend-below .map-legend-item {
+    color: var(--text-secondary);
+  }
+
   /* ========================================
      LOADING STATES
      ======================================== */

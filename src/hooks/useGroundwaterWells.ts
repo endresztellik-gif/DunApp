@@ -20,20 +20,14 @@ interface UseGroundwaterWellsReturn {
 /**
  * Fetch groundwater wells from Supabase, optionally filtered by region.
  *
- * - No region (legacy): is_active=true AND enabled=true (the 10 visible Duna wells).
- * - region='duna': region='duna' AND is_active=true AND enabled=true (unchanged).
- * - region='drava': region='drava' WITHOUT is_active/enabled filters — Dráva wells
- *   ship enabled=false until go-live, yet the develop build must surface them.
- *   (TODO go-live: drop this exception once Dráva wells are enabled=true.)
+ * Always filters is_active=true AND enabled=true; adds the region filter when given.
+ * (Dráva wells are enabled=true since migration 028 — no special-casing needed.)
  */
 async function fetchGroundwaterWells(region?: Region | null): Promise<GroundwaterWell[]> {
-  let query = supabase.from('groundwater_wells').select('*');
+  let query = supabase.from('groundwater_wells').select('*').eq('is_active', true).eq('enabled', true);
 
   if (region) {
     query = query.eq('region', region);
-    if (region === 'duna') query = query.eq('is_active', true).eq('enabled', true);
-  } else {
-    query = query.eq('is_active', true).eq('enabled', true);
   }
 
   const { data, error } = await query.order('well_name');
