@@ -243,7 +243,7 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
       {/* Talajvízkút Monitoring Section with Well Selector */}
       <div ref={wellSelectorRef} className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 className="section-title" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Talajvízkút Monitoring (10 kút)</h2>
+        <h2 className="section-title" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Talajvízkút Monitoring ({wells.length} kút)</h2>
         <WellSelector
           wells={wells}
           selectedWell={selectedWell}
@@ -257,6 +257,7 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
         <div className="mb-6">
           <GroundwaterChart
             well={selectedWell}
+            wells={wells}
             onWellSelect={(wellId) => {
               const found = wells.find(w => w.id === wellId);
               if (found) handleWellChange(found);

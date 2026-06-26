@@ -71,7 +71,7 @@ function App() {
 
   // Fetch real data from Supabase (region-filtered)
   const { cities, isLoading: citiesLoading, error: citiesError } = useCities(region);
-  const { locations: droughtLocations, isLoading: locationsLoading, error: locationsError } = useDroughtLocations();
+  const { locations: droughtLocations, isLoading: locationsLoading, error: locationsError } = useDroughtLocations(region);
   const { wells: groundwaterWells, isLoading: wellsLoading, error: wellsError } = useGroundwaterWells(region);
 
   // Check water level alert when app loads (user request)

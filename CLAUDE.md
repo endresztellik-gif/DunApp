@@ -3,8 +3,8 @@
 > CENTRAL REFERENCE DOCUMENT
 > Claude Code: Read this file FIRST before every task.
 
-**Last updated:** 2026-03-03
-**Version:** 4.0.0
+**Last updated:** 2026-06-26
+**Version:** 4.2.0
 **Project status:** Production Ready (All modules operational, all cron jobs active)
 
 ## WeatherMapsWidget v3.0 — kritikus konfiguráció
@@ -74,8 +74,8 @@ WARNING: MODULE-SPECIFIC SELECTORS
 - **Status:** Operational
 
 ### Drought Module
-- **Monitoring locations (5):** Katymár, Dávod, Szederkény, Sükösd, Csávoly
-- **Groundwater wells (15 total, 10 enabled):** See docs/history/HOTFIXES_2026.md for disabled wells
+- **Monitoring locations (8, region-split):** Duna (5): Katymár, Dávod, Szederkény, Sükösd, Csávoly · Dráva (3): Felsőszentmárton, Berzence, Kálmáncsa. Region-filtered via `useDroughtLocations(region)` (migration 029).
+- **Groundwater wells (24 total, region-split):** Duna 15 (10 enabled), Dráva 9 (enabled). Filtered by `useGroundwaterWells(region)`. See docs/history/HOTFIXES_2026.md for disabled wells
 - **Data sources:** aszalymonitoring.vizugy.hu (Pattern API), vizugy.hu PHP endpoint (groundwater)
 - **Edge Functions:** `fetch-drought`, `fetch-groundwater-vizugy`
 - **Cron (drought):** Daily at 06:00 UTC (`0 6 * * *`)

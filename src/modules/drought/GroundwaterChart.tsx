@@ -42,9 +42,11 @@ import type { GroundwaterWell } from '../../types';
 interface GroundwaterChartProps {
   well: GroundwaterWell;
   onWellSelect?: (wellId: string) => void;
+  /** Region-filtered wells — forwarded to the timestamp table so it shows only the current region. */
+  wells?: GroundwaterWell[];
 }
 
-export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWellSelect }) => {
+export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWellSelect, wells }) => {
   // Fetch real data from Supabase
   const { timeseriesData, isLoading, error } = useGroundwaterTimeseries(well.id);
 
@@ -279,7 +281,7 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWell
           </div>
 
           {/* Timestamp Table - Last Measurement Dates for All Wells */}
-          <GroundwaterTimestampTable onWellSelect={onWellSelect} selectedWellId={well.id} />
+          <GroundwaterTimestampTable onWellSelect={onWellSelect} selectedWellId={well.id} wells={wells} />
         </div>
       )}
     </div>

@@ -74,6 +74,29 @@ const DROUGHT_LOCATIONS = [
     lon: 19.2833,
     county: 'Bács-Kiskun',
     uuid: '16FFA799-C5E4-42EE-B08F-FA51E8720815'
+  },
+  // --- Dráva region stations (added 2026-06-26, migration 029) ---
+  // Live OVF aszálymonitoring stations; pattern API returns 7 datasets (verified).
+  {
+    name: 'Felsőszentmárton',
+    lat: 45.8553,
+    lon: 17.6997,
+    county: 'Baranya',
+    uuid: '388A6228-476B-4A13-ADF3-B8C342EA9462'
+  },
+  {
+    name: 'Berzence',
+    lat: 46.2068,
+    lon: 17.1418,
+    county: 'Somogy',
+    uuid: 'E2E327B7-9CB4-4D9A-93E7-EA490057D105'
+  },
+  {
+    name: 'Kálmáncsa',
+    lat: 46.0447,
+    lon: 17.5564,
+    county: 'Somogy',
+    uuid: '8E8A16B5-3CED-4EA3-9D97-5CA79627B752'
   }
 ];
 

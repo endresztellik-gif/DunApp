@@ -18,7 +18,9 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Maximize2, X } from 'lucide-react';
+import { useRegion } from '../../contexts/RegionContext';
+import { CollapsibleLegend } from '../../components/UI/CollapsibleLegend';
 
 // Map service URLs
 
@@ -29,9 +31,13 @@ const WMS_HUGEO = 'https://map.hugeo.hu/arcgis/services/tvz/tvz100_all/MapServer
 // Aszályindex ImageServer (CORS OK)
 const IMAGE_DROUGHT_INDEX = 'https://ovfgis2.vizugy.hu/arcgis/rest/services/Aszalymon/mosaic_hdis/ImageServer';
 
-// Map center (Hungary)
-const MAP_CENTER: [number, number] = [47.1625, 19.5033];
-const MAP_ZOOM = 7;
+// Map center / zoom — region-dependent.
+// Duna: country view (good for the southern-Duna monitoring area).
+// Dráva: focus the Dráva corridor (Felsőszentmárton–Berzence–Kálmáncsa).
+const MAP_CENTER_DUNA: [number, number] = [47.1625, 19.5033];
+const MAP_ZOOM_DUNA = 7;
+const MAP_CENTER_DRAVA: [number, number] = [46.03, 17.42];
+const MAP_ZOOM_DRAVA = 8;
 const AUTO_REFRESH_INTERVAL = 600000; // 10 minutes
 const TILE_LOAD_TIMEOUT = 8000; // 8 seconds
 
@@ -42,6 +48,10 @@ interface MapState {
 }
 
 export const DroughtMapsWidget: React.FC = () => {
+  const { region } = useRegion();
+  const mapCenter = region === 'drava' ? MAP_CENTER_DRAVA : MAP_CENTER_DUNA;
+  const mapZoom = region === 'drava' ? MAP_ZOOM_DRAVA : MAP_ZOOM_DUNA;
+
   // Map refs
   const map1Ref = useRef<HTMLDivElement>(null);
   const map2Ref = useRef<HTMLDivElement>(null);
@@ -53,8 +63,26 @@ export const DroughtMapsWidget: React.FC = () => {
   // HUGEO layer selector (0: mélység, 1: nyugalmi szint)
   const [selectedHugeoLayer, setSelectedHugeoLayer] = useState<number>(0);
 
+  // Which map (if any) is in fullscreen overlay ('hugeo' | 'drought' | null)
+  const [fullscreenKey, setFullscreenKey] = useState<string | null>(null);
+
   // Leaflet loaded flag
   const [leafletLoaded, setLeafletLoaded] = useState(false);
+
+  // Escape-to-exit + body scroll-lock while a map is fullscreen
+  useEffect(() => {
+    if (!fullscreenKey) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFullscreenKey(null);
+    };
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [fullscreenKey]);
 
   useEffect(() => {
     // Check if Leaflet and esri-leaflet are already loaded
@@ -104,8 +132,18 @@ export const DroughtMapsWidget: React.FC = () => {
     };
   }, []);
 
-  // Store map instances for layer switching
-  const map1InstanceRef = useRef<any>(null);
+  // Store map instances (keyed by map id) for invalidateSize on fullscreen toggle
+  const mapInstancesRef = useRef<Record<string, any>>({});
+
+  // After a fullscreen toggle the map container changes size — re-measure both maps.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      Object.values(mapInstancesRef.current).forEach((inst: any) => {
+        try { inst?.map?.invalidateSize(); } catch { /* map may be torn down */ }
+      });
+    }, 320);
+    return () => clearTimeout(t);
+  }, [fullscreenKey]);
 
   useEffect(() => {
     if (!leafletLoaded) return;
@@ -121,15 +159,15 @@ export const DroughtMapsWidget: React.FC = () => {
       layerParam: string,
       setState: React.Dispatch<React.SetStateAction<MapState>>,
       enablePopup: boolean = false,
-      storeInstance: boolean = false
+      mapId: string = ''
     ) => {
       if (!mapRef.current) return null;
 
       try {
         // Create map
         const map = L.map(mapRef.current, {
-          center: MAP_CENTER,
-          zoom: MAP_ZOOM,
+          center: mapCenter,
+          zoom: mapZoom,
           zoomControl: true,
           scrollWheelZoom: false,
         });
@@ -268,9 +306,9 @@ export const DroughtMapsWidget: React.FC = () => {
 
         const result = { map, dataLayer, refreshInterval };
 
-        // Store instance if requested (for layer switching)
-        if (storeInstance) {
-          map1InstanceRef.current = result;
+        // Store instance (keyed by map id) for fullscreen invalidateSize
+        if (mapId) {
+          mapInstancesRef.current[mapId] = result;
         }
 
         return result;
@@ -285,8 +323,8 @@ export const DroughtMapsWidget: React.FC = () => {
     };
 
     // Create 2 maps (HUGEO + Aszályindex)
-    const widget1 = createWidget(map1Ref, WMS_HUGEO, 'wms', String(selectedHugeoLayer), setMap1State, false, true);
-    const widget2 = createWidget(map2Ref, IMAGE_DROUGHT_INDEX, 'imageserver', '0', setMap2State, false);
+    const widget1 = createWidget(map1Ref, WMS_HUGEO, 'wms', String(selectedHugeoLayer), setMap1State, false, 'hugeo');
+    const widget2 = createWidget(map2Ref, IMAGE_DROUGHT_INDEX, 'imageserver', '0', setMap2State, false, 'drought');
 
     // Cleanup
     return () => {
@@ -300,8 +338,9 @@ export const DroughtMapsWidget: React.FC = () => {
         widget2.map.remove();
         clearInterval(widget2.refreshInterval);
       }
+      mapInstancesRef.current = {};
     };
-  }, [leafletLoaded, selectedHugeoLayer]);
+  }, [leafletLoaded, selectedHugeoLayer, mapCenter, mapZoom]);
 
   // Render map with loading state
   const renderMap = (
@@ -310,8 +349,11 @@ export const DroughtMapsWidget: React.FC = () => {
     title: string,
     subtitle: string,
     legend?: React.ReactNode,
-    layerSelector?: React.ReactNode
-  ) => (
+    layerSelector?: React.ReactNode,
+    id: string = ''
+  ) => {
+    const isFs = !!id && fullscreenKey === id;
+    return (
     <div className="map-container-standard">
       <div className="map-header">
         <div className="flex items-center justify-between w-full">
@@ -323,11 +365,11 @@ export const DroughtMapsWidget: React.FC = () => {
         </div>
       </div>
 
-      {/* Map Container */}
-      <div className="relative w-full h-96 rounded-lg overflow-hidden">
+      {/* Map Container — becomes a fullscreen overlay when isFs */}
+      <div className={isFs ? 'fixed inset-0 z-[9998] bg-white' : 'relative w-full h-96 rounded-lg overflow-hidden'}>
         {/* Loading Overlay */}
         {state.loading && (
-          <div className="absolute inset-0 bg-white bg-opacity-80 flex flex-col items-center justify-center z-[999] rounded-lg">
+          <div className="absolute inset-0 bg-white bg-opacity-80 flex flex-col items-center justify-center z-[999]">
             <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mb-2" />
             <p className="text-sm text-gray-600">Térkép betöltése... {state.progress}%</p>
           </div>
@@ -335,25 +377,57 @@ export const DroughtMapsWidget: React.FC = () => {
 
         {/* Error State */}
         {state.error && (
-          <div className="absolute inset-0 bg-red-50 flex flex-col items-center justify-center z-[999] rounded-lg p-4">
+          <div className="absolute inset-0 bg-red-50 flex flex-col items-center justify-center z-[999] p-4">
             <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
             <p className="text-sm text-red-700 text-center">{state.error}</p>
           </div>
         )}
 
         {/* Leaflet Map */}
-        <div ref={ref} className="w-full h-full rounded-lg" style={{ position: 'relative', zIndex: 1 }} />
+        <div ref={ref} className="w-full h-full" style={{ position: 'relative', zIndex: 1 }} />
 
+        {/* Enter fullscreen (normal mode) */}
+        {id && !isFs && (
+          <button
+            onClick={() => setFullscreenKey(id)}
+            className="absolute top-2 right-2 z-[1000] bg-white/90 rounded-lg shadow-md p-2 hover:bg-white transition-colors"
+            aria-label="Teljes képernyő"
+            title="Teljes képernyő"
+          >
+            <Maximize2 className="h-4 w-4 text-gray-700" />
+          </button>
+        )}
+
+        {/* Fullscreen chrome: layer selector + close, plus collapsible legend */}
+        {isFs && (
+          <>
+            <div className="absolute top-2 right-2 z-[10000] flex items-center gap-2">
+              {layerSelector}
+              <button
+                onClick={() => setFullscreenKey(null)}
+                className="bg-white rounded-lg shadow-md p-2 hover:bg-gray-100 transition-colors"
+                aria-label="Bezárás"
+                title="Bezárás (Esc)"
+              >
+                <X className="h-5 w-5 text-gray-700" />
+              </button>
+            </div>
+            {legend && (
+              <CollapsibleLegend className="bottom-4 left-4">{legend}</CollapsibleLegend>
+            )}
+          </>
+        )}
       </div>
 
-      {/* Legend (a térkép alatt) */}
-      {legend && !state.loading && !state.error && (
+      {/* Legend (a térkép alatt) — normal mode only */}
+      {legend && !isFs && !state.loading && !state.error && (
         <div className="map-legend-below mt-3 px-3 py-2.5" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
           {legend}
         </div>
       )}
     </div>
-  );
+    );
+  };
 
   // HUGEO layer selector
   const hugeoLayerSelector = (
@@ -596,7 +670,8 @@ export const DroughtMapsWidget: React.FC = () => {
           'Aktuális talajvízszint (HUGEO)',
           'HUGEO adatok',
           hugeoLegend,
-          hugeoLayerSelector
+          hugeoLayerSelector,
+          'hugeo'
         )}
       </div>
 
@@ -607,7 +682,9 @@ export const DroughtMapsWidget: React.FC = () => {
           map2State,
           'Aszályindex (HDIs)',
           'OVF aszálymonitoring - aktuális',
-          droughtIndexLegend
+          droughtIndexLegend,
+          undefined,
+          'drought'
         )}
       </div>
     </div>
