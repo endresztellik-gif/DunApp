@@ -36,7 +36,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const API_BASE_URL = 'https://aszalymonitoring.vizugy.hu/index.php';
 const FORECAST_MODEL_UUID = '2904392D-50A3-4DDC-A42E-ED338D78BA78'; // ECMWF model
 const MAX_RETRIES = 2;
-const REQUEST_TIMEOUT = 20000; // 20 seconds (slow server)
+const REQUEST_TIMEOUT = 35000; // 35 seconds — some stations (e.g. Felsőszentmárton ~24s) need >20s
 
 // Drought monitoring locations with station UUIDs
 const DROUGHT_LOCATIONS = [
