@@ -36,7 +36,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const API_BASE_URL = 'https://aszalymonitoring.vizugy.hu/index.php';
 const FORECAST_MODEL_UUID = '2904392D-50A3-4DDC-A42E-ED338D78BA78'; // ECMWF model
 const MAX_RETRIES = 2;
-const REQUEST_TIMEOUT = 20000; // 20 seconds (slow server)
+const REQUEST_TIMEOUT = 35000; // 35 seconds — some stations (e.g. Felsőszentmárton ~24s) need >20s
 
 // Drought monitoring locations with station UUIDs
 const DROUGHT_LOCATIONS = [
@@ -74,6 +74,29 @@ const DROUGHT_LOCATIONS = [
     lon: 19.2833,
     county: 'Bács-Kiskun',
     uuid: '16FFA799-C5E4-42EE-B08F-FA51E8720815'
+  },
+  // --- Dráva region stations (added 2026-06-26, migration 029) ---
+  // Live OVF aszálymonitoring stations; pattern API returns 7 datasets (verified).
+  {
+    name: 'Felsőszentmárton',
+    lat: 45.8553,
+    lon: 17.6997,
+    county: 'Baranya',
+    uuid: '388A6228-476B-4A13-ADF3-B8C342EA9462'
+  },
+  {
+    name: 'Berzence',
+    lat: 46.2068,
+    lon: 17.1418,
+    county: 'Somogy',
+    uuid: 'E2E327B7-9CB4-4D9A-93E7-EA490057D105'
+  },
+  {
+    name: 'Kálmáncsa',
+    lat: 46.0447,
+    lon: 17.5564,
+    county: 'Somogy',
+    uuid: '8E8A16B5-3CED-4EA3-9D97-5CA79627B752'
   }
 ];
 

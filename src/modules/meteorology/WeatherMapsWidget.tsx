@@ -34,11 +34,13 @@ import { useWindMapData } from '../../hooks/useWindMapData';
 import { useTempMapData } from '../../hooks/useTempMapData';
 import type { GeoJsonObject } from 'geojson';
 import 'leaflet/dist/leaflet.css';
-import { CloudRain, Globe2, Wind, Thermometer, Play, Pause } from 'lucide-react';
+import { CloudRain, Globe2, Wind, Thermometer, Play, Pause, Maximize2, X } from 'lucide-react';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { MapPin } from 'lucide-react';
 import type { City } from '../../types';
 import { useRegion } from '../../contexts/RegionContext';
+import { useFullscreen } from '../../hooks/useFullscreen';
+import { CollapsibleLegend } from '../../components/UI/CollapsibleLegend';
 import bordersData from '../../data/centralEuropeBorders.json';
 
 // ---------------------------------------------------------------------------
@@ -359,6 +361,16 @@ function InvalidateMapSize() {
   return null;
 }
 
+// Re-measure the Leaflet map after a fullscreen toggle (the container size changes).
+function MapResizeOnFullscreen({ fullscreen }: { fullscreen: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    const t = setTimeout(() => map.invalidateSize(), 300);
+    return () => clearTimeout(t);
+  }, [fullscreen, map]);
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
@@ -369,6 +381,7 @@ interface WeatherMapsWidgetProps {
 
 export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) => {
   const { region } = useRegion();
+  const { isFullscreen, enter: enterFullscreen, exit: exitFullscreen } = useFullscreen();
   // Region-dependent default map view (the city marker still sits on the city itself).
   const regionCenter = region === 'drava' ? DRAVA_MAP_CENTER : DEFAULT_MAP_CENTER;
   const windPoints = useWindMapData();
@@ -454,47 +467,58 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
   const activeTab = TABS.find((t) => t.mode === mode)!;
   const frameCount = mode === 'radar' ? radarFrames.length : frames.length;
 
+  // Tab selector — reused above the map (normal) and inside the fullscreen toolbar.
+  const tabsBar = (
+    <div className="flex gap-2 flex-wrap">
+      {TABS.map(({ mode: tabMode, label, Icon, description }) => (
+        <button
+          key={tabMode}
+          title={description}
+          onClick={() => {
+            setMode(tabMode);
+            setFrameIndex(0);
+            setIsPlaying(true);
+          }}
+          className={[
+            'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+            mode === tabMode
+              ? 'bg-cyan-600 text-white shadow-sm'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50',
+          ].join(' ')}
+        >
+          <Icon className="h-4 w-4" />
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="space-y-3">
       {/* Tab selector */}
-      <div className="flex gap-2 flex-wrap">
-        {TABS.map(({ mode: tabMode, label, Icon, description }) => (
-          <button
-            key={tabMode}
-            title={description}
-            onClick={() => {
-              setMode(tabMode);
-              setFrameIndex(0);
-              setIsPlaying(true);
-            }}
-            className={[
-              'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-              mode === tabMode
-                ? 'bg-cyan-600 text-white shadow-sm'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50',
-            ].join(' ')}
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-          </button>
-        ))}
-      </div>
+      {tabsBar}
 
-      {/* Map container */}
-      <div className="relative w-full h-64 sm:h-[520px] overflow-hidden bg-white rounded-lg shadow-sm border-2 border-gray-200">
+      {/* Map container — becomes a fullscreen overlay when isFullscreen */}
+      <div
+        className={
+          isFullscreen
+            ? 'fixed inset-0 z-[9998] bg-white'
+            : 'relative w-full h-64 sm:h-[520px] overflow-hidden bg-white rounded-lg shadow-sm border-2 border-gray-200'
+        }
+      >
         <MapContainer
           key={city.id}
           center={regionCenter}
           zoom={DEFAULT_MAP_ZOOM}
-          className="h-full w-full rounded-lg"
+          className="h-full w-full"
           scrollWheelZoom={false}
           touchZoom={true}
           bounceAtZoomLimits={false}
           maxZoom={16}
           minZoom={6}
-          style={{ borderRadius: '8px' }}
         >
           <InvalidateMapSize />
+          <MapResizeOnFullscreen fullscreen={isFullscreen} />
 
           {/* Base map — CartoDB Positron for OWM modes (better contrast), OSM otherwise */}
           {(mode === 'wind' || mode === 'temperature') ? (
@@ -634,25 +658,55 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
           )}
         </div>
 
-        {/* Source attribution top-right */}
-        <div className="absolute top-2 right-2 z-[1000]">
-          <span className="bg-white/80 rounded px-2 py-1 text-xs text-gray-500">
-            Forrás:{' '}
-            {mode === 'radar' ? (
-              <a href="https://www.rainviewer.com" target="_blank" rel="noopener noreferrer"
-                 className="hover:text-cyan-600">RainViewer</a>
-            ) : activeTab.source === 'OMSZ' ? (
-              <a href="https://www.met.hu" target="_blank" rel="noopener noreferrer"
-                 className="hover:text-cyan-600">OMSZ</a>
-            ) : (
-              <a href="https://openweathermap.org" target="_blank" rel="noopener noreferrer"
-                 className="hover:text-cyan-600">OpenWeatherMap</a>
-            )}
-          </span>
-        </div>
+        {/* Top-right: fullscreen toggle + source attribution (normal mode) */}
+        {!isFullscreen && (
+          <div className="absolute top-2 right-2 z-[1000] flex items-center gap-2">
+            <button
+              onClick={enterFullscreen}
+              className="bg-white/90 rounded-lg shadow-md p-2 hover:bg-white transition-colors"
+              aria-label="Teljes képernyő"
+              title="Teljes képernyő"
+            >
+              <Maximize2 className="h-4 w-4 text-gray-700" />
+            </button>
+            <span className="bg-white/80 rounded px-2 py-1 text-xs text-gray-500">
+              Forrás:{' '}
+              {mode === 'radar' ? (
+                <a href="https://www.rainviewer.com" target="_blank" rel="noopener noreferrer"
+                   className="hover:text-cyan-600">RainViewer</a>
+              ) : activeTab.source === 'OMSZ' ? (
+                <a href="https://www.met.hu" target="_blank" rel="noopener noreferrer"
+                   className="hover:text-cyan-600">OMSZ</a>
+              ) : (
+                <a href="https://openweathermap.org" target="_blank" rel="noopener noreferrer"
+                   className="hover:text-cyan-600">OpenWeatherMap</a>
+              )}
+            </span>
+          </div>
+        )}
+
+        {/* Fullscreen chrome: top toolbar (tabs + close) + collapsible legend */}
+        {isFullscreen && (
+          <>
+            <div className="absolute top-0 left-0 right-0 z-[10000] flex items-start justify-between gap-2 p-2 bg-gradient-to-b from-white/80 to-transparent">
+              <div className="flex-1 min-w-0 overflow-x-auto">{tabsBar}</div>
+              <button
+                onClick={exitFullscreen}
+                className="shrink-0 bg-white rounded-lg shadow-md p-2 hover:bg-gray-100 transition-colors"
+                aria-label="Bezárás"
+                title="Bezárás (Esc)"
+              >
+                <X className="h-5 w-5 text-gray-700" />
+              </button>
+            </div>
+            <CollapsibleLegend className="bottom-16 left-4">
+              <LegendBar legendType={activeTab.legendType} />
+            </CollapsibleLegend>
+          </>
+        )}
       </div>
 
-      {/* Legend bar */}
+      {/* Legend bar (normal mode; in fullscreen the collapsible legend is used) */}
       <div className="px-3 py-2.5" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
         <LegendBar legendType={activeTab.legendType} />
       </div>

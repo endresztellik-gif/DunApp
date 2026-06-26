@@ -9,7 +9,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import type { DroughtLocation } from '../types';
+import type { DroughtLocation, Region } from '../types';
 
 interface UseDroughtLocationsReturn {
   locations: DroughtLocation[];
@@ -18,14 +18,22 @@ interface UseDroughtLocationsReturn {
 }
 
 /**
- * Fetch all active drought monitoring locations from Supabase
+ * Fetch active drought monitoring locations from Supabase, optionally filtered by region.
+ *
+ * Always filters is_active=true; adds the region filter when given so the Duna and
+ * Dráva modules show ONLY their own stations (migration 029 added the region column).
  */
-async function fetchDroughtLocations(): Promise<DroughtLocation[]> {
-  const { data, error } = await supabase
+async function fetchDroughtLocations(region?: Region | null): Promise<DroughtLocation[]> {
+  let query = supabase
     .from('drought_locations')
     .select('*')
-    .eq('is_active', true)
-    .order('location_name');
+    .eq('is_active', true);
+
+  if (region) {
+    query = query.eq('region', region);
+  }
+
+  const { data, error } = await query.order('location_name');
 
   if (error) {
     throw new Error(`Failed to fetch drought locations: ${error.message}`);
@@ -50,10 +58,10 @@ async function fetchDroughtLocations(): Promise<DroughtLocation[]> {
  * Locations are static data that rarely changes, so we cache for 24 hours.
  * This reduces API calls and improves offline experience.
  */
-export function useDroughtLocations(): UseDroughtLocationsReturn {
+export function useDroughtLocations(region?: Region | null): UseDroughtLocationsReturn {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['droughtLocations'],
-    queryFn: fetchDroughtLocations,
+    queryKey: ['droughtLocations', region ?? 'all'],
+    queryFn: () => fetchDroughtLocations(region),
     staleTime: 24 * 60 * 60 * 1000, // 24 hours (static data)
     gcTime: 24 * 60 * 60 * 1000, // Keep in cache for 24 hours
     retry: 3, // Retry failed requests 3 times

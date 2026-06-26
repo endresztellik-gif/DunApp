@@ -3,8 +3,24 @@
 > **Cél:** Az összes fejlesztési döntés, hotfix, architektúrális választás és tanulság egy helyen.
 > Minden jövőbeli fejlesztés előtt érdemes átolvasni.
 
-**Utolsó frissítés:** 2026-06-25
-**Projekt verzió:** 4.0.0
+**Utolsó frissítés:** 2026-06-26
+**Projekt verzió:** 4.2.0
+
+---
+
+## 2026-06-26 — Aszály régió-szétválasztás (helyszínek + kutak) + teljes képernyős térképek + v4.2
+
+Három felhasználói kérés egy körben (branch: `feat/drava-drought-locations-fullscreen-maps`).
+
+**1. Régió-szétválasztás az aszály modulban.**
+- *Kút-időbélyeg táblázat:* a `GroundwaterTimestampTable` a `get_all_well_last_timestamps` RPC-vel mind a 19 enabled kutat mutatta (Duna+Dráva) — ez volt a látható „nem válik szét" tünet (a kút-legördülő már szétvált). Javítás: a régió-szűrt `wells` levitele `DroughtModule → GroundwaterChart → GroundwaterTimestampTable`, és kliens-oldali szűrés `wellCode` alapján. Nincs DB-migráció. A „Talajvízkút Monitoring (10 kút)" fejléc dinamikus (`{wells.length} kút`).
+- *Monitoring helyszínek:* a `drought_locations` táblába `region` oszlop (**migráció 029**), default 'duna'. 3 új Dráva állomás: **Felsőszentmárton** (Baranya), **Berzence**, **Kálmáncsa** (Somogy) — `region='drava'`. A `fetch-drought` `DROUGHT_LOCATIONS` tömbjébe bekerült a 3 OVF aszálymonitoring UUID (mindhárom 7 datasetet ad a pattern API-n, ellenőrizve). `useDroughtLocations(region)` szűr, App.tsx átadja a régiót. **Élesítés után egyszer le kell futtatni a `fetch-drought`-ot**, hogy a 3 új helyszín `drought_data`-t kapjon (utána a napi cron viszi).
+
+**2. Kattintható, teljes képernyős térképek** (időjárás `WeatherMapsWidget` + aszály `DroughtMapsWidget` 2 ArcGIS térképe). Megosztott `useFullscreen` hook (Escape + body scroll-lock) és `CollapsibleLegend` komponens (lenyitható „ⓘ Jelmagyarázat" gomb, framer-motion). A térkép wrapper `fixed inset-0`-ra vált (DOM nem mozdul → Leaflet példány él), toggle után `invalidateSize()`. `X` vagy Esc zár. A met.hu `WaterDeficitDashboard` már korábban teljes képernyős volt (változatlan).
+
+**3. Dráva térkép-középpont az aszály modulban.** A `DroughtMapsWidget` center/zoom régiófüggő (`useRegion`): Duna `[47.16,19.50]`/z7 (változatlan), Dráva `[46.03,17.42]`/z8. (Az időjárás modul már korábban régiófüggő volt.)
+
+**Verzió:** 4.2.0 mindenhol (package.json, CLAUDE.md, README, HomePage `v 4.2`, DEVELOPMENT_LOG).
 
 ---
 

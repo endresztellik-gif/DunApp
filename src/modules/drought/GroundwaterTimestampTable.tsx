@@ -18,6 +18,7 @@ import React from 'react';
 import { Clock, AlertCircle } from 'lucide-react';
 import { useAllGroundwaterLastTimestamps } from '../../hooks/useAllGroundwaterLastTimestamps';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
+import type { GroundwaterWell } from '../../types';
 
 /**
  * Format timestamp to Hungarian date/time format
@@ -40,13 +41,28 @@ function formatHungarianDateTime(timestamp: string | null): string {
 interface GroundwaterTimestampTableProps {
   onWellSelect?: (wellId: string) => void;
   selectedWellId?: string | null;
+  /**
+   * Region-filtered wells to show. The underlying RPC returns ALL enabled wells
+   * (both regions), so we restrict the table to the current region's wells by
+   * well code. When omitted, all wells are shown (backwards-compatible).
+   */
+  wells?: GroundwaterWell[];
 }
 
 export const GroundwaterTimestampTable: React.FC<GroundwaterTimestampTableProps> = ({
   onWellSelect,
   selectedWellId,
+  wells,
 }) => {
   const { timestamps, isLoading, error } = useAllGroundwaterLastTimestamps();
+
+  // Restrict to the current region's wells (RPC returns Duna + Dráva together).
+  const visibleTimestamps = wells
+    ? (() => {
+        const allowed = new Set(wells.map((w) => w.wellCode));
+        return timestamps.filter((t) => allowed.has(t.wellCode));
+      })()
+    : timestamps;
 
   // Loading state
   if (isLoading) {
@@ -75,7 +91,7 @@ export const GroundwaterTimestampTable: React.FC<GroundwaterTimestampTableProps>
   }
 
   // Empty state
-  if (timestamps.length === 0) {
+  if (visibleTimestamps.length === 0) {
     return (
       <div className="mt-6 p-6 text-center" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}>
         <Clock className="h-12 w-12 mx-auto mb-3" style={{ color: 'var(--text-tertiary)' }} />
@@ -132,7 +148,7 @@ export const GroundwaterTimestampTable: React.FC<GroundwaterTimestampTableProps>
             </tr>
           </thead>
           <tbody style={{ background: 'var(--bg-surface)' }}>
-            {timestamps.map((timestamp) => {
+            {visibleTimestamps.map((timestamp) => {
               const isSelected = selectedWellId === timestamp.wellId;
               return (
               <tr
@@ -185,7 +201,7 @@ export const GroundwaterTimestampTable: React.FC<GroundwaterTimestampTableProps>
 
       {/* Mobile: Card View */}
       <div className="md:hidden space-y-3">
-        {timestamps.map((timestamp) => {
+        {visibleTimestamps.map((timestamp) => {
           const isSelected = selectedWellId === timestamp.wellId;
           return (
           <div
