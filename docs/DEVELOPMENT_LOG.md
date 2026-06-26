@@ -10,17 +10,25 @@
 
 ## 2026-06-26 — Aszály régió-szétválasztás (helyszínek + kutak) + teljes képernyős térképek + v4.2
 
-Három felhasználói kérés egy körben (branch: `feat/drava-drought-locations-fullscreen-maps`).
+Három felhasználói kérés egy körben (branch: `feat/drava-drought-locations-fullscreen-maps`, **PR #5 → main mergelve** `044c3aa`, prod-deploy sikeres).
 
 **1. Régió-szétválasztás az aszály modulban.**
 - *Kút-időbélyeg táblázat:* a `GroundwaterTimestampTable` a `get_all_well_last_timestamps` RPC-vel mind a 19 enabled kutat mutatta (Duna+Dráva) — ez volt a látható „nem válik szét" tünet (a kút-legördülő már szétvált). Javítás: a régió-szűrt `wells` levitele `DroughtModule → GroundwaterChart → GroundwaterTimestampTable`, és kliens-oldali szűrés `wellCode` alapján. Nincs DB-migráció. A „Talajvízkút Monitoring (10 kút)" fejléc dinamikus (`{wells.length} kút`).
-- *Monitoring helyszínek:* a `drought_locations` táblába `region` oszlop (**migráció 029**), default 'duna'. 3 új Dráva állomás: **Felsőszentmárton** (Baranya), **Berzence**, **Kálmáncsa** (Somogy) — `region='drava'`. A `fetch-drought` `DROUGHT_LOCATIONS` tömbjébe bekerült a 3 OVF aszálymonitoring UUID (mindhárom 7 datasetet ad a pattern API-n, ellenőrizve). `useDroughtLocations(region)` szűr, App.tsx átadja a régiót. **Élesítés után egyszer le kell futtatni a `fetch-drought`-ot**, hogy a 3 új helyszín `drought_data`-t kapjon (utána a napi cron viszi).
+- *Monitoring helyszínek:* a `drought_locations` táblába `region` oszlop (**migráció 029**), default 'duna'. 3 új Dráva állomás: **Felsőszentmárton** (Baranya), **Berzence**, **Kálmáncsa** (Somogy) — `region='drava'`. A `fetch-drought` `DROUGHT_LOCATIONS` tömbjébe bekerült a 3 OVF aszálymonitoring UUID (mindhárom 7 datasetet ad a pattern API-n, ellenőrizve). `useDroughtLocations(region)` szűr, App.tsx átadja a régiót.
 
 **2. Kattintható, teljes képernyős térképek** (időjárás `WeatherMapsWidget` + aszály `DroughtMapsWidget` 2 ArcGIS térképe). Megosztott `useFullscreen` hook (Escape + body scroll-lock) és `CollapsibleLegend` komponens (lenyitható „ⓘ Jelmagyarázat" gomb, framer-motion). A térkép wrapper `fixed inset-0`-ra vált (DOM nem mozdul → Leaflet példány él), toggle után `invalidateSize()`. `X` vagy Esc zár. A met.hu `WaterDeficitDashboard` már korábban teljes képernyős volt (változatlan).
 
 **3. Dráva térkép-középpont az aszály modulban.** A `DroughtMapsWidget` center/zoom régiófüggő (`useRegion`): Duna `[47.16,19.50]`/z7 (változatlan), Dráva `[46.03,17.42]`/z8. (Az időjárás modul már korábban régiófüggő volt.)
 
 **Verzió:** 4.2.0 mindenhol (package.json, CLAUDE.md, README, HomePage `v 4.2`, DEVELOPMENT_LOG).
+
+**Élesítés (2026-06-26):**
+- Migráció `029` prodra alkalmazva `supabase db query --linked -f`-fel (additív DDL — ezúttal NEM blokkolta a prod-write classifier), verifikálva: 8 helyszín (3 Dráva + 5 Duna).
+- `fetch-drought` deployolva `functions deploy --use-api`-val (Docker nélkül). Lefuttatva → **mind a 8 helyszínnek van mai `drought_data`-ja** (Felsőszentmárton HDI 1.48, Berzence 1.36, Kálmáncsa 1.55).
+- **TIMEOUT-FIX (2. commit, `e20ebc2`):** a `fetch-drought` `REQUEST_TIMEOUT` 20s→**35s**. Felsőszentmárton ~24s / Berzence ~17s válaszidő az OVF pattern API-n → 20s-mal a NAPI CRON is tartósan hibázott volna rájuk. Caveat: lassú OVF-napokon a függvény túllépheti a Supabase edge gateway-timeoutot (a hívó 504/üres választ kap), DE az inszertek állomásonként inkrementálisak → az adat akkor is beíródik (ma is így lett mind a 8 feltöltve a záró üres válasz ellenére).
+- PR #5 mergelve (`044c3aa`), GitHub Actions deploy zöld (build ✓, Netlify+Edge Functions ✓, Lighthouse ✓, Health check ✓), `https://dunapp.netlify.app` HTTP 200.
+
+**Tanulság — lokális `main` elavult:** a `git pull --ff-only` a `main`-en nem futott (nincs upstream tracking); a stale lokális `main` (`88cf0bb`, Dráva ELŐTTI) félrevezet. Mindig `origin/main`-ról ágazz (`git checkout -B <ág> origin/main`), ne a lokális `main`-ról.
 
 ---
 
