@@ -1,13 +1,14 @@
 /**
  * DroughtLocationSelector Component
  *
- * DROUGHT MODULE ONLY - Selector for 5 monitoring locations
+ * DROUGHT MODULE ONLY - Selector for the region's monitoring locations
  *
  * CRITICAL ARCHITECTURE RULE:
  * This selector is ONLY for the Drought module monitoring locations.
- * It MUST have exactly 5 locations.
+ * The number of locations is region-dependent (e.g. Duna: 5, Dráva: 3),
+ * so it only requires at least 1 location.
  * DO NOT use this as a generic location selector!
- * This is SEPARATE from WellSelector (which is for 15 groundwater wells).
+ * This is SEPARATE from WellSelector (which is for the groundwater wells).
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -27,10 +28,10 @@ export const DroughtLocationSelector: React.FC<DroughtLocationSelectorProps> = (
   onLocationChange,
   className = '',
 }) => {
-  // VALIDATION: MUST have exactly 5 locations for Drought module
-  if (locations.length !== 5) {
+  // VALIDATION: Must have at least 1 location (count is region-dependent, e.g. Duna: 5, Dráva: 3)
+  if (locations.length < 1) {
     throw new Error(
-      `DroughtLocationSelector: Expected exactly 5 locations for Drought module, but received ${locations.length}. ` +
+      `DroughtLocationSelector: Expected at least 1 location for Drought module, but received ${locations.length}. ` +
       'This selector is module-specific and cannot be used as a generic selector. ' +
       'For groundwater wells, use WellSelector instead.'
     );

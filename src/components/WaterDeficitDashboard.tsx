@@ -13,6 +13,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ZoomIn, X } from 'lucide-react';
+import { CollapsibleLegend } from './UI/CollapsibleLegend';
 
 type Layer = 'vh50' | 'vh100';
 
@@ -52,6 +53,26 @@ export const WaterDeficitDashboard: React.FC = () => {
     month: 'long',
     day: 'numeric',
   });
+
+  // Legend content — reused below the map (normal view) and inside the
+  // semi-transparent CollapsibleLegend overlay on the zoomed/fullscreen view.
+  const legendBody = (
+    <div className="text-sm text-gray-700 space-y-2">
+      <p>
+        <span className="font-semibold">Talaj vízhiány:</span> A talaj vízháztartási
+        hiánya mm-ben mérve.
+      </p>
+      <p className="text-xs text-gray-600">
+        Minél sötétebb a barna szín, annál nagyobb a vízhiány a talajban. A világosabb
+        területeken jobban ellátott a talaj vízzel.
+      </p>
+      <div className="flex items-center gap-2 pt-2 border-t border-gray-300">
+        <div className="text-xs text-gray-500">
+          <strong>Rétegek:</strong> vh50 = 0-50 cm, vh100 = 0-100 cm mélységig
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="bg-orange-50 p-6 rounded-2xl">
@@ -145,6 +166,18 @@ export const WaterDeficitDashboard: React.FC = () => {
               >
                 <X className="text-gray-800" />
               </button>
+
+              {/* Semi-transparent legend overlay (tap to expand) — does not close the modal */}
+              <div onClick={(e) => e.stopPropagation()}>
+                <CollapsibleLegend className="bottom-4 left-4">
+                  <div className="max-w-xs">
+                    <h4 className="text-xs font-semibold text-gray-900 mb-2">
+                      Talaj vízhiány – {layerNames[layer]}
+                    </h4>
+                    {legendBody}
+                  </div>
+                </CollapsibleLegend>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -153,21 +186,7 @@ export const WaterDeficitDashboard: React.FC = () => {
       {/* Jelmagyarázat */}
       <div className="mt-6 max-w-3xl w-full bg-gray-50 p-4 rounded-xl shadow-sm">
         <h3 className="text-lg font-semibold mb-2 text-gray-800">Jelmagyarázat</h3>
-        <div className="text-sm text-gray-700 space-y-2">
-          <p>
-            <span className="font-semibold">Talaj vízhiány:</span> A talaj vízháztartási
-            hiánya mm-ben mérve.
-          </p>
-          <p className="text-xs text-gray-600">
-            Minél sötétebb a barna szín, annál nagyobb a vízhiány a talajban. A világosabb
-            területeken jobban ellátott a talaj vízzel.
-          </p>
-          <div className="flex items-center gap-2 pt-2 border-t border-gray-300">
-            <div className="text-xs text-gray-500">
-              <strong>Rétegek:</strong> vh50 = 0-50 cm, vh100 = 0-100 cm mélységig
-            </div>
-          </div>
-        </div>
+        {legendBody}
       </div>
       </div>
     </div>

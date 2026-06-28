@@ -2,8 +2,9 @@
  * DroughtLocationSelector Component Tests
  *
  * CRITICAL: Tests for module-specific selector validation
- * This selector MUST have exactly 5 locations for the Drought module
- * This is SEPARATE from WellSelector (which handles 15 wells)
+ * This selector requires at least 1 location for the Drought module.
+ * The location count is region-dependent (Duna: 5, Dráva: 3).
+ * This is SEPARATE from WellSelector (which handles the groundwater wells)
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -26,60 +27,61 @@ describe('DroughtLocationSelector - Architecture Validation', () => {
   });
 
   // CRITICAL TEST: Architecture enforcement
-  it('throws error if not exactly 5 locations', () => {
-    const invalidLocations: DroughtLocation[] = [
-      MOCK_DROUGHT_LOCATIONS[0],
-      MOCK_DROUGHT_LOCATIONS[1],
-      MOCK_DROUGHT_LOCATIONS[2],
-    ]; // Only 3
+  it('throws error if there are no locations', () => {
+    const noLocations: DroughtLocation[] = [];
 
     expect(() => {
       render(
         <DroughtLocationSelector
-          locations={invalidLocations}
+          locations={noLocations}
           selectedLocation={null}
           onLocationChange={mockOnChange}
         />
       );
-    }).toThrow('Expected exactly 5 locations');
+    }).toThrow('Expected at least 1 location');
   });
 
-  it('throws error with descriptive message for wrong count', () => {
-    const fourLocations: DroughtLocation[] = [
-      MOCK_DROUGHT_LOCATIONS[0],
-      MOCK_DROUGHT_LOCATIONS[1],
-      MOCK_DROUGHT_LOCATIONS[2],
-      MOCK_DROUGHT_LOCATIONS[3],
-    ]; // Only 4
-
+  it('throws error with descriptive message for empty list', () => {
     expect(() => {
       render(
         <DroughtLocationSelector
-          locations={fourLocations}
+          locations={[]}
           selectedLocation={null}
           onLocationChange={mockOnChange}
         />
       );
-    }).toThrow(/Expected exactly 5 locations.*but received 4/);
+    }).toThrow(/Expected at least 1 location.*but received 0/);
   });
 
-  it('accepts exactly 5 locations without error', () => {
+  it('accepts the Duna count (5 locations) without error', () => {
     expect(() => {
       render(<DroughtLocationSelector {...validProps} />);
     }).not.toThrow();
   });
 
-  it('validates correct count in MOCK_DROUGHT_LOCATIONS', () => {
-    expect(MOCK_DROUGHT_LOCATIONS).toHaveLength(5);
-  });
-
-  it('error message mentions WellSelector for wells', () => {
-    const invalidLocations: DroughtLocation[] = [MOCK_DROUGHT_LOCATIONS[0]];
+  it('accepts the Dráva count (3 locations) without error', () => {
+    const dravaLocations: DroughtLocation[] = [
+      MOCK_DROUGHT_LOCATIONS[0],
+      MOCK_DROUGHT_LOCATIONS[1],
+      MOCK_DROUGHT_LOCATIONS[2],
+    ]; // Dráva region has 3 locations
 
     expect(() => {
       render(
         <DroughtLocationSelector
-          locations={invalidLocations}
+          locations={dravaLocations}
+          selectedLocation={dravaLocations[0]}
+          onLocationChange={mockOnChange}
+        />
+      );
+    }).not.toThrow();
+  });
+
+  it('error message mentions WellSelector for wells', () => {
+    expect(() => {
+      render(
+        <DroughtLocationSelector
+          locations={[]}
           selectedLocation={null}
           onLocationChange={mockOnChange}
         />

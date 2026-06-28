@@ -30,8 +30,8 @@ import { GroundwaterChart } from './GroundwaterChart';
 import type { DroughtLocation, GroundwaterWell, DataSource } from '../../types';
 
 interface DroughtModuleProps {
-  locations: DroughtLocation[]; // 5 monitoring locations
-  wells: GroundwaterWell[]; // 15 groundwater wells
+  locations: DroughtLocation[]; // region-dependent monitoring locations (Duna: 5, Dráva: 3)
+  wells: GroundwaterWell[]; // region-dependent groundwater wells
   initialLocation?: DroughtLocation;
   initialWell?: GroundwaterWell;
 }
