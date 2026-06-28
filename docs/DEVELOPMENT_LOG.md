@@ -3,8 +3,28 @@
 > **Cél:** Az összes fejlesztési döntés, hotfix, architektúrális választás és tanulság egy helyen.
 > Minden jövőbeli fejlesztés előtt érdemes átolvasni.
 
-**Utolsó frissítés:** 2026-06-26
-**Projekt verzió:** 4.2.0
+**Utolsó frissítés:** 2026-06-28
+**Projekt verzió:** 4.5.0
+
+---
+
+## 2026-06-28 — Dráva aszály crash-fix + met.hu fullscreen jelmagyarázat + v4.5
+
+Hibajavító kör a 2026-06-26-i Dráva-fejlesztés után (commit `fe0018d`, **közvetlenül `main`-re** pusholva — user-döntés, nem PR).
+
+**1. Dráva aszály modul crash (a fő bug) — `DroughtLocationSelector`.**
+A komponens render közben hard errort dobott, ha a helyszínek száma nem pontosan 5 (`locations.length !== 5`) — régi invariáns abból, amikor az aszály csak a Dunához létezett. A Dráva aszály modul **3** helyszínnel (Felsőszentmárton, Berzence, Kálmáncsa) → a throw-t az `ErrorBoundary` kapta el → „Hiba történt", a teljes drávai aszály-nézet kifagyott (a meteo + vízállás ment, mert azok selectorai nem ilyen merevek). Javítás: `!== 5` → **`< 1`** a testvér `WellSelector` mintájára (ami már korábban így volt) — a helyszín-/kútszámok régiófüggők (Duna 5, Dráva 3). JSDoc/kommentek + `DroughtModule` prop-kommentek frissítve. Tesztek átírva: az „exactly 5" tesztek helyett üres-lista-dob + Duna(5)/Dráva(3) elfogad → **27/27 zöld**.
+
+**2. met.hu térkép fullscreen jelmagyarázat — `WaterDeficitDashboard`.**
+A 3 aszály-térképből kettő (`DroughtMapsWidget`: HUGEO + Aszályindex) már `CollapsibleLegend`-del bírt fullscreenben, de a met.hu talaj-vízhiány térkép **zoom-modaljából hiányzott** a jelmagyarázat (csak normál nézetben, a kép alatt volt). Bekerült ugyanaz a félig átlátszó, lenyitható `CollapsibleLegend` (bal-alsó sarok), `stopPropagation`-nel hogy a jelmagyarázatra kattintás ne zárja be a modalt. A legend-tartalom közös `legendBody` változóba emelve (normál + fullscreen újrahasználat, duplikáció megszüntetve).
+
+**Meteo fullscreen — már kész volt.** A `WeatherMapsWidget` (radar) a 2026-06-26-i körben már kapott fullscreen gombot + `CollapsibleLegend`-et; ellenőrizve, **nem kellett módosítani** (a felhasználói kérés ezen része már teljesült a kódban).
+
+**Verzió:** 4.5.0 — `package.json` + HomePage `v 4.5`. (A megjelenített verzió két helyen hardcode-olt; nincs single-source.)
+
+**Ellenőrzés + élesítés:** `tsc --noEmit` 0 hiba; `security-review` a 6 módosított fájlon **0 találat** (csak statikus szöveg/komment/kliensoldali UI-guard + statikus jelmagyarázat-JSX). A teljes `vitest run` ~71 tesztet bukik 10 fájlban (LoadingSpinner, EmptyState, ErrorBoundary, RadarMap, App, hálózati hook-tesztek) — **git-stash baseline-nal igazolva, hogy ezek a változtatás ELŐTT is buknak** (környezeti/hálózati), nem a fix okozza; külön körben rendezendő. Commit `fe0018d` (6 fájl, +73/−51) közvetlenül `main`-re (`b2d5e23..fe0018d`), Netlify auto-deploy.
+
+**Tanulság:** új régió/terület bevezetésekor a selectorokban sose feltételezz fix elemszámot — `>= 1` jellegű validáció kell, különben egy másik terület eltérő darabszáma **render-time crasht** okoz, amit az ErrorBoundary csak elnyel, de a modul használhatatlan lesz.
 
 ---
 
