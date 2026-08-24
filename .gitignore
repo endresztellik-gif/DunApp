@@ -46,3 +46,13 @@ coverage/
 .env
 .env.vapid
 .claude/settings.local.json
+
+# Superpowers session artifacts
+.superpowers/
+
+# Office temp/lock files
+~$*
+
+# Local screenshots & scratch notes
+dunapp-*.png
+grafikon.md
