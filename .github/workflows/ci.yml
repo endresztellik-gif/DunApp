@@ -30,11 +30,13 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint
-        continue-on-error: true # Temporarily skip - ESLint v9 config migration needed
+        continue-on-error: false # ÉLES: az ESLint v9 flat config migráció kész (2026-09-07)
 
       - name: Run Prettier format check
         run: npm run format:check
-        continue-on-error: true # Temporarily skip - Focus on deployment
+        continue-on-error: true # NEM ÉLES: 104 formázatlan fájl a src/-ben.
+        # Egy `npm run format` megoldja, de az egész src/ git blame-jét elmossa,
+        # ezért külön commitba + .git-blame-ignore-revs-be tartozik.
 
       - name: Run TypeScript type check
         run: npx tsc --noEmit
@@ -42,7 +44,9 @@ jobs:
 
       - name: Run tests with coverage
         run: npm run test:coverage
-        continue-on-error: true # Temporarily skip - DataCard tests need update after inline Tailwind changes
+        continue-on-error: true # NEM ÉLES: 55 bukó teszt (volt 71).
+        # Mind elavult teszt megváltozott/megszűnt viselkedésre — a triázs
+        # a DEVELOPMENT_LOG 2026-09-07 bejegyzésében. Élesíteni azután lehet.
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
@@ -51,7 +55,7 @@ jobs:
 
       - name: Run Edge Function tests (Deno)
         run: npm run test:edge-functions
-        continue-on-error: true # Temporarily skip - Focus on deployment first
+        continue-on-error: false # ÉLES: 61/61 zöld, a flaky időzítési teszt javítva
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4

@@ -8,6 +8,43 @@
 
 ---
 
+## 2026-09-07 — vitest triázs (1. kör): 71 → 55 bukás, és a CI hamis zöldje
+
+**A legfontosabb felfedezés: a CI sosem volt piros — hamis zöldet jelentett.** A `ci.yml`-ben négy lépés `continue-on-error: true` volt (ESLint, Prettier, vitest, Deno edge tesztek), tehát a workflow **sikert írt ki** úgy, hogy közben a lint el sem futott, 71 teszt bukott és a Deno teszteket senki nem nézte. Ez rosszabb a pirosnál: pirosnál van ok utánanézni, hamis zöldnél nincs.
+
+### Gyökérok szerinti triázs (nem tesztenként)
+
+| # | Gyökérok | Bukás | Állapot |
+|---|---|---|---|
+| 1 | A Supabase-mockok nem ismerik a `.maybeSingle()`-t | 19 | ✅ **javítva** |
+| 2 | A RadarMap `react-leaflet` mockja elavult | 15 | ✅ részben (15→10) |
+| 3 | UI-tesztek a régi CSS-osztályokra (restyle óta) | 22 | ⏳ döntést igényel |
+| 4 | App-tesztek a HomePage-landing előtti állapotra | 15 | ⏳ döntést igényel |
+
+**1) `.maybeSingle()` — 19 bukás, egyetlen ok.** Mind a négy hook (`useDroughtData`, `useGroundwaterData`, `useWaterLevelData` + a `data-flow` integráció) `.maybeSingle()`-t hív az adatlekérdezésre, a mockok viszont csak `.single()`-t kínáltak. A lánc `undefined`-ba futott → a query sosem dőlt el → az `isLoading` örökre `true` maradt. Innen jött a rejtélyes `expected true to be false`. A valódi PostgREST builder **mindkét** metódust kínálja, ezért a mock most mindkettőt adja — így hűbb a valósághoz, nem lazább. `useDroughtData` és `useGroundwaterData` ezzel teljesen zöld.
+
+**2) RadarMap mock — 15 bukás.** A komponens időközben `ImageOverlay`-t (radar-képréteg) és `useMap`-et (`InvalidateMapSize`) is importál; a mock ezekkel nem bővült, ezért mind a 15 teszt *„No export is defined on the react-leaflet mock"* hibával halt el, **mielőtt bármit is állított volna**. A mock kiegészítve → 5 teszt azonnal zöld lett.
+
+A maradék 10 viszont mélyebb baj: ezek a tesztek a **RainViewer**-implementációt tesztelik (`fetch('https://api.rainviewer.com/public/weather-maps.json')`), a komponenst viszont azóta **met.hu ODP radarra** írták át, ami nem is hív JSON-indexet — a képkocka-URL-eket időbélyegből számolja. Ezek nem hibás tesztek működő kódra, hanem **törölt kód tesztjei**.
+
+**3) UI-komponensek — 22 bukás** (`LoadingSpinner` 9, `EmptyState` 8, `ErrorBoundary` 5). A tesztek `document.querySelector('.spinner')`-t és `toHaveClass('h-6')`-ot használnak; a komponensek viszont Tailwind utility-osztályokra lettek átírva (`animate-spin rounded-full border-t-transparent`), `.spinner` osztály már nincs. Megjegyzés: a Tailwind-osztályokra állítani eleve törékeny — az **stílust** tesztel, nem viselkedést. A `LoadingSpinner` már ad `role="status"`-t, tehát van mire építeni.
+
+**4) `App.test.tsx` — 14 bukás, egyetlen ok.** A tesztek azonnal `getByRole('banner')`-t várnak, de az `App` a `!activeModule` ágon a **`HomePage`** landinget rendereli, ami nem tartalmaz `Header`-t. A tesztek a HomePage bevezetése előtti állapotra íródtak. (A `RegionProvider` és a `dunapp-region` localStorage rendben van bennük — nem az a baj.) Egy fix, ami modult választ a render után, mind a 14-et viszi.
+
+### Külön találat: nulla tesztfedezet a ma elromlott útvonalon
+
+A `useWaterLevelForecast` hooknak — pontosan annak, ami mögött a ma javított vízállás-előrejelzés fut — **nincs tesztje**. Ráadásul a `useWaterLevelData.test.tsx` még mindig a hookból **kikerült** `forecast` mezőt állítja (a funkció átköltözött a külön `useWaterLevelForecast`-ba), innen a maradék 6 bukása.
+
+### CI-kapuk élesítve, amik valóban átmennek
+
+- **ESLint → `continue-on-error: false`.** A lépés saját megjegyzése is ezt kérte („ESLint v9 config migration needed") — az megvan.
+- **Deno edge tesztek → `continue-on-error: false`.** 61/61 zöld. Ehhez javítani kellett egy flaky tesztet: a `check-water-level-alert` cutoff-tesztje **két külön óraolvasásból** számolt (`Date.now()` és `new Date()`), így ha közben eltelt 1 ms, `6.000000277…` jött ki és elhasalt. Most egyetlen rögzített időpontból számol — ugyanaz az aritmetika, determinisztikus eredmény. 5/5 futásra stabil.
+- Prettier és vitest **marad** `continue-on-error: true`, de a megjegyzésük mostantól a valós okot és a hátralévő munkát írja, nem azt, hogy „temporarily skip".
+
+**Eredmény:** 306 passed (volt 290), 55 failed (volt 71).
+
+---
+
 ## 2026-09-07 — ESLint flat config migráció: a lint-kapu újra ad jelet
 
 **A tényleges állapot.** A `npm run lint` nem „pár warningot" adott, hanem **el sem indult**:

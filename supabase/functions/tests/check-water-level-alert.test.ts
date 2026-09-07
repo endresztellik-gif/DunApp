@@ -131,9 +131,13 @@ Deno.test('check-water-level-alert: failed notification log entry', () => {
 });
 
 Deno.test('check-water-level-alert: calculate cutoff time for rate limiting', () => {
+  // FLAKY VOLT: korábban két külön óraolvasás volt (`Date.now()` és `new Date()`),
+  // így ha közben eltelt 1 ms, a különbség 6.000000277… lett és a teszt elhasalt.
+  // Egyetlen rögzített időpontból számolunk — a vizsgált aritmetika ugyanaz,
+  // de az eredmény determinisztikus.
   const hoursAgo = 6;
-  const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
-  const now = new Date();
+  const now = new Date('2026-01-01T12:00:00.000Z');
+  const cutoffTime = new Date(now.getTime() - hoursAgo * 60 * 60 * 1000);
 
   const differenceMs = now.getTime() - cutoffTime.getTime();
   const differenceHours = differenceMs / (1000 * 60 * 60);
