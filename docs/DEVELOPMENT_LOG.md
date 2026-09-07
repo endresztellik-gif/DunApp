@@ -3,8 +3,36 @@
 > **Cél:** Az összes fejlesztési döntés, hotfix, architektúrális választás és tanulság egy helyen.
 > Minden jövőbeli fejlesztés előtt érdemes átolvasni.
 
-**Utolsó frissítés:** 2026-06-28
+**Utolsó frissítés:** 2026-09-07
 **Projekt verzió:** 4.5.0
+
+---
+
+## 2026-09-07 — Vízállás-előrejelzés leállt: hydroinfo.hu TLS lánchiba (UnknownIssuer)
+
+**Tünet.** A vízállás modulban a „5 Napos Előrejelzés" kártya „Nincs előrejelzési adat"-ot mutatott, miközben a hydroinfo.hu weben rendben megjelenítette az előrejelzést. Az aktuális vízállás / vízhozam frissült — csak az előrejelzés nem.
+
+**Diagnózis.** A `water_level_forecasts` tábla utolsó írása **2026-08-25 09:00 UTC** volt (a `water_level_data` ugyanakkor óránként frissült). A `fetch-water-level` óránként lefutott és 200-at adott vissza, de ~45 mp-ig tartott — ez volt az árulkodó jel: az 5 hydroinfo-fetch mind a 3 retryt végigfutotta. A `function_logs` megerősítette:
+
+```
+❌ Detail table for Baja: error sending request for url
+   (https://www.hydroinfo.hu/tables/442031H.html):
+   client error (Connect): invalid peer certificate: UnknownIssuer
+```
+
+**Gyökérok.** A hydroinfo.hu **2026-08-25 08:35 UTC-kor** (pontosan a leállás előtt fél órával) új leaf tanúsítványt kapott, amelynek kibocsátója az `e-Szigno RSA OV TLS CA 2026`. A szerver viszont továbbra is a **rossz (ECC) köztes tanúsítványt** küldi a handshake-ben (`e-Szigno OV TLS CA 2026` — „RSA" nélkül), így a lánc nem záródik. Böngésző/macOS ezt elfedi, mert az AIA „CA Issuers" URL-ről letölti a hiányzó köztest; a Deno (rustls) **nem csinál AIA-chasinget** → `UnknownIssuer`. Ellenőrizve: `openssl s_client` is „unable to get local issuer certificate"-tel bukik.
+
+A helyes lánc: leaf ← `e-Szigno RSA OV TLS CA 2026` ← `e-Szigno RSA TLS Root CA 2025` (ez utóbbi az AIA-ból tölthető, a `Microsec e-Szigno Root CA 2009` cross-signolja).
+
+**Javítás.** Új `supabase/functions/_shared/hydroinfo-fetch.ts`: beágyazza a két hiányzó tanúsítványt PEM-ként, és `Deno.createHttpClient({ caCerts })`-szel épít egy HTTP klienst, amit a `hydroinfoFetch(url)` használ. A `fetch-water-level` mindkét scraper-je (detail table + konszolidált `dunelotH.html`) erre vált. A pinelt CA-k csak **hozzáadódnak** az alap trust store-hoz, nem váltják le — ha a hydroinfo megjavítja a láncát, ez ártalmatlan marad. Ha a runtime-ból hiányozna a `Deno.createHttpClient`, a helper warninggal sima `fetch`-re esik vissza.
+
+**Ellenőrzés.** Deploy után manuális invoke: **5/5 állomás, mind 6 előrejelzési nap** (Nagybajcs is, a konszolidált táblából). A DB-be írt Baja-sor bitre egyezik az élő hydroinfo táblával (`-12 ±2`, `-17 ±5`, `-19 ±8`, `-19 ±13`, `-15 ±19`, `-4 ±24`).
+
+**Tanulság.** Külső HTML-scraping esetén a „200 OK + üres eredmény" néma hiba. Két konkrét jelzés vitt a megoldáshoz: (1) az edge_logs-ban a futásidő ugrott ~7 mp-ről ~45 mp-re (retry-backoff), (2) a tanúsítvány `notBefore` dátuma pontosan egybeesett az utolsó sikeres adatírással. Deno/rustls **nem** tud AIA-chasinget — ami böngészőben működik, edge function-ből eldőlhet.
+
+**Nyitott (nem ebben a körben javítva):**
+- `issued_at` minden futásnál `new Date()` → az `onConflict: 'station_id,forecast_date,issued_at'` upsert soha nem ütközik, óránként új sorhalmaz keletkezik (`water_level_forecasts` ma **134 ezer sor**). Helyesen a lapról olvasott „Kiadva:" időbélyeget kellene `issued_at`-nek használni — akkor az upsert valóban deduplikálna.
+- A CLAUDE.md cron-táblázata elavult: a `fetch-water-level` valójában `0 * * * *` (nem `10 * * * *`), a meteo két jobbal is fut (`*/20 * * * *` + `5 * * * *`), és van egy nem dokumentált `fetch-water-bodies-daily` (`0 7 * * *`).
 
 ---
 
