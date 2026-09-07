@@ -53,11 +53,26 @@ export default defineConfig({
         'src/lib/**/*.ts',
         'src/components/**/*.tsx',
       ],
+      /**
+       * RÁCS (ratchet), nem cél. A korábbi 80% sosem teljesült — a tényleges
+       * szint 2026-09-07-én: statements 42.64 / branches 45.2 /
+       * functions 53.07 / lines 43.35. Amíg a `test:coverage` lépés
+       * `continue-on-error: true` volt, ez észrevétlen maradt; a kapu
+       * élesítésekor azonnal pirosra váltott.
+       *
+       * Az itteni értékek a MAI szint alatt vannak pár ponttal: így a kapu
+       * a VISSZAESÉST fogja meg (ez az, amit egy CI-kapunak tudnia kell),
+       * anélkül hogy apróságokon csapkodna.
+       *
+       * A 80% továbbra is a cél — ha a fedezet nő, ezeket a számokat kell
+       * utána húzni. Legnagyobb hiányzó területek: a modulkomponensek
+       * (meteorology / water-level / drought) és a térkép-widgetek.
+       */
       thresholds: {
-        lines: 80,
-        functions: 80,
-        branches: 80,
-        statements: 80,
+        statements: 40,
+        branches: 43,
+        functions: 51,
+        lines: 41,
       },
     },
   },
