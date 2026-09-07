@@ -103,7 +103,8 @@ describe('useWaterLevelData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockStation, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
             })
           })
         };
@@ -114,7 +115,8 @@ describe('useWaterLevelData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
                 })
               })
             })
@@ -158,6 +160,10 @@ describe('useWaterLevelData', () => {
           single: vi.fn().mockResolvedValue({
             data: null,
             error: { message: 'Station not found' }
+          }),
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: { message: 'Station not found' }
           })
         })
       })
@@ -182,7 +188,8 @@ describe('useWaterLevelData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockStation, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
             })
           })
         };
@@ -193,7 +200,8 @@ describe('useWaterLevelData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
                 })
               })
             })
@@ -232,7 +240,8 @@ describe('useWaterLevelData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockStation, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
             })
           })
         };
@@ -243,7 +252,8 @@ describe('useWaterLevelData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
                 })
               })
             })
@@ -302,7 +312,8 @@ describe('useWaterLevelData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockStation, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
             })
           })
         };
@@ -313,7 +324,8 @@ describe('useWaterLevelData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: incompleteWaterLevelData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: incompleteWaterLevelData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: incompleteWaterLevelData, error: null })
                 })
               })
             })
@@ -352,7 +364,8 @@ describe('useWaterLevelData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockStation, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
             })
           })
         };
@@ -363,7 +376,8 @@ describe('useWaterLevelData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
                 })
               })
             })
@@ -401,7 +415,8 @@ describe('useWaterLevelData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockStation, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
             })
           })
         };
@@ -412,7 +427,8 @@ describe('useWaterLevelData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
                 })
               })
             })
@@ -453,7 +469,8 @@ describe('useWaterLevelData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockStation, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
             })
           })
         };
@@ -464,7 +481,8 @@ describe('useWaterLevelData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
                 })
               })
             })
@@ -504,7 +522,8 @@ describe('useWaterLevelData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockStation, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
             })
           })
         };
@@ -515,7 +534,8 @@ describe('useWaterLevelData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
                 })
               })
             })

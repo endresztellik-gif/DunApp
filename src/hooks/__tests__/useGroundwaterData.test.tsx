@@ -74,7 +74,8 @@ describe('useGroundwaterData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockWell, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockWell, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockWell, error: null })
             })
           })
         };
@@ -85,7 +86,8 @@ describe('useGroundwaterData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null })
                 })
               })
             })
@@ -116,6 +118,10 @@ describe('useGroundwaterData', () => {
           single: vi.fn().mockResolvedValue({
             data: null,
             error: { message: 'Well not found' }
+          }),
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: { message: 'Well not found' }
           })
         })
       })
@@ -139,7 +145,8 @@ describe('useGroundwaterData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockWell, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockWell, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockWell, error: null })
             })
           })
         };
@@ -150,7 +157,8 @@ describe('useGroundwaterData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null })
                 })
               })
             })
@@ -186,7 +194,8 @@ describe('useGroundwaterData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockWell, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockWell, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockWell, error: null })
             })
           })
         };
@@ -197,7 +206,8 @@ describe('useGroundwaterData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: dataWithoutTemp, error: null })
+                  single: vi.fn().mockResolvedValue({ data: dataWithoutTemp, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: dataWithoutTemp, error: null })
                 })
               })
             })
@@ -224,7 +234,8 @@ describe('useGroundwaterData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockWell, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockWell, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockWell, error: null })
             })
           })
         };
@@ -235,7 +246,8 @@ describe('useGroundwaterData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null })
                 })
               })
             })

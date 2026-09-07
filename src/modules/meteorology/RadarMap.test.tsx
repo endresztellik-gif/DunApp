@@ -31,6 +31,15 @@ vi.mock('react-leaflet', () => ({
   Popup: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="popup">{children}</div>
   ),
+  // A RadarMap időközben radar-képréteget kapott (ImageOverlay) és egy
+  // InvalidateMapSize segédkomponenst (useMap) — a mock ezekkel nem bővült,
+  // ezért mind a 15 teszt "No export is defined on the react-leaflet mock"
+  // hibával halt el, mielőtt bármit is állított volna.
+  ImageOverlay: ({ url, opacity }: { url: string; bounds: unknown; opacity?: number }) => (
+    <div data-testid="image-overlay" data-url={url} data-opacity={opacity} />
+  ),
+  // A komponens csak a map.invalidateSize()-t hívja; elég ennyit adni.
+  useMap: () => ({ invalidateSize: vi.fn() }),
 }));
 
 // Mock Leaflet icon

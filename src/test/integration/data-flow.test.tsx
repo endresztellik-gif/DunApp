@@ -140,7 +140,8 @@ describe('Integration: Meteorology Data Flow', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null })
             })
           })
         };
@@ -151,7 +152,8 @@ describe('Integration: Meteorology Data Flow', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null })
                 })
               })
             })
@@ -195,6 +197,10 @@ describe('Integration: Meteorology Data Flow', () => {
               single: vi.fn().mockResolvedValue({
                 data: null,
                 error: { message: 'Temporary error' }
+              }),
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: null,
+                error: { message: 'Temporary error' }
               })
             })
           })
@@ -206,7 +212,8 @@ describe('Integration: Meteorology Data Flow', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null })
             })
           })
         };
@@ -217,7 +224,8 @@ describe('Integration: Meteorology Data Flow', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null })
                 })
               })
             })
@@ -252,7 +260,8 @@ describe('Integration: Water Level Data Flow', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.station, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.station, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.station, error: null })
             })
           })
         };
@@ -263,7 +272,8 @@ describe('Integration: Water Level Data Flow', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null })
                 })
               })
             })
@@ -314,7 +324,8 @@ describe('Integration: Water Level Data Flow', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.station, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.station, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.station, error: null })
             })
           })
         };
@@ -325,7 +336,8 @@ describe('Integration: Water Level Data Flow', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null })
                 })
               })
             })
@@ -370,7 +382,8 @@ describe('Integration: Drought Data Flow', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockDroughtFlow.location, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockDroughtFlow.location, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockDroughtFlow.location, error: null })
             })
           })
         };
@@ -381,7 +394,8 @@ describe('Integration: Drought Data Flow', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockDroughtFlow.droughtData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockDroughtFlow.droughtData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockDroughtFlow.droughtData, error: null })
                 })
               })
             })
@@ -427,7 +441,8 @@ describe('Integration: Cache Behavior', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null })
             })
           })
         };
@@ -438,7 +453,8 @@ describe('Integration: Cache Behavior', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null })
                 })
               })
             })

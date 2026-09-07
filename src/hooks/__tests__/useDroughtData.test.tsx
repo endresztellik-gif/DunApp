@@ -80,7 +80,8 @@ describe('useDroughtData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockLocation, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockLocation, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockLocation, error: null })
             })
           })
         };
@@ -91,7 +92,8 @@ describe('useDroughtData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null })
                 })
               })
             })
@@ -121,6 +123,10 @@ describe('useDroughtData', () => {
           single: vi.fn().mockResolvedValue({
             data: null,
             error: { message: 'Location not found' }
+          }),
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: null,
+            error: { message: 'Location not found' }
           })
         })
       })
@@ -144,7 +150,8 @@ describe('useDroughtData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockLocation, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockLocation, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockLocation, error: null })
             })
           })
         };
@@ -155,7 +162,8 @@ describe('useDroughtData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null })
                 })
               })
             })
@@ -187,7 +195,8 @@ describe('useDroughtData', () => {
         return {
           select: () => ({
             eq: () => ({
-              single: vi.fn().mockResolvedValue({ data: mockLocation, error: null })
+              single: vi.fn().mockResolvedValue({ data: mockLocation, error: null }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockLocation, error: null })
             })
           })
         };
@@ -198,7 +207,8 @@ describe('useDroughtData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null })
+                  single: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null })
                 })
               })
             })
