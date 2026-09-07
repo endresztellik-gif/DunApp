@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, type PluginOption } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { visualizer } from 'rollup-plugin-visualizer'
@@ -50,13 +50,17 @@ export default defineConfig(({ mode }) => {
         type: 'module'
       }
     }),
+    // A rollup-plugin-visualizer a saját Rollup-verziójának Plugin-típusát
+    // adja vissza, ami nem illik a Vite PluginOption-jébe. Korábban `as any`
+    // volt itt; a `PluginOption` szűkebb és pontosabb — a köztes `unknown`
+    // csak a két Rollup-típus közti átfedés hiányát hidalja át.
     visualizer({
       filename: './dist/stats.html',
       open: false,
       gzipSize: true,
       brotliSize: true,
       template: 'treemap'
-    }) as any
+    }) as unknown as PluginOption
   ],
 
   // Build optimization

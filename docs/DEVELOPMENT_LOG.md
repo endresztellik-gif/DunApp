@@ -8,6 +8,46 @@
 
 ---
 
+## 2026-09-07 — ESLint flat config migráció: a lint-kapu újra ad jelet
+
+**A tényleges állapot.** A `npm run lint` nem „pár warningot" adott, hanem **el sem indult**:
+
+```
+ESLint couldn't find an eslint.config.(js|mjs|cjs) file.
+```
+
+Az ESLint v9 óta a CLI nem olvassa a `.eslintrc.*` formátumot, a repóban viszont `.eslintrc.json` volt. Vagyis a CI lint-lépése **hosszú ideje nulla ellenőrzést futtatott** — ez volt a legolcsóbban visszaszerezhető védőháló a három örökölt CI-piros (ESLint / Prettier / vitest) közül.
+
+**Nem kellett új függőség** — a flat-config-kész csomagok (`@eslint/js`, `typescript-eslint`, `globals`, `eslint-plugin-react` 7.37, `react-hooks` 5.2, `react-refresh`) mind telepítve voltak már.
+
+**Miért blokkos a config.** A repó három élesen eltérő futtatókörnyezetet kever, és egy globális beállítás mindegyiken hamis riasztást adna:
+
+| Fájlminta | Környezet |
+|---|---|
+| `src/**` | böngésző + React (jsx-runtime, hooks, react-refresh) |
+| `supabase/functions/**` | Deno (worker globals + `Deno` névtér, nincs DOM) |
+| `*.config.ts`, `netlify/**`, `scripts/**` | Node |
+| tesztek | + vitest globals (`globals: true`) |
+
+**Szabály-döntések** (mind kommentezve a configban, hogy később ne kelljen kitalálni a miértet):
+- `react/prop-types` **KI** — a propokat a TypeScript ellenőrzi; a szabály nem érti a TS interface-eket, ezért **28 hamis riasztást** adott. A `plugin:react/recommended` JS-projektekből örökölt maradványa.
+- `@typescript-eslint/no-explicit-any` **WARN, nem ERROR** — 37 valós `any` van a kódban (Supabase válaszalakok, Leaflet/Recharts interop). Látható technikai adósság marad, de egy 37 fájlos refaktor nem tartozik a kapu bevezetéséhez.
+- `react/display-name` **KI a tesztekben** — a React Query wrapperek inline komponensek.
+
+**Valódi kódhibák — javítva, nem elnémítva** (a maradék 5 error mind az volt):
+- `prefer-const` ×2: a `sourceUsed` sosem kap új értéket (FTCS + Kadia).
+- `no-useless-escape`: `/\-/` → `/-/` a base64url dekódolásban (`send-push-notification`). Viselkedés bizonyítottan azonos: `'ab-cd_ef'` → `'ab+cd/ef'` mindkettővel.
+- `no-unused-vars`: a Netlify handler `context` paramétere szándékosan használatlan (a kód saját kommentje is ezt írja) → `_context`, a projekt `^_` konvenciója szerint.
+- `no-explicit-any` a `vite.config.ts`-ben: `as any` → **`as unknown as PluginOption`**. Ez nem elnémítás, hanem szűkebb típus; a `unknown` csak a rollup-plugin-visualizer és a Vite eltérő Rollup-típusai közti átfedéshiányt hidalja át.
+
+**Egyéb.** A `lint`/`lint:fix` scriptekből kikerült az `--ext` (a flat config a `files` mintákból dolgozik). A `.eslintrc.json` **törölve** — az ESLint 9 nem olvassa, bent hagyva csak félrevezetne egy jövőbeli olvasót.
+
+**Eredmény:** `npm run lint` **exit 0**, 50 warning láthatóan megmarad. Ellenőrizve: `tsc --noEmit` 0 hiba, `npm run build` OK, Deno edge tesztek **61/61**, és a módosított Edge Function fájlokon a `deno check` **1 hiba előtte és utána is** (`git stash`-sel összevetve, nulla új).
+
+**Marad a másik két CI-piros** (külön körre): Prettier 104 fájl a `src/`-ben — egy `format:write`, de az egész `src/` git blame-jét elmossa, ezért külön commitba és `.git-blame-ignore-revs`-be való. Vitest 71 bukás 10 fájlban — ez a legértékesebb és a legnagyobb meló: jelenleg a tesztfuttatás használhatatlan kapuként, mert nem lehet megkülönböztetni egy valódi regressziót a zajtól.
+
+---
+
 ## 2026-09-07 — Teljes tanúsítvány-audit: e-Szigno lánchiba (hydroinfo.hu + www.vizugy.hu)
 
 Az előrejelzés-javítás után **végignéztük az összes külső HTTPS-végpontot**, mert a hiba osztálya (rossz CA-lánc) más forrásoknál is előjöhet. Módszer: `openssl s_client` a Mozilla root store-ral (`curl.se/ca/cacert.pem`, 121 gyökér), AIA-chasing **nélkül** — pontosan ahogy a Deno/rustls látja.

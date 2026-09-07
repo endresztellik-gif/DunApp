@@ -10,7 +10,7 @@
 
 import type { Context } from 'https://edge.netlify.com';
 
-export default async (request: Request, context: Context) => {
+export default async (request: Request, _context: Context) => {
   // Extract the path suffix from the URL (more reliable than context.params['*'])
   const url = new URL(request.url);
   const pathSuffix = url.pathname.replace('/owm-tiles/', ''); // e.g. "wind_new/7/72/45.png"

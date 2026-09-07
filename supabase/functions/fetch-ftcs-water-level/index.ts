@@ -77,7 +77,7 @@ serve(async () => {
     console.log('💧 Fetch FTCS (Karapancsa) Water Level - Starting');
 
     let dailyMap: Map<string, DailyReading>;
-    let sourceUsed = 'vizugy.hu';
+    const sourceUsed = 'vizugy.hu';
 
     // Try REST API first
     try {

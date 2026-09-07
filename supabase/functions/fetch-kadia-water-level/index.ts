@@ -75,7 +75,7 @@ serve(async () => {
     console.log('💧 Fetch Kadia Water Level - Starting');
 
     let dailyMap: Map<string, DailyReading>;
-    let sourceUsed = 'vizugy.hu';
+    const sourceUsed = 'vizugy.hu';
 
     try {
       const endTime = new Date();
