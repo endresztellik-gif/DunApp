@@ -35,6 +35,20 @@ Diagnosztikai jel: a függvény 200-at ad vissza, de üres eredménnyel, és a f
 megugrik (retry-backoff). Cert-ellenőrzés Deno szemszögéből:
 `openssl s_client -connect <host>:443 -servername <host> -CAfile <mozilla cacert.pem>`
 
+**Tanúsítvány-ellenőrzés (a fenti hibaosztályra):**
+
+```bash
+./scripts/check-certs.sh            # mind a 16 külső host
+./scripts/check-certs.sh --edge     # csak az Edge Function-ök hostjai
+```
+
+A Mozilla root store-ral, AIA-chasing **nélkül** nézi a láncot — pontosan úgy,
+ahogy a Deno. Amit itt „LÁNCHIBA"-ként lát, az élesben
+`invalid peer certificate: UnknownIssuer`. A pinelt CA-kat az
+`_shared/eszigno-fetch.ts`-ből olvassa, tehát nincs duplikált igazság.
+Automatikusan is fut: `.github/workflows/cert-watch.yml` (hetente + a pinelt
+CA-k módosításakor).
+
 **Első lépés, ha bármelyik modul adata elavultnak tűnik:**
 
 ```bash

@@ -1,0 +1,61 @@
+name: Cert Watch - külső TLS-láncok
+
+# MIÉRT LÉTEZIK EZ A WORKFLOW
+#
+# 2026-08-25-én a hydroinfo.hu új tanúsítványt kapott, és hibás láncot kezdett
+# kiszolgálni. A böngésző ezt AIA-chasinggel elfedi, a Deno (rustls) nem —
+# így a vízállás-előrejelzés NÉMÁN állt két hétig: az Edge Function 200-at
+# adott vissza, csak épp üres eredménnyel. Ugyanez történt a www.vizugy.hu-val
+# is, ami az FTCS/Kadia víztesteket vitte el.
+#
+# A hibát semmi nem jelezte — egy felhasználói bejelentés derítette ki.
+# Ez a job pontosan ezt a néma osztályt teszi zajossá.
+
+on:
+  schedule:
+    # Hetente hétfőn 05:30 UTC — a napi cron-futások (05:00/06:00/07:00) után,
+    # hogy egy friss adatciklus állapotát lássuk.
+    - cron: '30 5 * * 1'
+  workflow_dispatch:
+    inputs:
+      warn_days:
+        description: 'Hány napon belüli lejáratra figyelmeztessen'
+        required: false
+        default: '21'
+  # A pinelt CA-k vagy a lista módosításakor azonnal fusson le.
+  push:
+    paths:
+      - 'supabase/functions/_shared/eszigno-fetch.ts'
+      - 'scripts/check-certs.sh'
+      - '.github/workflows/cert-watch.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Tanúsítványláncok ellenőrzése
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Külső TLS-láncok ellenőrzése
+        id: certs
+        run: ./scripts/check-certs.sh --days "${{ github.event.inputs.warn_days || '21' }}" | tee cert-report.txt
+        # A script kilépési kódja:
+        #   0 = minden lánc érvényes (a közeli lejárat csak ::warning::)
+        #   1 = van törött lánc → ez ÉLES adatkiesés, a job bukjon el
+
+      - name: Jelentés a futás összegzésébe
+        if: always()
+        run: |
+          {
+            echo '## Külső TLS-tanúsítványok'
+            echo
+            echo 'A Mozilla root store-ral, AIA-chasing nélkül — ahogy a Deno/rustls látja.'
+            echo
+            echo '```'
+            sed 's/\x1b\[[0-9;]*m//g' cert-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
