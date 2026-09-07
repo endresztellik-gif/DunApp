@@ -25,18 +25,18 @@ import { supabase } from './lib/supabase';
 
 // Lazy load modules for better initial load performance
 const MeteorologyModule = lazy(() =>
-  import('./modules/meteorology/MeteorologyModule').then(module => ({
-    default: module.MeteorologyModule
+  import('./modules/meteorology/MeteorologyModule').then((module) => ({
+    default: module.MeteorologyModule,
   }))
 );
 const WaterLevelModule = lazy(() =>
-  import('./modules/water-level/WaterLevelModule').then(module => ({
-    default: module.WaterLevelModule
+  import('./modules/water-level/WaterLevelModule').then((module) => ({
+    default: module.WaterLevelModule,
   }))
 );
 const DroughtModule = lazy(() =>
-  import('./modules/drought/DroughtModule').then(module => ({
-    default: module.DroughtModule
+  import('./modules/drought/DroughtModule').then((module) => ({
+    default: module.DroughtModule,
   }))
 );
 import { validateMockData } from './data/mockData';
@@ -71,8 +71,16 @@ function App() {
 
   // Fetch real data from Supabase (region-filtered)
   const { cities, isLoading: citiesLoading, error: citiesError } = useCities(region);
-  const { locations: droughtLocations, isLoading: locationsLoading, error: locationsError } = useDroughtLocations(region);
-  const { wells: groundwaterWells, isLoading: wellsLoading, error: wellsError } = useGroundwaterWells(region);
+  const {
+    locations: droughtLocations,
+    isLoading: locationsLoading,
+    error: locationsError,
+  } = useDroughtLocations(region);
+  const {
+    wells: groundwaterWells,
+    isLoading: wellsLoading,
+    error: wellsError,
+  } = useGroundwaterWells(region);
 
   // Check water level alert when app loads (user request)
   useEffect(() => {
@@ -113,19 +121,17 @@ function App() {
         currentModule={activeModule}
         onModuleChange={setActiveModule}
         isDark={isDark}
-        onToggleDark={() => setIsDark(d => !d)}
+        onToggleDark={() => setIsDark((d) => !d)}
       />
 
-      {activeModule && (
-        <ModuleTabs currentModule={activeModule} onModuleChange={setActiveModule} />
-      )}
+      {activeModule && <ModuleTabs currentModule={activeModule} onModuleChange={setActiveModule} />}
 
       {/* Main Content - Render Active Module with Suspense */}
-      <main className="mx-auto max-w-7xl px-4 py-6 md:py-8 pb-24">
+      <main className="mx-auto max-w-7xl px-4 py-6 pb-24 md:py-8">
         <ErrorBoundary>
           <Suspense fallback={<LoadingSpinner message="Modul betöltése..." />}>
-            {activeModule === 'meteorology' && (
-              citiesLoading ? (
+            {activeModule === 'meteorology' &&
+              (citiesLoading ? (
                 <LoadingSpinner message="Városok betöltése..." />
               ) : citiesError ? (
                 <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 text-red-900">
@@ -135,19 +141,18 @@ function App() {
               ) : cities.length === 0 ? (
                 <div className="rounded-lg border-2 border-yellow-200 bg-yellow-50 p-4 text-yellow-900">
                   <h3 className="font-semibold">Nincsenek elérhető városok</h3>
-                  <p className="text-sm">Nem sikerült betölteni a városlistát. Kérjük, töltse újra az oldalt.</p>
+                  <p className="text-sm">
+                    Nem sikerült betölteni a városlistát. Kérjük, töltse újra az oldalt.
+                  </p>
                 </div>
               ) : (
                 <MeteorologyModule key={region} cities={cities} initialCity={cities[0]} />
-              )
-            )}
-            {activeModule === 'water-level' && (
-              <WaterLevelModule key={region} />
-            )}
-            {activeModule === 'drought' && (
-              (locationsLoading || wellsLoading) ? (
+              ))}
+            {activeModule === 'water-level' && <WaterLevelModule key={region} />}
+            {activeModule === 'drought' &&
+              (locationsLoading || wellsLoading ? (
                 <LoadingSpinner message="Aszály adatok betöltése..." />
-              ) : (locationsError || wellsError) ? (
+              ) : locationsError || wellsError ? (
                 <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 text-red-900">
                   <h3 className="font-semibold">Hiba az aszály adatok betöltésekor</h3>
                   <p className="text-sm">{locationsError?.message || wellsError?.message}</p>
@@ -162,8 +167,7 @@ function App() {
                 />
               ) : (
                 <LoadingSpinner message="Adatok betöltése..." />
-              )
-            )}
+              ))}
           </Suspense>
         </ErrorBoundary>
       </main>

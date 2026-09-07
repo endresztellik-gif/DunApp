@@ -62,8 +62,8 @@ async function fetchGroundwaterData(wellId: string) {
         longitude: (wellData as Record<string, unknown>).longitude as number,
         depthMeters: (wellData as Record<string, unknown>).depth_meters as number,
         wellType: (wellData as Record<string, unknown>).well_type as string,
-        isActive: (wellData as Record<string, unknown>).is_active as boolean
-      }
+        isActive: (wellData as Record<string, unknown>).is_active as boolean,
+      },
     };
   }
 
@@ -73,7 +73,7 @@ async function fetchGroundwaterData(wellId: string) {
       waterLevelMeters: (groundwaterData as Record<string, unknown>).water_level_meters as number,
       waterLevelMasl: (groundwaterData as Record<string, unknown>).water_level_masl as number,
       waterTemperature: (groundwaterData as Record<string, unknown>).water_temperature as number,
-      timestamp: (groundwaterData as Record<string, unknown>).timestamp as string
+      timestamp: (groundwaterData as Record<string, unknown>).timestamp as string,
     },
     well: {
       id: (wellData as Record<string, unknown>).id as string,
@@ -85,8 +85,8 @@ async function fetchGroundwaterData(wellId: string) {
       longitude: (wellData as Record<string, unknown>).longitude as number,
       depthMeters: (wellData as Record<string, unknown>).depth_meters as number,
       wellType: (wellData as Record<string, unknown>).well_type as string,
-      isActive: (wellData as Record<string, unknown>).is_active as boolean
-    }
+      isActive: (wellData as Record<string, unknown>).is_active as boolean,
+    },
   };
 }
 
@@ -108,6 +108,6 @@ export function useGroundwaterData(wellId: string | null): UseGroundwaterDataRet
     well: data?.well || null,
     isLoading,
     error: error as Error | null,
-    refetch
+    refetch,
   };
 }

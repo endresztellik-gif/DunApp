@@ -75,7 +75,7 @@ async function fetchWaterBodiesThreeDayData(): Promise<WaterBodyThreeDayData[]> 
   // Fetch measurements for each water body
   const waterBodiesData: WaterBodyThreeDayData[] = [];
 
-  for (const waterBody of (waterBodies as WaterBodyRow[])) {
+  for (const waterBody of waterBodies as WaterBodyRow[]) {
     // Get latest measurement for each of the last 3 days
     const { data: measurements, error: measurementsError } = await supabase
       .from('water_body_measurements')
@@ -85,7 +85,10 @@ async function fetchWaterBodiesThreeDayData(): Promise<WaterBodyThreeDayData[]> 
       .order('measured_at', { ascending: false });
 
     if (measurementsError) {
-      console.error(`Failed to fetch measurements for ${waterBody.name}:`, measurementsError.message);
+      console.error(
+        `Failed to fetch measurements for ${waterBody.name}:`,
+        measurementsError.message
+      );
       continue;
     }
 
@@ -93,7 +96,7 @@ async function fetchWaterBodiesThreeDayData(): Promise<WaterBodyThreeDayData[]> 
     const measurementsByDay: { [key: string]: MeasurementRow } = {};
 
     if (measurements && measurements.length > 0) {
-      for (const measurement of (measurements as MeasurementRow[])) {
+      for (const measurement of measurements as MeasurementRow[]) {
         const measurementDate = new Date(measurement.measured_at);
         measurementDate.setUTCHours(0, 0, 0, 0);
         const dayKey = measurementDate.toISOString();

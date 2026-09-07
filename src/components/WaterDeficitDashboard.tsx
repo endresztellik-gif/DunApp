@@ -57,16 +57,16 @@ export const WaterDeficitDashboard: React.FC = () => {
   // Legend content — reused below the map (normal view) and inside the
   // semi-transparent CollapsibleLegend overlay on the zoomed/fullscreen view.
   const legendBody = (
-    <div className="text-sm text-gray-700 space-y-2">
+    <div className="space-y-2 text-sm text-gray-700">
       <p>
-        <span className="font-semibold">Talaj vízhiány:</span> A talaj vízháztartási
-        hiánya mm-ben mérve.
+        <span className="font-semibold">Talaj vízhiány:</span> A talaj vízháztartási hiánya mm-ben
+        mérve.
       </p>
       <p className="text-xs text-gray-600">
-        Minél sötétebb a barna szín, annál nagyobb a vízhiány a talajban. A világosabb
-        területeken jobban ellátott a talaj vízzel.
+        Minél sötétebb a barna szín, annál nagyobb a vízhiány a talajban. A világosabb területeken
+        jobban ellátott a talaj vízzel.
       </p>
-      <div className="flex items-center gap-2 pt-2 border-t border-gray-300">
+      <div className="flex items-center gap-2 border-t border-gray-300 pt-2">
         <div className="text-xs text-gray-500">
           <strong>Rétegek:</strong> vh50 = 0-50 cm, vh100 = 0-100 cm mélységig
         </div>
@@ -75,16 +75,16 @@ export const WaterDeficitDashboard: React.FC = () => {
   );
 
   return (
-    <div className="bg-orange-50 p-6 rounded-2xl">
+    <div className="rounded-2xl bg-orange-50 p-6">
       <div className="flex flex-col items-center">
-        <h2 className="text-2xl font-semibold mb-2 text-center text-gray-800">
+        <h2 className="mb-2 text-center text-2xl font-semibold text-gray-800">
           Talaj vízhiány – napi frissítés
         </h2>
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="mb-4 text-sm text-gray-500">
           Frissítve: {today} • Forrás:{' '}
           <a
             href="https://met.hu"
-            className="underline hover:text-orange-600 transition-colors"
+            className="underline transition-colors hover:text-orange-600"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -92,102 +92,102 @@ export const WaterDeficitDashboard: React.FC = () => {
           </a>
         </p>
 
-      {/* Rétegválasztó */}
-      <div className="flex flex-wrap justify-center gap-2 mb-6">
-        {(Object.entries(layerNames) as [Layer, string][]).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setLayer(key)}
-            className={`px-4 py-2 rounded-xl font-medium transition-all ${
-              layer === key
-                ? 'bg-orange-600 text-white shadow-md'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Térkép + nagyítás */}
-      <div
-        className="relative cursor-zoom-in w-full max-w-3xl rounded-2xl shadow-lg overflow-hidden bg-gray-100"
-        onClick={() => setZoomed(true)}
-      >
-        <img
-          src={imageUrl}
-          alt={`Talaj vízhiány – ${layerNames[layer]}`}
-          className="w-full h-auto"
-          loading="lazy"
-          crossOrigin="anonymous"
-          onError={(e) => {
-            // Fallback for missing image (try 3 days ago via proxy)
-            const threeDaysAgo = new Date();
-            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-            const year = threeDaysAgo.getFullYear();
-            const month = String(threeDaysAgo.getMonth() + 1).padStart(2, '0');
-            const day = String(threeDaysAgo.getDate()).padStart(2, '0');
-            const fallbackDateStr = `${year}${month}${day}`;
-            const fallbackUrl = `/met-img/${prefix}/${prefix}${fallbackDateStr}_0000.png`;
-            e.currentTarget.src = fallbackUrl;
-          }}
-        />
-        <ZoomIn className="absolute top-3 right-3 text-white bg-black/50 p-1 rounded-full" />
-      </div>
-
-      {/* Nagyított nézet */}
-      <AnimatePresence>
-        {zoomed && (
-          <motion.div
-            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setZoomed(false)}
-          >
-            <motion.div
-              className="relative max-w-5xl w-full"
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
+        {/* Rétegválasztó */}
+        <div className="mb-6 flex flex-wrap justify-center gap-2">
+          {(Object.entries(layerNames) as [Layer, string][]).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setLayer(key)}
+              className={`rounded-xl px-4 py-2 font-medium transition-all ${
+                layer === key
+                  ? 'bg-orange-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+              }`}
             >
-              <img
-                src={imageUrl}
-                alt="Nagyított térkép"
-                className="w-full h-auto rounded-lg"
-                crossOrigin="anonymous"
-              />
-              <button
-                className="absolute top-2 right-2 bg-white/80 rounded-full p-2 hover:bg-white transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setZoomed(false);
-                }}
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Térkép + nagyítás */}
+        <div
+          className="relative w-full max-w-3xl cursor-zoom-in overflow-hidden rounded-2xl bg-gray-100 shadow-lg"
+          onClick={() => setZoomed(true)}
+        >
+          <img
+            src={imageUrl}
+            alt={`Talaj vízhiány – ${layerNames[layer]}`}
+            className="h-auto w-full"
+            loading="lazy"
+            crossOrigin="anonymous"
+            onError={(e) => {
+              // Fallback for missing image (try 3 days ago via proxy)
+              const threeDaysAgo = new Date();
+              threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+              const year = threeDaysAgo.getFullYear();
+              const month = String(threeDaysAgo.getMonth() + 1).padStart(2, '0');
+              const day = String(threeDaysAgo.getDate()).padStart(2, '0');
+              const fallbackDateStr = `${year}${month}${day}`;
+              const fallbackUrl = `/met-img/${prefix}/${prefix}${fallbackDateStr}_0000.png`;
+              e.currentTarget.src = fallbackUrl;
+            }}
+          />
+          <ZoomIn className="absolute top-3 right-3 rounded-full bg-black/50 p-1 text-white" />
+        </div>
+
+        {/* Nagyított nézet */}
+        <AnimatePresence>
+          {zoomed && (
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setZoomed(false)}
+            >
+              <motion.div
+                className="relative w-full max-w-5xl"
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.9 }}
               >
-                <X className="text-gray-800" />
-              </button>
+                <img
+                  src={imageUrl}
+                  alt="Nagyított térkép"
+                  className="h-auto w-full rounded-lg"
+                  crossOrigin="anonymous"
+                />
+                <button
+                  className="absolute top-2 right-2 rounded-full bg-white/80 p-2 transition-colors hover:bg-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setZoomed(false);
+                  }}
+                >
+                  <X className="text-gray-800" />
+                </button>
 
-              {/* Semi-transparent legend overlay (tap to expand) — does not close the modal */}
-              <div onClick={(e) => e.stopPropagation()}>
-                <CollapsibleLegend className="bottom-4 left-4">
-                  <div className="max-w-xs">
-                    <h4 className="text-xs font-semibold text-gray-900 mb-2">
-                      Talaj vízhiány – {layerNames[layer]}
-                    </h4>
-                    {legendBody}
-                  </div>
-                </CollapsibleLegend>
-              </div>
+                {/* Semi-transparent legend overlay (tap to expand) — does not close the modal */}
+                <div onClick={(e) => e.stopPropagation()}>
+                  <CollapsibleLegend className="bottom-4 left-4">
+                    <div className="max-w-xs">
+                      <h4 className="mb-2 text-xs font-semibold text-gray-900">
+                        Talaj vízhiány – {layerNames[layer]}
+                      </h4>
+                      {legendBody}
+                    </div>
+                  </CollapsibleLegend>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
 
-      {/* Jelmagyarázat */}
-      <div className="mt-6 max-w-3xl w-full bg-gray-50 p-4 rounded-xl shadow-sm">
-        <h3 className="text-lg font-semibold mb-2 text-gray-800">Jelmagyarázat</h3>
-        {legendBody}
-      </div>
+        {/* Jelmagyarázat */}
+        <div className="mt-6 w-full max-w-3xl rounded-xl bg-gray-50 p-4 shadow-sm">
+          <h3 className="mb-2 text-lg font-semibold text-gray-800">Jelmagyarázat</h3>
+          {legendBody}
+        </div>
       </div>
     </div>
   );

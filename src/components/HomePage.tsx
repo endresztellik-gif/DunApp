@@ -25,13 +25,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onModuleSelect }) => {
   if (!region) {
     return (
       <div
-        className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
+        className="flex min-h-screen flex-col items-center justify-center px-4 py-12"
         style={{ background: 'var(--bg-app)' }}
       >
         {/* Brand */}
-        <div className="text-center mb-12">
-          <div className="flex justify-center mb-4">
-            <img src="/icons/icon-192x192.svg" alt="DunApp Logo" className="w-24 h-24 md:w-32 md:h-32" />
+        <div className="mb-12 text-center">
+          <div className="mb-4 flex justify-center">
+            <img
+              src="/icons/icon-192x192.svg"
+              alt="DunApp Logo"
+              className="h-24 w-24 md:h-32 md:w-32"
+            />
           </div>
           <h1
             style={{
@@ -51,16 +55,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onModuleSelect }) => {
         </div>
 
         {/* Region cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl w-full">
+        <div className="grid w-full max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2">
           {REGION_CARDS.map(({ region: r, label, desc }) => (
             <button
               key={r}
               onClick={() => setRegion(r)}
-              className="dun-card flex flex-col items-center text-center p-8"
+              className="dun-card flex flex-col items-center p-8 text-center"
               style={{ cursor: 'pointer', border: 'none' }}
             >
               <div
-                className="flex items-center justify-center mb-4 rounded-full"
+                className="mb-4 flex items-center justify-center rounded-full"
                 style={{
                   width: '64px',
                   height: '64px',
@@ -80,9 +84,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onModuleSelect }) => {
               >
                 {label}
               </h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>
-                {desc}
-              </p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{desc}</p>
             </button>
           ))}
         </div>
@@ -97,13 +99,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onModuleSelect }) => {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
+      className="flex min-h-screen flex-col items-center justify-center px-4 py-12"
       style={{ background: 'var(--bg-app)' }}
     >
       {/* Brand */}
-      <div className="text-center mb-12">
-        <div className="flex justify-center mb-4">
-          <img src="/icons/icon-192x192.svg" alt="DunApp Logo" className="w-24 h-24 md:w-32 md:h-32" />
+      <div className="mb-12 text-center">
+        <div className="mb-4 flex justify-center">
+          <img
+            src="/icons/icon-192x192.svg"
+            alt="DunApp Logo"
+            className="h-24 w-24 md:h-32 md:w-32"
+          />
         </div>
         <h1
           style={{
@@ -126,7 +132,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onModuleSelect }) => {
       </div>
 
       {/* Module Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full">
+      <div className="grid w-full max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
         {[
           {
             module: 'meteorology' as ModuleType,
@@ -153,11 +159,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onModuleSelect }) => {
           <button
             key={module}
             onClick={() => onModuleSelect(module)}
-            className="dun-card flex flex-col items-center text-center p-8"
+            className="dun-card flex flex-col items-center p-8 text-center"
             style={{ cursor: 'pointer', border: 'none' }}
           >
             <div
-              className="flex items-center justify-center mb-4 rounded-full"
+              className="mb-4 flex items-center justify-center rounded-full"
               style={{
                 width: '64px',
                 height: '64px',
@@ -177,9 +183,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onModuleSelect }) => {
             >
               {label}
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>
-              {desc}
-            </p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{desc}</p>
           </button>
         ))}
       </div>

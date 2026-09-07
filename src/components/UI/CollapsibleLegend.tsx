@@ -30,15 +30,19 @@ export function CollapsibleLegend({ children, className = '' }: CollapsibleLegen
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.18 }}
-            className="mb-2 max-w-[85vw] max-h-[60vh] overflow-auto rounded-lg px-3 py-2.5 backdrop-blur"
-            style={{ background: 'rgba(255,255,255,0.96)', border: '0.5px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)' }}
+            className="mb-2 max-h-[60vh] max-w-[85vw] overflow-auto rounded-lg px-3 py-2.5 backdrop-blur"
+            style={{
+              background: 'rgba(255,255,255,0.96)',
+              border: '0.5px solid var(--border-subtle)',
+              boxShadow: 'var(--shadow-lg)',
+            }}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">{children}</div>
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Jelmagyarázat bezárása"
-                className="-mt-1 -mr-1 shrink-0 rounded p-1 hover:bg-gray-100 transition-colors"
+                className="-mt-1 -mr-1 shrink-0 rounded p-1 transition-colors hover:bg-gray-100"
               >
                 <X className="h-4 w-4 text-gray-500" />
               </button>

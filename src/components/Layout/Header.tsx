@@ -55,7 +55,9 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const today = new Date().toLocaleDateString('hu-HU', {
-    year: 'numeric', month: 'long', day: 'numeric'
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   });
 
   const bellSubscribedStyle: React.CSSProperties = {
@@ -96,11 +98,11 @@ export const Header: React.FC<HeaderProps> = ({
         zIndex: 'var(--z-nav)',
       }}
     >
-      <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         {/* Logo */}
         <button
           onClick={() => onModuleChange(null)}
-          className="flex flex-col hover:opacity-80 transition-opacity text-left"
+          className="flex flex-col text-left transition-opacity hover:opacity-80"
           aria-label="DunApp főoldal"
         >
           <span
@@ -184,16 +186,15 @@ export const Header: React.FC<HeaderProps> = ({
               transition: 'var(--transition-fast)',
             }}
           >
-            {isDark
-              ? <Sun size={16} aria-hidden />
-              : <Moon size={16} aria-hidden />
-            }
+            {isDark ? <Sun size={16} aria-hidden /> : <Moon size={16} aria-hidden />}
           </button>
 
           {/* Értesítések gomb — cián ha feliratkozott, halvány ha nem */}
           {isSupported && permission !== 'denied' && (
             <button
-              aria-label={isSubscribed ? 'Értesítések kezelése (aktív)' : 'Feliratkozás értesítésekre'}
+              aria-label={
+                isSubscribed ? 'Értesítések kezelése (aktív)' : 'Feliratkozás értesítésekre'
+              }
               onClick={() => setShowNotifications(true)}
               style={isSubscribed ? bellSubscribedStyle : bellDefaultStyle}
             >
@@ -206,12 +207,12 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Notification confirm modal */}
       {showNotifications && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4"
+          className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-16"
           style={{ background: 'rgba(0,0,0,0.5)' }}
           onClick={() => !isLoading && setShowNotifications(false)}
         >
           <div
-            className="w-full max-w-sm rounded-xl overflow-hidden shadow-xl"
+            className="w-full max-w-sm overflow-hidden rounded-xl shadow-xl"
             style={{ background: 'var(--bg-surface)' }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -221,10 +222,11 @@ export const Header: React.FC<HeaderProps> = ({
               style={{ borderBottom: '1px solid var(--border-subtle)' }}
             >
               <div className="flex items-center gap-2.5">
-                {isSubscribed
-                  ? <Bell className="h-4 w-4" style={{ color: 'var(--color-dun-wave-400)' }} />
-                  : <BellOff className="h-4 w-4 text-gray-400" />
-                }
+                {isSubscribed ? (
+                  <Bell className="h-4 w-4" style={{ color: 'var(--color-dun-wave-400)' }} />
+                ) : (
+                  <BellOff className="h-4 w-4 text-gray-400" />
+                )}
                 <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
                   Vízállás riasztás
                 </span>
@@ -232,7 +234,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 onClick={() => !isLoading && setShowNotifications(false)}
                 aria-label="Bezárás"
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 transition-colors hover:text-gray-600"
                 disabled={isLoading}
               >
                 <X size={16} />
@@ -241,15 +243,14 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Dialog törzs */}
             <div className="px-4 py-4">
-              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+              <p className="mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
                 {isSubscribed
                   ? 'Az értesítések aktívak. Riasztást kapsz, ha Mohácsnál a vízállás eléri a 400 cm-t.'
-                  : 'Szeretnél értesítést kapni, ha a mohácsi vízállás eléri a 400 cm-t?'
-                }
+                  : 'Szeretnél értesítést kapni, ha a mohácsi vízállás eléri a 400 cm-t?'}
               </p>
 
               {error && (
-                <p className="text-xs text-red-600 mb-3 rounded-md bg-red-50 px-3 py-2">{error}</p>
+                <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p>
               )}
 
               <div className="flex gap-2">
@@ -258,13 +259,17 @@ export const Header: React.FC<HeaderProps> = ({
                     <button
                       onClick={handleAction}
                       disabled={isLoading}
-                      className="flex-1 flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50"
                       style={{ background: '#dc2626' }}
                     >
-                      {isLoading
-                        ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Leiratkozás...</>
-                        : 'Leiratkozás'
-                      }
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Leiratkozás...
+                        </>
+                      ) : (
+                        'Leiratkozás'
+                      )}
                     </button>
                     <button
                       onClick={() => setShowNotifications(false)}
@@ -280,13 +285,17 @@ export const Header: React.FC<HeaderProps> = ({
                     <button
                       onClick={handleAction}
                       disabled={isLoading}
-                      className="flex-1 flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50"
                       style={{ background: 'var(--color-dun-wave-400)' }}
                     >
-                      {isLoading
-                        ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Feliratkozás...</>
-                        : 'Feliratkozás'
-                      }
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Feliratkozás...
+                        </>
+                      ) : (
+                        'Feliratkozás'
+                      )}
                     </button>
                     <button
                       onClick={() => setShowNotifications(false)}

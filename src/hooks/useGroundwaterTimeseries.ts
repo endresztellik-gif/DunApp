@@ -53,16 +53,16 @@ async function fetchGroundwaterTimeseries(wellId: string) {
   // Database self-limits to ~14 months through 5-day incremental scraping
   // .limit(10000) protects against excessive data (sufficient for years)
 
-  const { data, error} = await supabase
+  const { data, error } = (await supabase
     .from('groundwater_data')
     .select('timestamp, water_level_meters, water_level_masl, water_temperature')
     .eq('well_id', wellId)
     // Fetch most recent data first (descending order) to ensure latest data is included
     .order('timestamp', { ascending: false })
-    .limit(10000) as {
-      data: GroundwaterDataRow[] | null;
-      error: any;
-    }; // Reverse chronological order - frontend will re-sort for chart display
+    .limit(10000)) as {
+    data: GroundwaterDataRow[] | null;
+    error: any;
+  }; // Reverse chronological order - frontend will re-sort for chart display
 
   if (error) {
     throw new Error(`Failed to fetch groundwater timeseries: ${error.message}`);
@@ -77,7 +77,7 @@ async function fetchGroundwaterTimeseries(wellId: string) {
     timestamp: point.timestamp,
     waterLevelMeters: point.water_level_meters,
     waterLevelMasl: point.water_level_masl,
-    waterTemperature: point.water_temperature
+    waterTemperature: point.water_temperature,
   }));
 }
 
@@ -106,6 +106,6 @@ export function useGroundwaterTimeseries(wellId: string | null): UseGroundwaterT
     timeseriesData: data || [],
     isLoading,
     error: error as Error | null,
-    refetch
+    refetch,
   };
 }

@@ -9,269 +9,271 @@
    ------------------------------------------------------------ */
 :root {
   /* Kék-türkiz skála (vízrétegek) */
-  --color-dun-deep-900:    #06141e;
-  --color-dun-deep-800:    #0d2b3e;   /* deep — elsődleges sötét */
-  --color-dun-deep-700:    #113548;
-  --color-dun-current-600: #1a5f7a;   /* current — közepes kék */
+  --color-dun-deep-900: #06141e;
+  --color-dun-deep-800: #0d2b3e; /* deep — elsődleges sötét */
+  --color-dun-deep-700: #113548;
+  --color-dun-current-600: #1a5f7a; /* current — közepes kék */
   --color-dun-current-500: #1e7a9e;
-  --color-dun-wave-400:    #22a6b3;   /* wave — akcentszín */
-  --color-dun-wave-300:    #4bbfc9;
-  --color-dun-ripple-200:  #7ecfc7;   /* ripple — halvány türkiz */
-  --color-dun-ripple-100:  #b0e3de;
-  --color-dun-fog-50:      #e1f2f3;   /* fog — leghalványabb */
+  --color-dun-wave-400: #22a6b3; /* wave — akcentszín */
+  --color-dun-wave-300: #4bbfc9;
+  --color-dun-ripple-200: #7ecfc7; /* ripple — halvány türkiz */
+  --color-dun-ripple-100: #b0e3de;
+  --color-dun-fog-50: #e1f2f3; /* fog — leghalványabb */
 
   /* Homok/föld skála */
-  --color-dun-sand-100:    #f0e6c8;
-  --color-dun-sand-200:    #dfd0a0;
-  --color-dun-earth-500:   #6b5344;
-  --color-dun-earth-700:   #4a3830;
+  --color-dun-sand-100: #f0e6c8;
+  --color-dun-sand-200: #dfd0a0;
+  --color-dun-earth-500: #6b5344;
+  --color-dun-earth-700: #4a3830;
 
   /* Szemantikus — figyelem/veszély */
-  --color-dun-amber-400:   #d4851c;
-  --color-dun-amber-200:   #f0b95a;
-  --color-dun-alert-500:   #b94040;
-  --color-dun-alert-200:   #e07575;
-  --color-dun-ok-500:      #2d8a5e;
-  --color-dun-ok-200:      #72c49a;
+  --color-dun-amber-400: #d4851c;
+  --color-dun-amber-200: #f0b95a;
+  --color-dun-alert-500: #b94040;
+  --color-dun-alert-200: #e07575;
+  --color-dun-ok-500: #2d8a5e;
+  --color-dun-ok-200: #72c49a;
 }
 
 /* ------------------------------------------------------------
    LIGHT THEME  (alapértelmezett)
    ------------------------------------------------------------ */
 :root,
-[data-theme="light"] {
+[data-theme='light'] {
   /* --- Háttérszínek --- */
-  --bg-app:          #f5f7f8;       /* oldal háttér */
-  --bg-surface:      #ffffff;       /* kártyák, panelek */
-  --bg-surface-alt:  #eef3f4;       /* kicsit mélyebb felület */
-  --bg-overlay:      rgba(13,43,62,.04);
+  --bg-app: #f5f7f8; /* oldal háttér */
+  --bg-surface: #ffffff; /* kártyák, panelek */
+  --bg-surface-alt: #eef3f4; /* kicsit mélyebb felület */
+  --bg-overlay: rgba(13, 43, 62, 0.04);
 
   /* --- Szöveg --- */
-  --text-primary:    #0d2b3e;       /* deep, max. kontraszt */
-  --text-secondary:  #3d6373;       /* current árnyalat */
-  --text-tertiary:   #7a9eaa;       /* halvány, feliratok */
-  --text-data:       #1a5f7a;       /* mért értékek, monospace */
-  --text-inverse:    #ffffff;
+  --text-primary: #0d2b3e; /* deep, max. kontraszt */
+  --text-secondary: #3d6373; /* current árnyalat */
+  --text-tertiary: #7a9eaa; /* halvány, feliratok */
+  --text-data: #1a5f7a; /* mért értékek, monospace */
+  --text-inverse: #ffffff;
 
   /* --- Keretszínek --- */
-  --border-subtle:   rgba(26,95,122,.10);
-  --border-default:  rgba(26,95,122,.18);
-  --border-strong:   rgba(26,95,122,.30);
+  --border-subtle: rgba(26, 95, 122, 0.1);
+  --border-default: rgba(26, 95, 122, 0.18);
+  --border-strong: rgba(26, 95, 122, 0.3);
 
   /* --- Akcentszínek (szemantikus) --- */
-  --accent-primary:  var(--color-dun-wave-400);    /* interaktív elemek */
-  --accent-hover:    var(--color-dun-current-500); /* hover állapot */
-  --accent-muted:    var(--color-dun-fog-50);      /* badge háttér */
+  --accent-primary: var(--color-dun-wave-400); /* interaktív elemek */
+  --accent-hover: var(--color-dun-current-500); /* hover állapot */
+  --accent-muted: var(--color-dun-fog-50); /* badge háttér */
 
   /* --- Állapotszínek --- */
-  --status-ok-bg:    #e8f5ee;
-  --status-ok-text:  var(--color-dun-ok-500);
-  --status-ok-border: rgba(45,138,94,.25);
+  --status-ok-bg: #e8f5ee;
+  --status-ok-text: var(--color-dun-ok-500);
+  --status-ok-border: rgba(45, 138, 94, 0.25);
 
-  --status-warn-bg:   #fef6e7;
+  --status-warn-bg: #fef6e7;
   --status-warn-text: #8a5500;
-  --status-warn-border: rgba(212,133,28,.25);
+  --status-warn-border: rgba(212, 133, 28, 0.25);
 
-  --status-alert-bg:   #fdeaea;
+  --status-alert-bg: #fdeaea;
   --status-alert-text: var(--color-dun-alert-500);
-  --status-alert-border: rgba(185,64,64,.25);
+  --status-alert-border: rgba(185, 64, 64, 0.25);
 
   /* --- Navigáció --- */
-  --nav-bg:          rgba(255,255,255,.85);
-  --nav-border:      rgba(26,95,122,.10);
-  --nav-item-active-bg: rgba(34,166,179,.10);
-  --nav-item-active-border: rgba(34,166,179,.25);
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  --nav-border: rgba(26, 95, 122, 0.1);
+  --nav-item-active-bg: rgba(34, 166, 179, 0.1);
+  --nav-item-active-border: rgba(34, 166, 179, 0.25);
   --nav-icon-active: var(--color-dun-wave-400);
-  --nav-icon-idle:   #7a9eaa;
+  --nav-icon-idle: #7a9eaa;
 
   /* --- Adatkártya dark variáns (a light témán belül is megmarad) --- */
-  --card-dark-bg:    var(--color-dun-deep-800);
-  --card-dark-text:  var(--color-dun-ripple-200);
-  --card-dark-sub:   rgba(255,255,255,.38);
-  --card-dark-chip-bg: rgba(34,166,179,.18);
-  --card-dark-chip-border: rgba(34,166,179,.32);
+  --card-dark-bg: var(--color-dun-deep-800);
+  --card-dark-text: var(--color-dun-ripple-200);
+  --card-dark-sub: rgba(255, 255, 255, 0.38);
+  --card-dark-chip-bg: rgba(34, 166, 179, 0.18);
+  --card-dark-chip-border: rgba(34, 166, 179, 0.32);
 
   /* --- Shadow --- */
-  --shadow-sm:  0 1px 3px rgba(13,43,62,.06), 0 1px 2px rgba(13,43,62,.04);
-  --shadow-md:  0 4px 12px rgba(13,43,62,.08), 0 2px 4px rgba(13,43,62,.05);
-  --shadow-lg:  0 8px 24px rgba(13,43,62,.12), 0 4px 8px rgba(13,43,62,.06);
+  --shadow-sm: 0 1px 3px rgba(13, 43, 62, 0.06), 0 1px 2px rgba(13, 43, 62, 0.04);
+  --shadow-md: 0 4px 12px rgba(13, 43, 62, 0.08), 0 2px 4px rgba(13, 43, 62, 0.05);
+  --shadow-lg: 0 8px 24px rgba(13, 43, 62, 0.12), 0 4px 8px rgba(13, 43, 62, 0.06);
 }
 
 /* ------------------------------------------------------------
    DARK THEME  (auto: rendszer sötét mód)
    ------------------------------------------------------------ */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg-app:          #07161f;
-    --bg-surface:      #0d2534;
-    --bg-surface-alt:  #0f2d3e;
-    --bg-overlay:      rgba(0,0,0,.3);
+  :root:not([data-theme='light']) {
+    --bg-app: #07161f;
+    --bg-surface: #0d2534;
+    --bg-surface-alt: #0f2d3e;
+    --bg-overlay: rgba(0, 0, 0, 0.3);
 
-    --text-primary:    #daedf0;
-    --text-secondary:  #88bfc8;
-    --text-tertiary:   #4a7e8a;
-    --text-data:       var(--color-dun-ripple-200);
-    --text-inverse:    #0d2b3e;
+    --text-primary: #daedf0;
+    --text-secondary: #88bfc8;
+    --text-tertiary: #4a7e8a;
+    --text-data: var(--color-dun-ripple-200);
+    --text-inverse: #0d2b3e;
 
-    --border-subtle:   rgba(126,207,199,.08);
-    --border-default:  rgba(126,207,199,.14);
-    --border-strong:   rgba(126,207,199,.24);
+    --border-subtle: rgba(126, 207, 199, 0.08);
+    --border-default: rgba(126, 207, 199, 0.14);
+    --border-strong: rgba(126, 207, 199, 0.24);
 
-    --accent-primary:  var(--color-dun-ripple-200);
-    --accent-hover:    var(--color-dun-wave-400);
-    --accent-muted:    rgba(34,166,179,.12);
+    --accent-primary: var(--color-dun-ripple-200);
+    --accent-hover: var(--color-dun-wave-400);
+    --accent-muted: rgba(34, 166, 179, 0.12);
 
-    --status-ok-bg:    rgba(45,138,94,.18);
-    --status-ok-text:  var(--color-dun-ok-200);
-    --status-ok-border: rgba(45,138,94,.3);
+    --status-ok-bg: rgba(45, 138, 94, 0.18);
+    --status-ok-text: var(--color-dun-ok-200);
+    --status-ok-border: rgba(45, 138, 94, 0.3);
 
-    --status-warn-bg:   rgba(212,133,28,.15);
+    --status-warn-bg: rgba(212, 133, 28, 0.15);
     --status-warn-text: var(--color-dun-amber-200);
-    --status-warn-border: rgba(212,133,28,.28);
+    --status-warn-border: rgba(212, 133, 28, 0.28);
 
-    --status-alert-bg:   rgba(185,64,64,.18);
+    --status-alert-bg: rgba(185, 64, 64, 0.18);
     --status-alert-text: var(--color-dun-alert-200);
-    --status-alert-border: rgba(185,64,64,.3);
+    --status-alert-border: rgba(185, 64, 64, 0.3);
 
-    --nav-bg:          rgba(10,28,42,.92);
-    --nav-border:      rgba(126,207,199,.1);
-    --nav-item-active-bg: rgba(34,166,179,.14);
-    --nav-item-active-border: rgba(34,166,179,.3);
+    --nav-bg: rgba(10, 28, 42, 0.92);
+    --nav-border: rgba(126, 207, 199, 0.1);
+    --nav-item-active-bg: rgba(34, 166, 179, 0.14);
+    --nav-item-active-border: rgba(34, 166, 179, 0.3);
     --nav-icon-active: var(--color-dun-ripple-200);
-    --nav-icon-idle:   #4a7e8a;
+    --nav-icon-idle: #4a7e8a;
 
-    --card-dark-bg:    rgba(0,0,0,.35);
-    --card-dark-text:  var(--color-dun-ripple-200);
-    --card-dark-sub:   rgba(255,255,255,.3);
-    --card-dark-chip-bg: rgba(34,166,179,.14);
-    --card-dark-chip-border: rgba(34,166,179,.28);
+    --card-dark-bg: rgba(0, 0, 0, 0.35);
+    --card-dark-text: var(--color-dun-ripple-200);
+    --card-dark-sub: rgba(255, 255, 255, 0.3);
+    --card-dark-chip-bg: rgba(34, 166, 179, 0.14);
+    --card-dark-chip-border: rgba(34, 166, 179, 0.28);
 
-    --shadow-sm:  0 1px 3px rgba(0,0,0,.25);
-    --shadow-md:  0 4px 12px rgba(0,0,0,.35);
-    --shadow-lg:  0 8px 24px rgba(0,0,0,.45);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45);
   }
 }
 
 /* ------------------------------------------------------------
    MANUÁLIS TÉMAKAPCSOLÓ  (data-theme attribútum)
    ------------------------------------------------------------ */
-[data-theme="dark"] {
-  --bg-app:          #07161f;
-  --bg-surface:      #0d2534;
-  --bg-surface-alt:  #0f2d3e;
-  --bg-overlay:      rgba(0,0,0,.3);
-  --text-primary:    #daedf0;
-  --text-secondary:  #88bfc8;
-  --text-tertiary:   #4a7e8a;
-  --text-data:       var(--color-dun-ripple-200);
-  --text-inverse:    #0d2b3e;
-  --border-subtle:   rgba(126,207,199,.08);
-  --border-default:  rgba(126,207,199,.14);
-  --border-strong:   rgba(126,207,199,.24);
-  --accent-primary:  var(--color-dun-ripple-200);
-  --accent-hover:    var(--color-dun-wave-400);
-  --accent-muted:    rgba(34,166,179,.12);
-  --status-ok-bg:    rgba(45,138,94,.18);
-  --status-ok-text:  var(--color-dun-ok-200);
-  --status-ok-border: rgba(45,138,94,.3);
-  --status-warn-bg:   rgba(212,133,28,.15);
+[data-theme='dark'] {
+  --bg-app: #07161f;
+  --bg-surface: #0d2534;
+  --bg-surface-alt: #0f2d3e;
+  --bg-overlay: rgba(0, 0, 0, 0.3);
+  --text-primary: #daedf0;
+  --text-secondary: #88bfc8;
+  --text-tertiary: #4a7e8a;
+  --text-data: var(--color-dun-ripple-200);
+  --text-inverse: #0d2b3e;
+  --border-subtle: rgba(126, 207, 199, 0.08);
+  --border-default: rgba(126, 207, 199, 0.14);
+  --border-strong: rgba(126, 207, 199, 0.24);
+  --accent-primary: var(--color-dun-ripple-200);
+  --accent-hover: var(--color-dun-wave-400);
+  --accent-muted: rgba(34, 166, 179, 0.12);
+  --status-ok-bg: rgba(45, 138, 94, 0.18);
+  --status-ok-text: var(--color-dun-ok-200);
+  --status-ok-border: rgba(45, 138, 94, 0.3);
+  --status-warn-bg: rgba(212, 133, 28, 0.15);
   --status-warn-text: var(--color-dun-amber-200);
-  --status-warn-border: rgba(212,133,28,.28);
-  --status-alert-bg:   rgba(185,64,64,.18);
+  --status-warn-border: rgba(212, 133, 28, 0.28);
+  --status-alert-bg: rgba(185, 64, 64, 0.18);
   --status-alert-text: var(--color-dun-alert-200);
-  --status-alert-border: rgba(185,64,64,.3);
-  --nav-bg:          rgba(10,28,42,.92);
-  --nav-border:      rgba(126,207,199,.1);
-  --nav-item-active-bg: rgba(34,166,179,.14);
-  --nav-item-active-border: rgba(34,166,179,.3);
+  --status-alert-border: rgba(185, 64, 64, 0.3);
+  --nav-bg: rgba(10, 28, 42, 0.92);
+  --nav-border: rgba(126, 207, 199, 0.1);
+  --nav-item-active-bg: rgba(34, 166, 179, 0.14);
+  --nav-item-active-border: rgba(34, 166, 179, 0.3);
   --nav-icon-active: var(--color-dun-ripple-200);
-  --nav-icon-idle:   #4a7e8a;
-  --card-dark-bg:    rgba(0,0,0,.35);
-  --card-dark-text:  var(--color-dun-ripple-200);
-  --card-dark-sub:   rgba(255,255,255,.3);
-  --card-dark-chip-bg: rgba(34,166,179,.14);
-  --card-dark-chip-border: rgba(34,166,179,.28);
-  --shadow-sm:  0 1px 3px rgba(0,0,0,.25);
-  --shadow-md:  0 4px 12px rgba(0,0,0,.35);
-  --shadow-lg:  0 8px 24px rgba(0,0,0,.45);
+  --nav-icon-idle: #4a7e8a;
+  --card-dark-bg: rgba(0, 0, 0, 0.35);
+  --card-dark-text: var(--color-dun-ripple-200);
+  --card-dark-sub: rgba(255, 255, 255, 0.3);
+  --card-dark-chip-bg: rgba(34, 166, 179, 0.14);
+  --card-dark-chip-border: rgba(34, 166, 179, 0.28);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 /* ------------------------------------------------------------
    TIPOGRÁFIA
    ------------------------------------------------------------ */
 :root {
-  --font-display: 'DM Serif Display', Georgia, serif;  /* app neve, nagy számok */
-  --font-ui:      'Inter', system-ui, sans-serif;       /* UI szövegek */
-  --font-data:    'IBM Plex Mono', 'Courier New', monospace; /* mért adatok */
+  --font-display: 'DM Serif Display', Georgia, serif; /* app neve, nagy számok */
+  --font-ui: 'Inter', system-ui, sans-serif; /* UI szövegek */
+  --font-data: 'IBM Plex Mono', 'Courier New', monospace; /* mért adatok */
 
   /* Méretrács */
-  --text-xs:   11px;
-  --text-sm:   13px;
+  --text-xs: 11px;
+  --text-sm: 13px;
   --text-base: 15px;
-  --text-lg:   18px;
-  --text-xl:   22px;
-  --text-2xl:  28px;
-  --text-3xl:  36px;
-  --text-data-sm:  20px;   /* kisebb adatérték */
-  --text-data-lg:  32px;   /* főérték, pl. 428 cm */
-  --text-data-xl:  44px;   /* hero adat */
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+  --text-data-sm: 20px; /* kisebb adatérték */
+  --text-data-lg: 32px; /* főérték, pl. 428 cm */
+  --text-data-xl: 44px; /* hero adat */
 
   /* Vonalvastagság */
-  --lh-tight:  1.2;
+  --lh-tight: 1.2;
   --lh-normal: 1.5;
-  --lh-loose:  1.75;
+  --lh-loose: 1.75;
 
   /* Letter-spacing */
-  --ls-tight:  -0.03em;
-  --ls-normal:  0;
-  --ls-wide:    0.06em;
-  --ls-caps:    0.1em;
+  --ls-tight: -0.03em;
+  --ls-normal: 0;
+  --ls-wide: 0.06em;
+  --ls-caps: 0.1em;
 }
 
 /* ------------------------------------------------------------
    ELRENDEZÉS / SPACING
    ------------------------------------------------------------ */
 :root {
-  --space-1:  4px;
-  --space-2:  8px;
-  --space-3:  12px;
-  --space-4:  16px;
-  --space-5:  20px;
-  --space-6:  24px;
-  --space-8:  32px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
 
   /* Kerekítés */
-  --radius-sm:   6px;
-  --radius-md:   10px;
-  --radius-lg:   14px;
-  --radius-xl:   20px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
   --radius-full: 9999px;
 
   /* Keret vastagság */
-  --border-thin:   0.5px;
+  --border-thin: 0.5px;
   --border-normal: 1px;
-  --border-accent: 1.5px;   /* aktív állapot, highlight */
+  --border-accent: 1.5px; /* aktív állapot, highlight */
 
   /* Animáció */
-  --transition-fast:   120ms ease;
+  --transition-fast: 120ms ease;
   --transition-normal: 200ms ease;
-  --transition-slow:   350ms ease;
+  --transition-slow: 350ms ease;
 
   /* Z-index rétegek */
-  --z-base:    0;
-  --z-card:    1;
-  --z-dropdown:100;
-  --z-nav:     200;
-  --z-modal:   300;
-  --z-toast:   400;
+  --z-base: 0;
+  --z-card: 1;
+  --z-dropdown: 100;
+  --z-nav: 200;
+  --z-modal: 300;
+  --z-toast: 400;
 }
 
 /* ------------------------------------------------------------
    ALAP RESET + GLOBAL STÍLUSOK
    ------------------------------------------------------------ */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -304,8 +306,12 @@ body {
   color: var(--text-primary);
   line-height: var(--lh-tight);
 }
-.dun-value-xl { font-size: var(--text-data-xl); }
-.dun-value-sm { font-size: var(--text-data-sm); }
+.dun-value-xl {
+  font-size: var(--text-data-xl);
+}
+.dun-value-sm {
+  font-size: var(--text-data-sm);
+}
 .dun-value-unit {
   font-family: var(--font-ui);
   font-size: var(--text-sm);
@@ -411,13 +417,15 @@ body {
   border-radius: var(--radius-md);
   border: var(--border-thin) solid transparent;
   cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
   text-decoration: none;
   color: var(--nav-icon-idle);
   background: transparent;
 }
 .dun-nav-item.active,
-.dun-nav-item[aria-current="page"] {
+.dun-nav-item[aria-current='page'] {
   background: var(--nav-item-active-bg);
   border-color: var(--nav-item-active-border);
   color: var(--nav-icon-active);
@@ -445,20 +453,30 @@ body {
   content: '';
   position: absolute;
   border-radius: 50%;
-  border: 1px solid rgba(126,207,199,.15);
+  border: 1px solid rgba(126, 207, 199, 0.15);
   pointer-events: none;
 }
 .dun-ripple-deco::before {
-  width: 100px; height: 100px;
-  right: -20px; bottom: -30px;
+  width: 100px;
+  height: 100px;
+  right: -20px;
+  bottom: -30px;
 }
 .dun-ripple-deco::after {
-  width: 160px; height: 160px;
-  right: -50px; bottom: -60px;
-  border-color: rgba(126,207,199,.08);
+  width: 160px;
+  height: 160px;
+  right: -50px;
+  bottom: -60px;
+  border-color: rgba(126, 207, 199, 0.08);
 }
 
 /* Trend nyilak */
-.dun-trend-up   { color: var(--color-dun-alert-500); }
-.dun-trend-down { color: var(--color-dun-ok-500); }
-.dun-trend-flat { color: var(--text-tertiary); }
+.dun-trend-up {
+  color: var(--color-dun-alert-500);
+}
+.dun-trend-down {
+  color: var(--color-dun-ok-500);
+}
+.dun-trend-flat {
+  color: var(--text-tertiary);
+}

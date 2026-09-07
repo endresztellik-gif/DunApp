@@ -385,9 +385,7 @@ describe('DroughtLocationSelector - Styling', () => {
   });
 
   it('accepts custom className prop', () => {
-    render(
-      <DroughtLocationSelector {...props} className="custom-test-class" />
-    );
+    render(<DroughtLocationSelector {...props} className="custom-test-class" />);
     const dropdown = document.querySelector('.selector-dropdown');
     expect(dropdown).toHaveClass('custom-test-class');
   });

@@ -21,8 +21,8 @@ export const mockOpenWeatherMapResponse = {
       id: 802,
       main: 'Clouds',
       description: 'scattered clouds',
-      icon: '03d'
-    }
+      icon: '03d',
+    },
   ],
   base: 'stations',
   main: {
@@ -31,15 +31,15 @@ export const mockOpenWeatherMapResponse = {
     temp_min: 20,
     temp_max: 25,
     pressure: 1013,
-    humidity: 65
+    humidity: 65,
   },
   visibility: 10000,
   wind: {
     speed: 3.5,
-    deg: 180
+    deg: 180,
   },
   clouds: {
-    all: 40
+    all: 40,
   },
   dt: 1698412800,
   sys: {
@@ -47,36 +47,36 @@ export const mockOpenWeatherMapResponse = {
     id: 6906,
     country: 'HU',
     sunrise: 1698383400,
-    sunset: 1698421200
+    sunset: 1698421200,
   },
   timezone: 3600,
   id: 3044760,
   name: 'Szekszárd',
-  cod: 200
+  cod: 200,
 };
 
 export const mockOpenWeatherMapWithRain = {
   ...mockOpenWeatherMapResponse,
   rain: {
     '1h': 2.5,
-    '3h': 5.0
-  }
+    '3h': 5.0,
+  },
 };
 
 export const mockOpenWeatherMapWithSnow = {
   ...mockOpenWeatherMapResponse,
   snow: {
     '1h': 1.5,
-    '3h': 3.0
+    '3h': 3.0,
   },
   weather: [
     {
       id: 600,
       main: 'Snow',
       description: 'light snow',
-      icon: '13d'
-    }
-  ]
+      icon: '13d',
+    },
+  ],
 };
 
 // ============================================================================
@@ -90,13 +90,13 @@ export const mockMeteoblueResponse = {
     longitude: 18.7097,
     height: 95,
     timezone: 'Europe/Budapest',
-    modelrun_utc: '2025-10-27T00:00:00Z'
+    modelrun_utc: '2025-10-27T00:00:00Z',
   },
   units: {
     time: 'ISO8601',
     temperature: 'C',
     windspeed: 'km/h',
-    precipitation: 'mm'
+    precipitation: 'mm',
   },
   data_1h: {
     time: ['2025-10-27T12:00:00Z', '2025-10-27T13:00:00Z'],
@@ -105,8 +105,8 @@ export const mockMeteoblueResponse = {
     windspeed: [12.6, 14.4], // km/h
     winddirection: [180, 185],
     precipitation: [0.0, 0.5],
-    totalcloudcover: [40, 45]
-  }
+    totalcloudcover: [40, 45],
+  },
 };
 
 // ============================================================================
@@ -117,7 +117,7 @@ export const mockYrNoResponse = {
   type: 'Feature',
   geometry: {
     type: 'Point',
-    coordinates: [18.7097, 46.3481, 95]
+    coordinates: [18.7097, 46.3481, 95],
   },
   properties: {
     meta: {
@@ -129,8 +129,8 @@ export const mockYrNoResponse = {
         precipitation_amount: 'mm',
         relative_humidity: '%',
         wind_from_direction: 'degrees',
-        wind_speed: 'm/s'
-      }
+        wind_speed: 'm/s',
+      },
     },
     timeseries: [
       {
@@ -143,21 +143,21 @@ export const mockYrNoResponse = {
               cloud_area_fraction: 40,
               relative_humidity: 65,
               wind_from_direction: 180,
-              wind_speed: 3.5
-            }
+              wind_speed: 3.5,
+            },
           },
           next_1_hours: {
             summary: {
-              symbol_code: 'partlycloudy_day'
+              symbol_code: 'partlycloudy_day',
             },
             details: {
-              precipitation_amount: 0.0
-            }
-          }
-        }
-      }
-    ]
-  }
+              precipitation_amount: 0.0,
+            },
+          },
+        },
+      },
+    ],
+  },
 };
 
 // ============================================================================
@@ -264,21 +264,21 @@ export const mockDroughtSearchResponse = {
     id: 'station-katymar-123',
     name: 'Katymár Állomás',
     distance: 250,
-    latitude: 46.2200,
-    longitude: 19.5700
+    latitude: 46.22,
+    longitude: 19.57,
   },
   allStations: [
     {
       id: 'station-katymar-123',
       name: 'Katymár Állomás',
-      distance: 250
+      distance: 250,
     },
     {
       id: 'station-other-456',
       name: 'Másik Állomás',
-      distance: 5000
-    }
-  ]
+      distance: 5000,
+    },
+  ],
 };
 
 export const mockDroughtStationDataResponse = [
@@ -295,7 +295,7 @@ export const mockDroughtStationDataResponse = [
     soilTemp: 18.5,
     airTemp: 22.3,
     precipitation: 0.0,
-    relativeHumidity: 65
+    relativeHumidity: 65,
   },
   {
     date: '2025-10-26',
@@ -310,12 +310,12 @@ export const mockDroughtStationDataResponse = [
     soilTemp: 17.8,
     airTemp: 21.5,
     precipitation: 2.5,
-    relativeHumidity: 72
+    relativeHumidity: 72,
   },
   {
     date: '2025-10-25',
-    HDI: 0.60,
-    HDIS: 0.40,
+    HDI: 0.6,
+    HDIS: 0.4,
     soilMoisture_10cm: 27.0,
     soilMoisture_20cm: 28.8,
     soilMoisture_30cm: 30.5,
@@ -325,8 +325,8 @@ export const mockDroughtStationDataResponse = [
     soilTemp: 17.2,
     airTemp: 20.8,
     precipitation: 0.0,
-    relativeHumidity: 68
-  }
+    relativeHumidity: 68,
+  },
 ];
 
 export const mockDroughtStationDataEmpty = [];
@@ -345,8 +345,8 @@ export const mockDroughtStationDataIncomplete = [
     soilTemp: 18.5,
     airTemp: 22.3,
     precipitation: null,
-    relativeHumidity: 65
-  }
+    relativeHumidity: 65,
+  },
 ];
 
 // ============================================================================
@@ -357,28 +357,28 @@ export const mockApiErrorResponses = {
   notFound: {
     error: 'Not Found',
     message: 'Resource not found',
-    code: 404
+    code: 404,
   },
   unauthorized: {
     error: 'Unauthorized',
     message: 'Invalid API key',
-    code: 401
+    code: 401,
   },
   rateLimit: {
     error: 'Too Many Requests',
     message: 'Rate limit exceeded',
-    code: 429
+    code: 429,
   },
   serverError: {
     error: 'Internal Server Error',
     message: 'An unexpected error occurred',
-    code: 500
+    code: 500,
   },
   timeout: {
     error: 'Request Timeout',
     message: 'Request took too long to complete',
-    code: 408
-  }
+    code: 408,
+  },
 };
 
 // ============================================================================
@@ -394,8 +394,8 @@ export function generateMockWeatherDataForCities(cities: string[]) {
     name: city,
     main: {
       ...mockOpenWeatherMapResponse.main,
-      temp: 20 + index * 2
-    }
+      temp: 20 + index * 2,
+    },
   }));
 }
 
@@ -409,18 +409,18 @@ export function generateMockDroughtDataRange(startDate: Date, days: number) {
     date.setDate(date.getDate() - i);
     data.push({
       date: date.toISOString().split('T')[0],
-      HDI: 0.6 + (Math.random() * 0.2),
-      HDIS: 0.4 + (Math.random() * 0.2),
-      soilMoisture_10cm: 25 + (Math.random() * 10),
-      soilMoisture_20cm: 27 + (Math.random() * 10),
-      soilMoisture_30cm: 29 + (Math.random() * 10),
-      soilMoisture_50cm: 32 + (Math.random() * 10),
-      soilMoisture_70cm: 35 + (Math.random() * 10),
-      soilMoisture_100cm: 37 + (Math.random() * 10),
-      soilTemp: 15 + (Math.random() * 10),
-      airTemp: 18 + (Math.random() * 10),
+      HDI: 0.6 + Math.random() * 0.2,
+      HDIS: 0.4 + Math.random() * 0.2,
+      soilMoisture_10cm: 25 + Math.random() * 10,
+      soilMoisture_20cm: 27 + Math.random() * 10,
+      soilMoisture_30cm: 29 + Math.random() * 10,
+      soilMoisture_50cm: 32 + Math.random() * 10,
+      soilMoisture_70cm: 35 + Math.random() * 10,
+      soilMoisture_100cm: 37 + Math.random() * 10,
+      soilTemp: 15 + Math.random() * 10,
+      airTemp: 18 + Math.random() * 10,
       precipitation: Math.random() * 5,
-      relativeHumidity: 60 + (Math.random() * 20)
+      relativeHumidity: 60 + Math.random() * 20,
     });
   }
   return data;
@@ -439,7 +439,7 @@ export function generateMockWaterLevelForecast(startLevel: number, days: number)
     forecast.push({
       day: i,
       waterLevel: level,
-      date: date.toISOString().split('T')[0]
+      date: date.toISOString().split('T')[0],
     });
   }
   return forecast;

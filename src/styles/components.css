@@ -13,15 +13,15 @@
      ======================================== */
 
   .data-card {
-    @apply bg-white rounded-lg shadow-sm border-2 border-gray-300 p-5 min-h-[140px] transition-shadow duration-200 hover:shadow-md flex flex-col;
+    @apply flex min-h-[140px] flex-col rounded-lg border-2 border-gray-300 bg-white p-5 shadow-sm transition-shadow duration-200 hover:shadow-md;
   }
 
   .data-card-header {
-    @apply flex items-center gap-2 mb-3;
+    @apply mb-3 flex items-center gap-2;
   }
 
   .data-card-label {
-    @apply text-sm text-gray-600 font-medium;
+    @apply text-sm font-medium text-gray-600;
   }
 
   .data-card-value {
@@ -29,7 +29,7 @@
   }
 
   .data-card-unit {
-    @apply text-base text-gray-500 mt-1;
+    @apply mt-1 text-base text-gray-500;
   }
 
   .data-card-icon {
@@ -46,7 +46,7 @@
   } */
 
   .data-card-dropdown-selector {
-    @apply w-full px-3 py-2 border border-orange-400 rounded-lg text-sm font-medium text-gray-900 bg-white transition-colors duration-200 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2;
+    @apply w-full rounded-lg border border-orange-400 bg-white px-3 py-2 text-sm font-medium text-gray-900 transition-colors duration-200 hover:bg-orange-50 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none;
   }
 
   /* ========================================
@@ -54,7 +54,7 @@
      ======================================== */
 
   .module-tab {
-    @apply px-5 py-2.5 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply rounded-lg px-5 py-2.5 font-medium transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none;
   }
 
   /* REDESIGN: replaced by dun-* classes
@@ -102,7 +102,7 @@
   }
 
   .selector-button {
-    @apply flex items-center gap-2 px-4 py-2 bg-white border-2 rounded-lg font-medium transition-all duration-200 w-full md:w-auto focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply flex w-full items-center gap-2 rounded-lg border-2 bg-white px-4 py-2 font-medium transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none md:w-auto;
   }
 
   /* REDESIGN: replaced by dun-* classes
@@ -124,11 +124,11 @@
   */
 
   .selector-dropdown-menu {
-    @apply absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto flex flex-col;
+    @apply absolute z-10 mt-2 flex max-h-60 w-full flex-col overflow-y-auto rounded-lg border border-gray-300 bg-white shadow-lg;
   }
 
   .selector-dropdown-item {
-    @apply w-full px-4 py-2 cursor-pointer transition-colors duration-150 hover:bg-gray-100 active:bg-gray-200 text-left block;
+    @apply block w-full cursor-pointer px-4 py-2 text-left transition-colors duration-150 hover:bg-gray-100 active:bg-gray-200;
   }
 
   /* REDESIGN: replaced by dun-* classes
@@ -142,7 +142,7 @@
      ======================================== */
 
   .chart-container {
-    @apply w-full bg-white rounded-lg shadow-sm border border-gray-200 p-4;
+    @apply w-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm;
   }
 
   /* REDESIGN: replaced by dun-* classes
@@ -164,7 +164,7 @@
   */
 
   .chart-header {
-    @apply flex items-center gap-2 mb-4;
+    @apply mb-4 flex items-center gap-2;
   }
 
   .chart-title {
@@ -176,7 +176,7 @@
      ======================================== */
 
   .map-container {
-    @apply w-full bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden;
+    @apply w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm;
   }
 
   /* REDESIGN: replaced by dun-* classes
@@ -186,7 +186,7 @@
   */
 
   .map-header {
-    @apply p-4 border-b border-gray-200;
+    @apply border-b border-gray-200 p-4;
   }
 
   .map-title {
@@ -194,7 +194,7 @@
   }
 
   .map-legend {
-    @apply absolute bottom-4 right-4 bg-white rounded-lg shadow-lg p-3 border border-gray-200;
+    @apply absolute right-4 bottom-4 rounded-lg border border-gray-200 bg-white p-3 shadow-lg;
     z-index: 9999 !important; /* Very high z-index to appear above Leaflet layers */
     pointer-events: auto; /* Ensure legend is clickable */
   }
@@ -204,7 +204,7 @@
   }
 
   .map-legend-color {
-    @apply w-4 h-4 rounded border border-gray-300;
+    @apply h-4 w-4 rounded border border-gray-300;
     flex-shrink: 0; /* Prevent shrinking */
   }
 
@@ -224,7 +224,7 @@
      ======================================== */
 
   .skeleton-loader {
-    @apply animate-pulse bg-gray-200 rounded;
+    @apply animate-pulse rounded bg-gray-200;
   }
 
   /* REDESIGN: replaced by dun-* classes
@@ -254,11 +254,11 @@
   */
 
   .error-message {
-    @apply text-red-700 text-sm font-medium;
+    @apply text-sm font-medium text-red-700;
   }
 
   .error-retry-button {
-    @apply mt-2 px-3 py-1 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+    @apply mt-2 rounded bg-red-600 px-3 py-1 text-sm font-medium text-white transition-colors duration-200 hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none;
   }
 
   /* ========================================
@@ -272,11 +272,11 @@
   */
 
   .empty-state-icon {
-    @apply h-12 w-12 text-gray-400 mb-3;
+    @apply mb-3 h-12 w-12 text-gray-400;
   }
 
   .empty-state-text {
-    @apply text-gray-600 text-sm;
+    @apply text-sm text-gray-600;
   }
 
   /* ========================================
@@ -284,7 +284,7 @@
      ======================================== */
 
   .section-header {
-    @apply flex items-center justify-between mb-4;
+    @apply mb-4 flex items-center justify-between;
   }
 
   .section-title {
@@ -292,7 +292,7 @@
   }
 
   .section-subtitle {
-    @apply text-sm text-gray-600 mt-1;
+    @apply mt-1 text-sm text-gray-600;
   }
 
   /* ========================================
@@ -300,7 +300,7 @@
      ======================================== */
 
   .data-source-footer {
-    @apply mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500;
+    @apply mt-4 border-t border-gray-200 pt-4 text-xs text-gray-500;
   }
 
   .data-source-timestamp {
@@ -316,19 +316,19 @@
   }
 
   .grid-water-cards {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3;
   }
 
   .grid-drought-cards {
-    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2;
   }
 
   .grid-drought-maps {
-    @apply grid grid-cols-1 lg:grid-cols-3 gap-4;
+    @apply grid grid-cols-1 gap-4 lg:grid-cols-3;
   }
 
   .grid-well-list {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3;
+    @apply grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3;
   }
 
   /* ========================================
@@ -336,7 +336,7 @@
      ======================================== */
 
   .well-card {
-    @apply bg-white border border-gray-200 rounded-lg p-3 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-orange-400;
+    @apply cursor-pointer rounded-lg border border-gray-200 bg-white p-3 transition-all duration-200 hover:border-orange-400 hover:shadow-md;
   }
 
   .well-card-name {
@@ -352,11 +352,11 @@
      ======================================== */
 
   .app-header {
-    @apply sticky top-0 z-20 bg-white shadow-sm px-6 py-4;
+    @apply sticky top-0 z-20 bg-white px-6 py-4 shadow-sm;
   }
 
   .app-header-content {
-    @apply max-w-7xl mx-auto flex items-center justify-between;
+    @apply mx-auto flex max-w-7xl items-center justify-between;
   }
 
   .app-logo {
@@ -372,7 +372,7 @@
      ======================================== */
 
   .main-container {
-    @apply max-w-7xl mx-auto px-6 py-6 space-y-6;
+    @apply mx-auto max-w-7xl space-y-6 px-6 py-6;
   }
 
   /* ========================================
@@ -380,12 +380,12 @@
      ======================================== */
 
   .sr-only {
-    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+    @apply absolute -m-px h-px w-px overflow-hidden border-0 p-0 whitespace-nowrap;
     clip: rect(0, 0, 0, 0);
   }
 
   .focus-visible-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply focus:ring-2 focus:ring-offset-2 focus:outline-none;
   }
 }
 

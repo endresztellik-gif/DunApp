@@ -26,21 +26,31 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 }) => {
   return (
     <div
-      className={`dun-card flex flex-col items-center justify-center text-center py-8 ${className}`}
+      className={`dun-card flex flex-col items-center justify-center py-8 text-center ${className}`}
       role="status"
       aria-live="polite"
     >
       <Icon
         aria-hidden="true"
-        style={{ color: 'var(--text-tertiary)', width: '48px', height: '48px', marginBottom: '12px' }}
+        style={{
+          color: 'var(--text-tertiary)',
+          width: '48px',
+          height: '48px',
+          marginBottom: '12px',
+        }}
       />
-      <p style={{ fontSize: 'var(--text-base)', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '4px' }}>
+      <p
+        style={{
+          fontSize: 'var(--text-base)',
+          fontWeight: 500,
+          color: 'var(--text-primary)',
+          marginBottom: '4px',
+        }}
+      >
         {message}
       </p>
       {description && (
-        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>
-          {description}
-        </p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{description}</p>
       )}
       {action && (
         <button

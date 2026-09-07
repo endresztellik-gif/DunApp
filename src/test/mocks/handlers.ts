@@ -13,7 +13,7 @@ import {
   mockDroughtStationDataResponse,
   mockVizugyHuHTML,
   mockHydroinfoHuHTML,
-  mockApiErrorResponses
+  mockApiErrorResponses,
 } from './api-responses';
 
 export type MockFetchOptions = {
@@ -31,7 +31,7 @@ export function createMockFetch(options: MockFetchOptions = {}) {
   return async (url: string | URL | Request, _init?: RequestInit): Promise<Response> => {
     // Add delay if specified
     if (delay > 0) {
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
 
     // Simulate network failure
@@ -45,7 +45,7 @@ export function createMockFetch(options: MockFetchOptions = {}) {
     if (urlString.includes('api.openweathermap.org')) {
       return new Response(JSON.stringify(mockOpenWeatherMapResponse), {
         status: statusCode,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -53,7 +53,7 @@ export function createMockFetch(options: MockFetchOptions = {}) {
     if (urlString.includes('meteoblue.com')) {
       return new Response(JSON.stringify(mockMeteoblueResponse), {
         status: statusCode,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -61,7 +61,7 @@ export function createMockFetch(options: MockFetchOptions = {}) {
     if (urlString.includes('api.met.no')) {
       return new Response(JSON.stringify(mockYrNoResponse), {
         status: statusCode,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -69,7 +69,7 @@ export function createMockFetch(options: MockFetchOptions = {}) {
     if (urlString.includes('aszalymonitoring.vizugy.hu/api/search')) {
       return new Response(JSON.stringify(mockDroughtSearchResponse), {
         status: statusCode,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -77,7 +77,7 @@ export function createMockFetch(options: MockFetchOptions = {}) {
     if (urlString.includes('aszalymonitoring.vizugy.hu/api/station')) {
       return new Response(JSON.stringify(mockDroughtStationDataResponse), {
         status: statusCode,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -85,7 +85,7 @@ export function createMockFetch(options: MockFetchOptions = {}) {
     if (urlString.includes('vizugy.hu')) {
       return new Response(mockVizugyHuHTML, {
         status: statusCode,
-        headers: { 'Content-Type': 'text/html' }
+        headers: { 'Content-Type': 'text/html' },
       });
     }
 
@@ -93,14 +93,14 @@ export function createMockFetch(options: MockFetchOptions = {}) {
     if (urlString.includes('hydroinfo.hu')) {
       return new Response(mockHydroinfoHuHTML, {
         status: statusCode,
-        headers: { 'Content-Type': 'text/html; charset=ISO-8859-2' }
+        headers: { 'Content-Type': 'text/html; charset=ISO-8859-2' },
       });
     }
 
     // Default - not found
     return new Response(JSON.stringify(mockApiErrorResponses.notFound), {
       status: 404,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   };
 }
@@ -114,7 +114,7 @@ export function createMockFetchWithError(errorType: keyof typeof mockApiErrorRes
   return async (_url: string | URL | Request): Promise<Response> => {
     return new Response(JSON.stringify(error), {
       status: error.code,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   };
 }
@@ -144,20 +144,20 @@ export const mockFetchResponses = {
   json: (data: any, status = 200) =>
     new Response(JSON.stringify(data), {
       status,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     }),
 
   html: (html: string, status = 200) =>
     new Response(html, {
       status,
-      headers: { 'Content-Type': 'text/html' }
+      headers: { 'Content-Type': 'text/html' },
     }),
 
   error: (status: number, message: string) =>
     new Response(JSON.stringify({ error: message }), {
       status,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     }),
 
-  networkError: () => Promise.reject(new Error('Network error'))
+  networkError: () => Promise.reject(new Error('Network error')),
 };

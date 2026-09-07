@@ -28,9 +28,7 @@ describe('WellSelector - Architecture Validation', () => {
   // CRITICAL TEST: Architecture enforcement
   it('throws error if wells array is empty', () => {
     expect(() => {
-      render(
-        <WellSelector wells={[]} selectedWell={null} onWellChange={mockOnChange} />
-      );
+      render(<WellSelector wells={[]} selectedWell={null} onWellChange={mockOnChange} />);
     }).toThrow('Expected at least 1 groundwater well');
   });
 
@@ -46,9 +44,7 @@ describe('WellSelector - Architecture Validation', () => {
 
   it('error message mentions DroughtLocationSelector for locations', () => {
     expect(() => {
-      render(
-        <WellSelector wells={[]} selectedWell={null} onWellChange={mockOnChange} />
-      );
+      render(<WellSelector wells={[]} selectedWell={null} onWellChange={mockOnChange} />);
     }).toThrow(/For monitoring locations, use DroughtLocationSelector instead/);
   });
 });

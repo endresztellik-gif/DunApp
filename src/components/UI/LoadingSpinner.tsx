@@ -36,9 +36,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         aria-hidden="true"
       />
       {message && (
-        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>
-          {message}
-        </p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>{message}</p>
       )}
       <span className="sr-only">{message}</span>
     </div>

@@ -22,8 +22,8 @@ import type { ReactNode } from 'react';
 
 vi.mock('../../lib/supabase', () => ({
   supabase: {
-    from: vi.fn()
-  }
+    from: vi.fn(),
+  },
 }));
 
 const LATEST_ISSUE = '2026-09-07T11:00:08.887+00:00';
@@ -31,11 +31,56 @@ const OLDER_ISSUE = '2026-09-06T09:05:00.000+00:00';
 
 /** Baja, a 2026-09-07-i kiadás — valódi hydroinfo értékek. */
 const mockForecastRows = [
-  { id: 'f1', station_id: 'station-123', forecast_date: '2026-09-08', issued_at: LATEST_ISSUE, forecasted_level_cm: -12, forecast_uncertainty_cm: 2, source: 'hydroinfo.hu', created_at: LATEST_ISSUE },
-  { id: 'f2', station_id: 'station-123', forecast_date: '2026-09-09', issued_at: LATEST_ISSUE, forecasted_level_cm: -17, forecast_uncertainty_cm: 5, source: 'hydroinfo.hu', created_at: LATEST_ISSUE },
-  { id: 'f3', station_id: 'station-123', forecast_date: '2026-09-10', issued_at: LATEST_ISSUE, forecasted_level_cm: -19, forecast_uncertainty_cm: 8, source: 'hydroinfo.hu', created_at: LATEST_ISSUE },
-  { id: 'f4', station_id: 'station-123', forecast_date: '2026-09-11', issued_at: LATEST_ISSUE, forecasted_level_cm: -19, forecast_uncertainty_cm: 13, source: 'hydroinfo.hu', created_at: LATEST_ISSUE },
-  { id: 'f5', station_id: 'station-123', forecast_date: '2026-09-12', issued_at: LATEST_ISSUE, forecasted_level_cm: -15, forecast_uncertainty_cm: 19, source: 'hydroinfo.hu', created_at: LATEST_ISSUE }
+  {
+    id: 'f1',
+    station_id: 'station-123',
+    forecast_date: '2026-09-08',
+    issued_at: LATEST_ISSUE,
+    forecasted_level_cm: -12,
+    forecast_uncertainty_cm: 2,
+    source: 'hydroinfo.hu',
+    created_at: LATEST_ISSUE,
+  },
+  {
+    id: 'f2',
+    station_id: 'station-123',
+    forecast_date: '2026-09-09',
+    issued_at: LATEST_ISSUE,
+    forecasted_level_cm: -17,
+    forecast_uncertainty_cm: 5,
+    source: 'hydroinfo.hu',
+    created_at: LATEST_ISSUE,
+  },
+  {
+    id: 'f3',
+    station_id: 'station-123',
+    forecast_date: '2026-09-10',
+    issued_at: LATEST_ISSUE,
+    forecasted_level_cm: -19,
+    forecast_uncertainty_cm: 8,
+    source: 'hydroinfo.hu',
+    created_at: LATEST_ISSUE,
+  },
+  {
+    id: 'f4',
+    station_id: 'station-123',
+    forecast_date: '2026-09-11',
+    issued_at: LATEST_ISSUE,
+    forecasted_level_cm: -19,
+    forecast_uncertainty_cm: 13,
+    source: 'hydroinfo.hu',
+    created_at: LATEST_ISSUE,
+  },
+  {
+    id: 'f5',
+    station_id: 'station-123',
+    forecast_date: '2026-09-12',
+    issued_at: LATEST_ISSUE,
+    forecasted_level_cm: -15,
+    forecast_uncertainty_cm: 19,
+    source: 'hydroinfo.hu',
+    created_at: LATEST_ISSUE,
+  },
 ];
 
 const createWrapper = () => {
@@ -50,9 +95,9 @@ const createWrapper = () => {
         // időtúllépésbe.
         retry: false,
         retryDelay: 0,
-        gcTime: 0
-      }
-    }
+        gcTime: 0,
+      },
+    },
   });
   return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -84,11 +129,11 @@ function mockSupabase(opts: {
               limit: () => ({
                 maybeSingle: vi.fn().mockResolvedValue({
                   data: opts.issueError ? null : (opts.latestIssue ?? null),
-                  error: opts.issueError ?? null
-                })
-              })
-            })
-          })
+                  error: opts.issueError ?? null,
+                }),
+              }),
+            }),
+          }),
         };
       }
       // 2. kérés: a kiadás összes sora
@@ -103,16 +148,16 @@ function mockSupabase(opts: {
                   order: () => ({
                     limit: vi.fn().mockResolvedValue({
                       data: opts.rowsError ? null : (opts.rows ?? []),
-                      error: opts.rowsError ?? null
-                    })
-                  })
+                      error: opts.rowsError ?? null,
+                    }),
+                  }),
                 };
-              }
+              },
             };
-          }
-        })
+          },
+        }),
       };
-    }
+    },
   }));
 
   (supabaseModule.supabase.from as unknown) = from;
@@ -128,7 +173,7 @@ describe('useWaterLevelForecast', () => {
     mockSupabase({ latestIssue: { issued_at: LATEST_ISSUE }, rows: mockForecastRows });
 
     const { result } = renderHook(() => useWaterLevelForecast(null), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     expect(result.current.isLoading).toBe(false);
@@ -140,7 +185,7 @@ describe('useWaterLevelForecast', () => {
     mockSupabase({ latestIssue: { issued_at: LATEST_ISSUE }, rows: mockForecastRows });
 
     const { result } = renderHook(() => useWaterLevelForecast('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -153,7 +198,7 @@ describe('useWaterLevelForecast', () => {
     mockSupabase({ latestIssue: { issued_at: LATEST_ISSUE }, rows: mockForecastRows });
 
     const { result } = renderHook(() => useWaterLevelForecast('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -173,7 +218,7 @@ describe('useWaterLevelForecast', () => {
     mockSupabase({ latestIssue: { issued_at: LATEST_ISSUE }, rows: mockForecastRows });
 
     const { result } = renderHook(() => useWaterLevelForecast('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -181,18 +226,18 @@ describe('useWaterLevelForecast', () => {
     // Kisvíznél a Duna vízállása negatív (Baja 2026 szeptember). Egy „csak
     // számjegy" parse ezeket előjel nélkül hozná — ez éles hiba lenne.
     expect(result.current.forecasts.map((f) => f.forecastedLevelCm)).toEqual([
-      -12, -17, -19, -19, -15
+      -12, -17, -19, -19, -15,
     ]);
   });
 
   it('filters to the newest issue and to today or later', async () => {
     const calls = mockSupabase({
       latestIssue: { issued_at: LATEST_ISSUE },
-      rows: mockForecastRows
+      rows: mockForecastRows,
     });
 
     const { result } = renderHook(() => useWaterLevelForecast('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -208,7 +253,7 @@ describe('useWaterLevelForecast', () => {
     mockSupabase({ latestIssue: null });
 
     const { result } = renderHook(() => useWaterLevelForecast('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -226,7 +271,7 @@ describe('useWaterLevelForecast', () => {
     mockSupabase({ latestIssue: { issued_at: OLDER_ISSUE }, rows: [] });
 
     const { result } = renderHook(() => useWaterLevelForecast('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -239,7 +284,7 @@ describe('useWaterLevelForecast', () => {
     mockSupabase({ issueError: { message: 'connection reset' } });
 
     const { result } = renderHook(() => useWaterLevelForecast('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.error).not.toBe(null));
@@ -251,11 +296,11 @@ describe('useWaterLevelForecast', () => {
   it('surfaces an error when the forecast rows fail to load', async () => {
     mockSupabase({
       latestIssue: { issued_at: LATEST_ISSUE },
-      rowsError: { message: 'permission denied' }
+      rowsError: { message: 'permission denied' },
     });
 
     const { result } = renderHook(() => useWaterLevelForecast('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.error).not.toBe(null));
@@ -267,7 +312,7 @@ describe('useWaterLevelForecast', () => {
     mockSupabase({ latestIssue: { issued_at: LATEST_ISSUE }, rows: mockForecastRows });
 
     const { result } = renderHook(() => useWaterLevelForecast('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));

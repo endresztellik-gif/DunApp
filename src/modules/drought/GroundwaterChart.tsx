@@ -33,7 +33,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend
+  Legend,
 } from 'recharts';
 import { useGroundwaterTimeseries } from '../../hooks/useGroundwaterTimeseries';
 import { GroundwaterTimestampTable } from './GroundwaterTimestampTable';
@@ -46,7 +46,11 @@ interface GroundwaterChartProps {
   wells?: GroundwaterWell[];
 }
 
-export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWellSelect, wells }) => {
+export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({
+  well,
+  onWellSelect,
+  wells,
+}) => {
   // Fetch real data from Supabase
   const { timeseriesData, isLoading, error } = useGroundwaterTimeseries(well.id);
 
@@ -64,9 +68,12 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWell
     // Check if water_level_meters is already negative (database inconsistency)
     // If already negative, use as-is. If positive, negate it.
     const rawValue = point.waterLevelMeters;
-    const displayLevel = rawValue !== null
-      ? (rawValue < 0 ? rawValue : -rawValue)  // Ensure always negative
-      : null;
+    const displayLevel =
+      rawValue !== null
+        ? rawValue < 0
+          ? rawValue
+          : -rawValue // Ensure always negative
+        : null;
 
     return {
       timestamp: point.timestamp,
@@ -74,7 +81,7 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWell
       waterLevelMeters: point.waterLevelMeters,
       displayLevel: displayLevel, // ALWAYS negative for display
       waterLevelMasl: point.waterLevelMasl,
-      waterTemperature: point.waterTemperature
+      waterTemperature: point.waterTemperature,
     };
   });
 
@@ -84,23 +91,17 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWell
 
   if (allData.length > 0) {
     // Find the LATEST timestamp in the dataset
-    const latestTimestamp = Math.max(
-      ...allData.map(d => new Date(d.timestamp).getTime())
-    );
+    const latestTimestamp = Math.max(...allData.map((d) => new Date(d.timestamp).getTime()));
 
     // Calculate 365 days BACKWARDS from latest data point (not from today!)
-    const oneYearAgo = latestTimestamp - (365 * 24 * 60 * 60 * 1000);
+    const oneYearAgo = latestTimestamp - 365 * 24 * 60 * 60 * 1000;
 
     // Filter to last 365 days from most recent data
-    dataToDisplay = allData.filter(d =>
-      new Date(d.timestamp).getTime() >= oneYearAgo
-    );
+    dataToDisplay = allData.filter((d) => new Date(d.timestamp).getTime() >= oneYearAgo);
 
     // Sort in ASCENDING order for chart display (left to right timeline)
     // Data comes from Supabase in DESCENDING order (newest first)
-    dataToDisplay.sort((a, b) =>
-      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
+    dataToDisplay.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }
 
   // THEN sample every 5th day for optimal visualization (~73 points for 365 days)
@@ -117,7 +118,7 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWell
   const padding = Math.max(range * 0.3, 0.5);
   const yDomain = [
     Math.floor((minDisplayLevel - padding) * 10) / 10, // Most negative (bottom)
-    Math.ceil((maxDisplayLevel + padding) * 10) / 10   // Least negative (top)
+    Math.ceil((maxDisplayLevel + padding) * 10) / 10, // Least negative (top)
   ];
 
   // Custom tooltip formatter
@@ -129,13 +130,26 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWell
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       });
 
       return (
-        <div className="p-3" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)' }}>
-          <p className="text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>{fullDate}</p>
-          <p className="text-sm font-semibold" style={{ color: 'var(--text-data)', fontFamily: 'var(--font-data)' }}>
+        <div
+          className="p-3"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '0.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-md)',
+          }}
+        >
+          <p className="mb-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
+            {fullDate}
+          </p>
+          <p
+            className="text-sm font-semibold"
+            style={{ color: 'var(--text-data)', fontFamily: 'var(--font-data)' }}
+          >
             Mélység: {data.displayLevel?.toFixed(2)} m
           </p>
           <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
@@ -164,17 +178,18 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWell
   };
 
   return (
-    <div className="dun-card p-6 mt-6">
+    <div className="dun-card mt-6 p-6">
       {/* Well Header */}
       <div className="mb-6 border-b pb-4" style={{ borderColor: 'var(--border-subtle)' }}>
         <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          {well.wellName} <span style={{ color: 'var(--color-dun-amber-400)' }}>#{well.wellCode}</span>
+          {well.wellName}{' '}
+          <span style={{ color: 'var(--color-dun-amber-400)' }}>#{well.wellCode}</span>
         </h3>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+        <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
           {well.cityName}, {well.county} megye
         </p>
         {well.depthMeters && (
-          <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+          <p className="mt-1 text-xs" style={{ color: 'var(--text-tertiary)' }}>
             Kútmélység: {well.depthMeters} m
           </p>
         )}
@@ -182,19 +197,38 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWell
 
       {/* Loading State - same min-height as chart to prevent layout shift */}
       {isLoading && (
-        <div className="flex justify-center items-center min-h-[500px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderTopColor: 'var(--color-dun-amber-400)' }}></div>
-          <p className="ml-4" style={{ color: 'var(--text-secondary)' }}>Adatok betöltése...</p>
+        <div className="flex min-h-[500px] items-center justify-center">
+          <div
+            className="h-12 w-12 animate-spin rounded-full border-b-2"
+            style={{ borderTopColor: 'var(--color-dun-amber-400)' }}
+          ></div>
+          <p className="ml-4" style={{ color: 'var(--text-secondary)' }}>
+            Adatok betöltése...
+          </p>
         </div>
       )}
 
       {/* Error State - same min-height as chart to prevent layout shift */}
       {error && (
-        <div className="p-8 text-center min-h-[500px] flex flex-col justify-center" style={{ background: 'var(--status-alert-bg)', border: '0.5px solid var(--status-alert-border)', borderRadius: 'var(--radius-md)' }}>
-          <AlertCircle className="h-12 w-12 mx-auto mb-4" style={{ color: 'var(--status-alert-text)' }} />
-          <p className="font-semibold text-lg" style={{ color: 'var(--status-alert-text)' }}>Hiba az adatok betöltésekor</p>
-          <p className="text-sm mt-2" style={{ color: 'var(--status-alert-text)' }}>{error.message}</p>
-          <p className="text-xs mt-4" style={{ color: 'var(--text-tertiary)' }}>
+        <div
+          className="flex min-h-[500px] flex-col justify-center p-8 text-center"
+          style={{
+            background: 'var(--status-alert-bg)',
+            border: '0.5px solid var(--status-alert-border)',
+            borderRadius: 'var(--radius-md)',
+          }}
+        >
+          <AlertCircle
+            className="mx-auto mb-4 h-12 w-12"
+            style={{ color: 'var(--status-alert-text)' }}
+          />
+          <p className="text-lg font-semibold" style={{ color: 'var(--status-alert-text)' }}>
+            Hiba az adatok betöltésekor
+          </p>
+          <p className="mt-2 text-sm" style={{ color: 'var(--status-alert-text)' }}>
+            {error.message}
+          </p>
+          <p className="mt-4 text-xs" style={{ color: 'var(--text-tertiary)' }}>
             Próbáld újra később vagy ellenőrizd az internetkapcsolatot.
           </p>
         </div>
@@ -202,12 +236,21 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWell
 
       {/* Empty State - same min-height as chart to prevent layout shift */}
       {!isLoading && !error && chartData.length === 0 && (
-        <div className="p-8 text-center min-h-[500px] flex flex-col justify-center" style={{ background: 'var(--status-warn-bg)', border: '0.5px solid var(--status-warn-border)', borderRadius: 'var(--radius-md)' }}>
-          <p className="font-semibold text-lg" style={{ color: 'var(--status-warn-text)' }}>Nincs elérhető adat</p>
-          <p className="text-sm mt-2" style={{ color: 'var(--status-warn-text)' }}>
+        <div
+          className="flex min-h-[500px] flex-col justify-center p-8 text-center"
+          style={{
+            background: 'var(--status-warn-bg)',
+            border: '0.5px solid var(--status-warn-border)',
+            borderRadius: 'var(--radius-md)',
+          }}
+        >
+          <p className="text-lg font-semibold" style={{ color: 'var(--status-warn-text)' }}>
+            Nincs elérhető adat
+          </p>
+          <p className="mt-2 text-sm" style={{ color: 'var(--status-warn-text)' }}>
             Nem áll rendelkezésre talajvízszint mérés ehhez a kúthoz.
           </p>
-          <p className="text-xs mt-4" style={{ color: 'var(--text-secondary)' }}>
+          <p className="mt-4 text-xs" style={{ color: 'var(--text-secondary)' }}>
             A kút adatainak gyűjtése folyamatban lehet. Próbáld újra később.
           </p>
         </div>
@@ -216,14 +259,11 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWell
       {/* Chart Display */}
       {!isLoading && !error && chartData.length > 0 && (
         <div>
-          <h4 className="text-md font-semibold mb-4" style={{ color: 'var(--text-secondary)' }}>
+          <h4 className="text-md mb-4 font-semibold" style={{ color: 'var(--text-secondary)' }}>
             Talajvízszint alakulása (5 napos mintavétel)
           </h4>
           <ResponsiveContainer width="100%" height={400}>
-            <LineChart
-              data={chartData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 50 }}
-            >
+            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 50 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(26,95,122,.10)" />
               <XAxis
                 dataKey="timestamp"
@@ -240,15 +280,12 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWell
                   value: 'Mélység a felszíntől (m)',
                   angle: -90,
                   position: 'insideLeft',
-                  style: { fontSize: 14, fill: '#7a9eaa' }
+                  style: { fontSize: 14, fill: '#7a9eaa' },
                 }}
                 tick={{ fontSize: 12 }}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Legend
-                wrapperStyle={{ paddingTop: '20px' }}
-                iconType="line"
-              />
+              <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="line" />
               <Line
                 type="monotone"
                 dataKey="displayLevel"
@@ -262,26 +299,42 @@ export const GroundwaterChart: React.FC<GroundwaterChartProps> = ({ well, onWell
           </ResponsiveContainer>
 
           {/* Chart Info Footer */}
-          <div className="mt-6 p-4" style={{ background: 'var(--status-ok-bg)', border: '0.5px solid var(--color-dun-ok-200)', borderRadius: 'var(--radius-md)' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-3 w-3 rounded-full animate-pulse" style={{ background: 'var(--color-dun-ok-500)' }}></div>
+          <div
+            className="mt-6 p-4"
+            style={{
+              background: 'var(--status-ok-bg)',
+              border: '0.5px solid var(--color-dun-ok-200)',
+              borderRadius: 'var(--radius-md)',
+            }}
+          >
+            <div className="mb-2 flex items-center gap-2">
+              <div
+                className="h-3 w-3 animate-pulse rounded-full"
+                style={{ background: 'var(--color-dun-ok-500)' }}
+              ></div>
               <p className="text-sm font-semibold" style={{ color: 'var(--color-dun-ok-500)' }}>
                 ✅ Valós adatok vizugy.hu-ról
               </p>
             </div>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+            <p className="mt-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
               Automatikus frissítés: 5 naponta 05:00 UTC-kor
             </p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
-              {chartData.length} adatpont (5 napos mintavétel, ~{Math.round(chartData.length * 5)} nap lefedve)
+            <p className="mt-1 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+              {chartData.length} adatpont (5 napos mintavétel, ~{Math.round(chartData.length * 5)}{' '}
+              nap lefedve)
             </p>
-            <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
-              Adatforrás: <strong>vizugy.hu</strong> • Utolsó frissítés: {new Date().toLocaleDateString('hu-HU')}
+            <p className="mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
+              Adatforrás: <strong>vizugy.hu</strong> • Utolsó frissítés:{' '}
+              {new Date().toLocaleDateString('hu-HU')}
             </p>
           </div>
 
           {/* Timestamp Table - Last Measurement Dates for All Wells */}
-          <GroundwaterTimestampTable onWellSelect={onWellSelect} selectedWellId={well.id} wells={wells} />
+          <GroundwaterTimestampTable
+            onWellSelect={onWellSelect}
+            selectedWellId={well.id}
+            wells={wells}
+          />
         </div>
       )}
     </div>

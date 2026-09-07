@@ -20,7 +20,7 @@ describe('InstallPrompt', () => {
     mockPromptEvent = {
       prompt: vi.fn().mockResolvedValue(undefined),
       userChoice: Promise.resolve({ outcome: 'accepted' as const }),
-      preventDefault: vi.fn()
+      preventDefault: vi.fn(),
     };
   });
 
@@ -33,9 +33,7 @@ describe('InstallPrompt', () => {
     render(<InstallPrompt />);
 
     // Simulate beforeinstallprompt event
-    window.dispatchEvent(
-      Object.assign(new Event('beforeinstallprompt'), mockPromptEvent)
-    );
+    window.dispatchEvent(Object.assign(new Event('beforeinstallprompt'), mockPromptEvent));
 
     await waitFor(() => {
       expect(screen.getByText(/Telepítsd a DunApp-ot/i)).toBeInTheDocument();
@@ -46,9 +44,7 @@ describe('InstallPrompt', () => {
     render(<InstallPrompt />);
 
     // Trigger event
-    window.dispatchEvent(
-      Object.assign(new Event('beforeinstallprompt'), mockPromptEvent)
-    );
+    window.dispatchEvent(Object.assign(new Event('beforeinstallprompt'), mockPromptEvent));
 
     await waitFor(() => {
       expect(screen.getByText(/Telepítés/i)).toBeInTheDocument();
@@ -66,9 +62,7 @@ describe('InstallPrompt', () => {
     render(<InstallPrompt />);
 
     // Trigger event
-    window.dispatchEvent(
-      Object.assign(new Event('beforeinstallprompt'), mockPromptEvent)
-    );
+    window.dispatchEvent(Object.assign(new Event('beforeinstallprompt'), mockPromptEvent));
 
     await waitFor(() => {
       expect(screen.getByText(/Később/i)).toBeInTheDocument();
@@ -86,9 +80,7 @@ describe('InstallPrompt', () => {
     render(<InstallPrompt />);
 
     // Trigger event
-    window.dispatchEvent(
-      Object.assign(new Event('beforeinstallprompt'), mockPromptEvent)
-    );
+    window.dispatchEvent(Object.assign(new Event('beforeinstallprompt'), mockPromptEvent));
 
     await waitFor(() => {
       expect(screen.getByText(/Ne mutasd újra/i)).toBeInTheDocument();
@@ -109,9 +101,7 @@ describe('InstallPrompt', () => {
     render(<InstallPrompt />);
 
     // Trigger event
-    window.dispatchEvent(
-      Object.assign(new Event('beforeinstallprompt'), mockPromptEvent)
-    );
+    window.dispatchEvent(Object.assign(new Event('beforeinstallprompt'), mockPromptEvent));
 
     // Should not render
     expect(screen.queryByText(/Telepítsd a DunApp-ot/i)).not.toBeInTheDocument();
@@ -121,9 +111,7 @@ describe('InstallPrompt', () => {
     render(<InstallPrompt />);
 
     // Trigger event
-    window.dispatchEvent(
-      Object.assign(new Event('beforeinstallprompt'), mockPromptEvent)
-    );
+    window.dispatchEvent(Object.assign(new Event('beforeinstallprompt'), mockPromptEvent));
 
     await waitFor(() => {
       const dialog = screen.getByRole('dialog');
@@ -137,9 +125,7 @@ describe('InstallPrompt', () => {
     render(<InstallPrompt />);
 
     // Trigger event
-    window.dispatchEvent(
-      Object.assign(new Event('beforeinstallprompt'), mockPromptEvent)
-    );
+    window.dispatchEvent(Object.assign(new Event('beforeinstallprompt'), mockPromptEvent));
 
     await waitFor(() => {
       expect(screen.getByLabelText('Bezárás')).toBeInTheDocument();
@@ -157,9 +143,7 @@ describe('InstallPrompt', () => {
     render(<InstallPrompt />);
 
     // Trigger event
-    window.dispatchEvent(
-      Object.assign(new Event('beforeinstallprompt'), mockPromptEvent)
-    );
+    window.dispatchEvent(Object.assign(new Event('beforeinstallprompt'), mockPromptEvent));
 
     await waitFor(() => {
       expect(screen.getByText(/Offline hozzáférés/i)).toBeInTheDocument();

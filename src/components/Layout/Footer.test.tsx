@@ -172,9 +172,7 @@ describe('Footer - Styling', () => {
   });
 
   it('accepts custom className', () => {
-    const { container } = render(
-      <Footer dataSources={mockDataSources} className="custom-class" />
-    );
+    const { container } = render(<Footer dataSources={mockDataSources} className="custom-class" />);
     const footer = container.querySelector('footer');
     expect(footer).toHaveClass('custom-class');
   });

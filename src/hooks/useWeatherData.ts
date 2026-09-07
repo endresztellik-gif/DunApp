@@ -69,7 +69,7 @@ async function fetchWeatherData(cityId: string): Promise<{ weatherData: WeatherD
       snow1h: (weatherData as Record<string, unknown>).snow_1h as number | null,
       snow3h: (weatherData as Record<string, unknown>).snow_3h as number | null,
       visibility: (weatherData as Record<string, unknown>).visibility as number,
-      timestamp: (weatherData as Record<string, unknown>).timestamp as string
+      timestamp: (weatherData as Record<string, unknown>).timestamp as string,
     },
     city: {
       id: (cityData as Record<string, unknown>).id as string,
@@ -78,8 +78,8 @@ async function fetchWeatherData(cityId: string): Promise<{ weatherData: WeatherD
       latitude: (cityData as Record<string, unknown>).latitude as number,
       longitude: (cityData as Record<string, unknown>).longitude as number,
       population: (cityData as Record<string, unknown>).population as number,
-      isActive: (cityData as Record<string, unknown>).is_active as boolean
-    }
+      isActive: (cityData as Record<string, unknown>).is_active as boolean,
+    },
   };
 }
 
@@ -101,6 +101,6 @@ export function useWeatherData(cityId: string | null): UseWeatherDataReturn {
     city: data?.city || null,
     isLoading,
     error: error as Error | null,
-    refetch
+    refetch,
   };
 }

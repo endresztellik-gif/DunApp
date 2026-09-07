@@ -5,12 +5,7 @@
  * This will be replaced with real API calls by the Data Engineer
  */
 
-import type {
-  City,
-  WaterLevelStation,
-  DroughtLocation,
-  GroundwaterWell,
-} from '../types';
+import type { City, WaterLevelStation, DroughtLocation, GroundwaterWell } from '../types';
 
 /**
  * METEOROLOGY MODULE - 4 Cities
@@ -30,7 +25,7 @@ export const MOCK_CITIES: City[] = [
     name: 'Baja',
     county: 'Bács-Kiskun',
     latitude: 46.1811,
-    longitude: 18.9550,
+    longitude: 18.955,
     population: 35989,
     isActive: true,
   },
@@ -65,7 +60,7 @@ export const MOCK_STATIONS: WaterLevelStation[] = [
     river: 'Duna',
     riverKm: 1480,
     latitude: 46.1811,
-    longitude: 18.9550,
+    longitude: 18.955,
     lowWaterLevelCm: 150,
     highWaterLevelCm: 300,
     alertLevelCm: 650,
@@ -136,7 +131,7 @@ export const MOCK_DROUGHT_LOCATIONS: DroughtLocation[] = [
     locationType: 'monitoring_station',
     county: 'Bács-Kiskun',
     latitude: 46.3833,
-    longitude: 19.2500,
+    longitude: 19.25,
     isActive: true,
   },
   {
@@ -145,7 +140,7 @@ export const MOCK_DROUGHT_LOCATIONS: DroughtLocation[] = [
     locationType: 'monitoring_station',
     county: 'Bács-Kiskun',
     latitude: 46.2833,
-    longitude: 19.0000,
+    longitude: 19.0,
     isActive: true,
   },
   {
@@ -153,7 +148,7 @@ export const MOCK_DROUGHT_LOCATIONS: DroughtLocation[] = [
     locationName: 'Csávoly',
     locationType: 'monitoring_station',
     county: 'Bács-Kiskun',
-    latitude: 46.4500,
+    latitude: 46.45,
     longitude: 19.2833,
     isActive: true,
   },
@@ -290,7 +285,7 @@ export const MOCK_GROUNDWATER_WELLS: GroundwaterWell[] = [
     county: 'Baranya',
     cityName: 'Kölked',
     latitude: 46.0167,
-    longitude: 18.7500,
+    longitude: 18.75,
     depthMeters: null,
     wellType: 'monitoring',
     isActive: true,
@@ -313,7 +308,7 @@ export const MOCK_GROUNDWATER_WELLS: GroundwaterWell[] = [
     wellCode: '132042',
     county: 'Bács-Kiskun',
     cityName: 'Szeremle',
-    latitude: 46.5500,
+    latitude: 46.55,
     longitude: 19.0333,
     depthMeters: null,
     wellType: 'monitoring',
@@ -337,7 +332,7 @@ export const MOCK_GROUNDWATER_WELLS: GroundwaterWell[] = [
     wellCode: '660',
     county: 'Tolna',
     cityName: 'Báta',
-    latitude: 46.2000,
+    latitude: 46.2,
     longitude: 18.7833,
     depthMeters: null,
     wellType: 'monitoring',

@@ -24,7 +24,11 @@ interface UseGroundwaterWellsReturn {
  * (Dráva wells are enabled=true since migration 028 — no special-casing needed.)
  */
 async function fetchGroundwaterWells(region?: Region | null): Promise<GroundwaterWell[]> {
-  let query = supabase.from('groundwater_wells').select('*').eq('is_active', true).eq('enabled', true);
+  let query = supabase
+    .from('groundwater_wells')
+    .select('*')
+    .eq('is_active', true)
+    .eq('enabled', true);
 
   if (region) {
     query = query.eq('region', region);

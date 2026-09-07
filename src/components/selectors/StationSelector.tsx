@@ -59,28 +59,29 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
   };
 
   return (
-    <div
-      ref={dropdownRef}
-      className={`selector-dropdown ${className}`}
-      onKeyDown={handleKeyDown}
-    >
+    <div ref={dropdownRef} className={`selector-dropdown ${className}`} onKeyDown={handleKeyDown}>
       {/* Selector Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="selector-button-water flex items-center gap-2 px-4 py-2 w-full md:w-auto"
-        style={{ border: '0.5px solid rgba(26,95,122,.20)', color: 'var(--text-primary)', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', cursor: 'pointer', transition: 'var(--transition-fast)' }}
+        className="selector-button-water flex w-full items-center gap-2 px-4 py-2 md:w-auto"
+        style={{
+          border: '0.5px solid rgba(26,95,122,.20)',
+          color: 'var(--text-primary)',
+          background: 'var(--bg-surface)',
+          borderRadius: 'var(--radius-md)',
+          fontFamily: 'var(--font-ui)',
+          fontSize: 'var(--text-sm)',
+          cursor: 'pointer',
+          transition: 'var(--transition-fast)',
+        }}
         aria-label="Állomás kiválasztása"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
         <MapPin className="h-5 w-5" aria-hidden="true" />
-        <span className="text-base font-medium">
-          {selectedStation?.name || 'Válassz állomást'}
-        </span>
+        <span className="text-base font-medium">{selectedStation?.name || 'Válassz állomást'}</span>
         <ChevronDown
-          className={`h-4 w-4 transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
-          }`}
+          className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           aria-hidden="true"
         />
       </button>
@@ -88,8 +89,13 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="absolute z-10 mt-2 w-full max-h-60 overflow-y-auto flex flex-col"
-          style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)' }}
+          className="absolute z-10 mt-2 flex max-h-60 w-full flex-col overflow-y-auto"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '0.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-md)',
+          }}
           role="listbox"
           aria-label="Állomások listája"
         >
@@ -106,17 +112,27 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
                 aria-selected={isSelected}
               >
                 <div className="flex flex-col">
-                  <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-primary)' }}>
+                  <span
+                    style={{
+                      fontSize: 'var(--text-sm)',
+                      fontWeight: 500,
+                      color: 'var(--text-primary)',
+                    }}
+                  >
                     {station.name}
                   </span>
                   <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>
                     {station.river} ({station.riverKm ? `${station.riverKm} fkm` : 'N/A'})
                   </span>
                   {/* Critical levels tooltip */}
-                  <div className="flex items-center gap-1 mt-1" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
+                  <div
+                    className="mt-1 flex items-center gap-1"
+                    style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}
+                  >
                     <Info className="h-3 w-3" aria-hidden="true" />
                     <span>
-                      LNV: {station.lowWaterLevelCm ?? 'N/A'}cm | KKV: {station.highWaterLevelCm ?? 'N/A'}cm | NV: {station.dangerLevelCm ?? 'N/A'}cm
+                      LNV: {station.lowWaterLevelCm ?? 'N/A'}cm | KKV:{' '}
+                      {station.highWaterLevelCm ?? 'N/A'}cm | NV: {station.dangerLevelCm ?? 'N/A'}cm
                     </span>
                   </div>
                 </div>

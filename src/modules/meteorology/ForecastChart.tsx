@@ -46,7 +46,14 @@ export const ForecastChart = React.memo<ForecastChartProps>(({ cityId }) => {
   // Loading State
   if (isLoading) {
     return (
-      <div className="w-full h-96 p-4 flex items-center justify-center" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
+      <div
+        className="flex h-96 w-full items-center justify-center p-4"
+        style={{
+          background: 'var(--bg-surface)',
+          border: '0.5px solid var(--border-default)',
+          borderRadius: 'var(--radius-lg)',
+        }}
+      >
         <LoadingSpinner message="Előrejelzés betöltése..." />
       </div>
     );
@@ -55,12 +62,21 @@ export const ForecastChart = React.memo<ForecastChartProps>(({ cityId }) => {
   // Error State
   if (error) {
     return (
-      <div className="flex items-start gap-3 p-4" style={{ background: 'var(--status-alert-bg)', color: 'var(--status-alert-text)', border: '0.5px solid var(--status-alert-border)', borderRadius: 'var(--radius-md)' }}>
-        <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" style={{ color: 'var(--status-alert-text)' }} />
+      <div
+        className="flex items-start gap-3 p-4"
+        style={{
+          background: 'var(--status-alert-bg)',
+          color: 'var(--status-alert-text)',
+          border: '0.5px solid var(--status-alert-border)',
+          borderRadius: 'var(--radius-md)',
+        }}
+      >
+        <AlertCircle
+          className="mt-0.5 h-5 w-5 flex-shrink-0"
+          style={{ color: 'var(--status-alert-text)' }}
+        />
         <div>
-          <h3 className="mb-1 text-base font-semibold">
-            Hiba az előrejelzés betöltésekor
-          </h3>
+          <h3 className="mb-1 text-base font-semibold">Hiba az előrejelzés betöltésekor</h3>
           <p className="text-sm">{error.message}</p>
         </div>
       </div>
@@ -78,7 +94,14 @@ export const ForecastChart = React.memo<ForecastChartProps>(({ cityId }) => {
   }
 
   return (
-    <div className="w-full h-96 p-4" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
+    <div
+      className="h-96 w-full p-4"
+      style={{
+        background: 'var(--bg-surface)',
+        border: '0.5px solid var(--border-default)',
+        borderRadius: 'var(--radius-lg)',
+      }}
+    >
       <ResponsiveContainer width="100%" height="100%" minHeight={350}>
         <LineChart data={forecastData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(26,95,122,.10)" />

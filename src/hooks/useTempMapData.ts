@@ -6,7 +6,7 @@ export interface TempPoint {
   name: string;
   lat: number;
   lon: number;
-  temp: number;   // °C
+  temp: number; // °C
 }
 
 interface CityRow {

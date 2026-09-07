@@ -102,7 +102,7 @@ export function InstallPrompt() {
 
   return (
     <div
-      className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:w-96"
+      className="fixed right-4 bottom-4 left-4 z-50 md:right-4 md:left-auto md:w-96"
       role="dialog"
       aria-labelledby="install-prompt-title"
       aria-describedby="install-prompt-description"
@@ -111,7 +111,7 @@ export function InstallPrompt() {
         {/* Close button */}
         <button
           onClick={handleDismiss}
-          className="absolute right-2 top-2 rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="absolute top-2 right-2 rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           aria-label="Bezárás"
         >
           <X className="h-5 w-5" />
@@ -123,22 +123,16 @@ export function InstallPrompt() {
             <Download className="h-6 w-6 text-white" />
           </div>
           <div className="flex-1">
-            <h3
-              id="install-prompt-title"
-              className="text-lg font-semibold text-gray-900"
-            >
+            <h3 id="install-prompt-title" className="text-lg font-semibold text-gray-900">
               Telepítsd a DunApp-ot
             </h3>
           </div>
         </div>
 
         {/* Description */}
-        <p
-          id="install-prompt-description"
-          className="mb-4 text-sm text-gray-600"
-        >
-          Telepítsd az alkalmazást az otthoni képernyődre a gyorsabb
-          hozzáféréshez és offline használathoz!
+        <p id="install-prompt-description" className="mb-4 text-sm text-gray-600">
+          Telepítsd az alkalmazást az otthoni képernyődre a gyorsabb hozzáféréshez és offline
+          használathoz!
         </p>
 
         {/* Benefits list */}
@@ -161,13 +155,13 @@ export function InstallPrompt() {
         <div className="flex flex-col gap-2 sm:flex-row">
           <button
             onClick={handleInstall}
-            className="flex-1 rounded-lg bg-gradient-to-r from-[#00A8CC] to-[#0088AA] px-4 py-2 text-sm font-medium text-white hover:from-[#0088AA] hover:to-[#007799] focus:outline-none focus:ring-2 focus:ring-[#00A8CC] focus:ring-offset-2"
+            className="flex-1 rounded-lg bg-gradient-to-r from-[#00A8CC] to-[#0088AA] px-4 py-2 text-sm font-medium text-white hover:from-[#0088AA] hover:to-[#007799] focus:ring-2 focus:ring-[#00A8CC] focus:ring-offset-2 focus:outline-none"
           >
             Telepítés
           </button>
           <button
             onClick={handleRemindLater}
-            className="flex-1 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 sm:flex-initial sm:px-6"
+            className="flex-1 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:outline-none sm:flex-initial sm:px-6"
           >
             Később
           </button>

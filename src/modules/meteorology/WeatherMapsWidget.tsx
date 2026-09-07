@@ -63,7 +63,6 @@ const DEFAULT_MAP_CENTER: [number, number] = [46.17, 18.8];
 const DRAVA_MAP_CENTER: [number, number] = [46.1, 17.2];
 const DEFAULT_MAP_ZOOM = 9;
 
-
 // Satellite image bounds (OMSZ MSG European sector)
 // Note: verify exact bounds from OMSZ Leiras_MSG-hu.pdf if image appears misaligned
 const SATELLITE_BOUNDS: LatLngBoundsExpression = [
@@ -113,7 +112,8 @@ const TABS: Tab[] = [
     label: 'Radar',
     Icon: CloudRain,
     source: 'RainViewer',
-    description: 'Csapadékintenzitás animált radarképe (RainViewer). Zöld = gyenge, sárga = közepes, narancs/piros = erős csapadék.',
+    description:
+      'Csapadékintenzitás animált radarképe (RainViewer). Zöld = gyenge, sárga = közepes, narancs/piros = erős csapadék.',
     legendType: 'radar',
   },
   {
@@ -121,7 +121,8 @@ const TABS: Tab[] = [
     label: 'Felhőtérkép',
     Icon: Globe2,
     source: 'OMSZ',
-    description: 'OMSZ Meteosat-11 infravörös felvétel. Fehér/világos = vastag magas felhők. Szürke = alacsony/vékony felhők. Sötét = derült ég.',
+    description:
+      'OMSZ Meteosat-11 infravörös felvétel. Fehér/világos = vastag magas felhők. Szürke = alacsony/vékony felhők. Sötét = derült ég.',
     legendType: 'satellite',
   },
   {
@@ -129,7 +130,8 @@ const TABS: Tab[] = [
     label: 'Szél',
     Icon: Wind,
     source: 'OWM',
-    description: 'Szélsebesség (OpenWeatherMap). Alacsony szélsebességnél (< 5 m/s) a réteg szinte átlátszó — ez normális.',
+    description:
+      'Szélsebesség (OpenWeatherMap). Alacsony szélsebességnél (< 5 m/s) a réteg szinte átlátszó — ez normális.',
     legendType: 'owm-wind',
   },
   {
@@ -137,7 +139,8 @@ const TABS: Tab[] = [
     label: 'Hőmérséklet',
     Icon: Thermometer,
     source: 'OWM',
-    description: 'Léghőmérséklet (OpenWeatherMap). Kék = hideg, zöld = 5–15 °C, sárga = ~20 °C, piros = meleg.',
+    description:
+      'Léghőmérséklet (OpenWeatherMap). Kék = hideg, zöld = 5–15 °C, sárga = ~20 °C, piros = meleg.',
     legendType: 'owm-temp',
   },
 ];
@@ -205,30 +208,30 @@ const CARTO_TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{
 function LegendBar({ legendType }: { legendType: Tab['legendType'] }) {
   if (legendType === 'radar') {
     return (
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600 px-1">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-xs text-gray-600">
         <span className="font-medium text-gray-700">Csapadék:</span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-full bg-blue-400" />
+          <span className="inline-block h-3 w-3 rounded-full bg-blue-400" />
           Szitálás
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-full bg-green-500" />
+          <span className="inline-block h-3 w-3 rounded-full bg-green-500" />
           Gyenge
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-full bg-yellow-400" />
+          <span className="inline-block h-3 w-3 rounded-full bg-yellow-400" />
           Közepes
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-full bg-orange-500" />
+          <span className="inline-block h-3 w-3 rounded-full bg-orange-500" />
           Erős
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-full bg-red-600" />
+          <span className="inline-block h-3 w-3 rounded-full bg-red-600" />
           Intenzív
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-full bg-purple-600" />
+          <span className="inline-block h-3 w-3 rounded-full bg-purple-600" />
           Extrém
         </span>
       </div>
@@ -237,18 +240,18 @@ function LegendBar({ legendType }: { legendType: Tab['legendType'] }) {
 
   if (legendType === 'satellite') {
     return (
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600 px-1">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-xs text-gray-600">
         <span className="font-medium text-gray-700">IR felvétel:</span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-full bg-white border border-gray-300" />
+          <span className="inline-block h-3 w-3 rounded-full border border-gray-300 bg-white" />
           Vastag magas felhő
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-full bg-gray-400" />
+          <span className="inline-block h-3 w-3 rounded-full bg-gray-400" />
           Alacsony / vékony felhő
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-3 h-3 rounded-full bg-gray-800" />
+          <span className="inline-block h-3 w-3 rounded-full bg-gray-800" />
           Derült ég
         </span>
       </div>
@@ -257,27 +260,46 @@ function LegendBar({ legendType }: { legendType: Tab['legendType'] }) {
 
   if (legendType === 'owm-wind') {
     return (
-      <div className="flex flex-col gap-1 w-full px-1">
-        <div className="h-3 rounded" style={{
-          background: 'linear-gradient(to right, rgba(148,163,184,0.4), #60a5fa, #22d3ee, #34d399, #fbbf24)'
-        }} />
+      <div className="flex w-full flex-col gap-1 px-1">
+        <div
+          className="h-3 rounded"
+          style={{
+            background:
+              'linear-gradient(to right, rgba(148,163,184,0.4), #60a5fa, #22d3ee, #34d399, #fbbf24)',
+          }}
+        />
         <div className="flex justify-between text-xs text-gray-500">
-          <span>0</span><span>5</span><span>10</span><span>15</span><span>20+ m/s</span>
+          <span>0</span>
+          <span>5</span>
+          <span>10</span>
+          <span>15</span>
+          <span>20+ m/s</span>
         </div>
-        <p className="text-xs text-gray-400 italic">Alacsony szélnél (&lt;5 m/s) az overlay szinte átlátszó — ez normális.</p>
+        <p className="text-xs text-gray-400 italic">
+          Alacsony szélnél (&lt;5 m/s) az overlay szinte átlátszó — ez normális.
+        </p>
       </div>
     );
   }
 
   if (legendType === 'owm-temp') {
     return (
-      <div className="flex flex-col gap-1 w-full px-1">
-        <div className="h-3 rounded" style={{
-          background: 'linear-gradient(to right, #3b0a6e, #0000d4, #00bfff, #00e676, #ffee58, #ff6f00, #c62828)'
-        }} />
+      <div className="flex w-full flex-col gap-1 px-1">
+        <div
+          className="h-3 rounded"
+          style={{
+            background:
+              'linear-gradient(to right, #3b0a6e, #0000d4, #00bfff, #00e676, #ffee58, #ff6f00, #c62828)',
+          }}
+        />
         <div className="flex justify-between text-xs text-gray-500">
-          <span>-20°C</span><span>-10°C</span><span>0°C</span>
-          <span>10°C</span><span>20°C</span><span>30°C</span><span>40°C</span>
+          <span>-20°C</span>
+          <span>-10°C</span>
+          <span>0°C</span>
+          <span>10°C</span>
+          <span>20°C</span>
+          <span>30°C</span>
+          <span>40°C</span>
         </div>
       </div>
     );
@@ -293,10 +315,7 @@ function LegendBar({ legendType }: { legendType: Tab['legendType'] }) {
 function createWindIcon(windSpeed: number, windDir: number): L.DivIcon {
   const arrowDeg = (windDir + 180) % 360;
   const color =
-    windSpeed < 5  ? '#94a3b8' :
-    windSpeed < 10 ? '#60a5fa' :
-    windSpeed < 20 ? '#22d3ee' :
-                     '#fbbf24';
+    windSpeed < 5 ? '#94a3b8' : windSpeed < 10 ? '#60a5fa' : windSpeed < 20 ? '#22d3ee' : '#fbbf24';
 
   return L.divIcon({
     html: `
@@ -326,11 +345,15 @@ function createWindIcon(windSpeed: number, windDir: number): L.DivIcon {
 
 function createTempIcon(temp: number): L.DivIcon {
   const color =
-    temp < 0   ? '#6d28d9' :
-    temp < 10  ? '#3b82f6' :
-    temp < 20  ? '#22c55e' :
-    temp < 30  ? '#f97316' :
-                 '#ef4444';
+    temp < 0
+      ? '#6d28d9'
+      : temp < 10
+        ? '#3b82f6'
+        : temp < 20
+          ? '#22c55e'
+          : temp < 30
+            ? '#f97316'
+            : '#ef4444';
 
   return L.divIcon({
     html: `<div style="
@@ -469,7 +492,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
 
   // Tab selector — reused above the map (normal) and inside the fullscreen toolbar.
   const tabsBar = (
-    <div className="flex gap-2 flex-wrap">
+    <div className="flex flex-wrap gap-2">
       {TABS.map(({ mode: tabMode, label, Icon, description }) => (
         <button
           key={tabMode}
@@ -480,10 +503,10 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
             setIsPlaying(true);
           }}
           className={[
-            'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+            'flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
             mode === tabMode
               ? 'bg-cyan-600 text-white shadow-sm'
-              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50',
+              : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
           ].join(' ')}
         >
           <Icon className="h-4 w-4" />
@@ -503,7 +526,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
         className={
           isFullscreen
             ? 'fixed inset-0 z-[9998] bg-white'
-            : 'relative w-full h-64 sm:h-[520px] overflow-hidden bg-white rounded-lg shadow-sm border-2 border-gray-200'
+            : 'relative h-64 w-full overflow-hidden rounded-lg border-2 border-gray-200 bg-white shadow-sm sm:h-[520px]'
         }
       >
         <MapContainer
@@ -521,7 +544,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
           <MapResizeOnFullscreen fullscreen={isFullscreen} />
 
           {/* Base map — CartoDB Positron for OWM modes (better contrast), OSM otherwise */}
-          {(mode === 'wind' || mode === 'temperature') ? (
+          {mode === 'wind' || mode === 'temperature' ? (
             <TileLayer
               key="carto"
               url={CARTO_TILE_URL}
@@ -538,18 +561,19 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
           )}
 
           {/* Radar: RainViewer tile layers (opacity-based frame switching, smooth animation) */}
-          {mode === 'radar' && radarFrames.map((rf, idx) => (
-            <TileLayer
-              key={`rv-${rf.time}`}
-              url={rf.tileUrl}
-              opacity={idx === frameIndex ? 0.80 : 0}
-              tileSize={512}
-              zoomOffset={-1}
-              maxNativeZoom={7}
-              maxZoom={16}
-              attribution='<a href="https://www.rainviewer.com" target="_blank">RainViewer</a>'
-            />
-          ))}
+          {mode === 'radar' &&
+            radarFrames.map((rf, idx) => (
+              <TileLayer
+                key={`rv-${rf.time}`}
+                url={rf.tileUrl}
+                opacity={idx === frameIndex ? 0.8 : 0}
+                tileSize={512}
+                zoomOffset={-1}
+                maxNativeZoom={7}
+                maxZoom={16}
+                attribution='<a href="https://www.rainviewer.com" target="_blank">RainViewer</a>'
+              />
+            ))}
 
           {/* Satellite: OMSZ ImageOverlay */}
           {mode === 'satellite' && currentFrame && (
@@ -561,7 +585,7 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
             <TileLayer
               key="wind"
               url="/owm-tiles/wind_new/{z}/{x}/{y}.png"
-              opacity={0.90}
+              opacity={0.9}
               attribution='<a href="https://openweathermap.org">OpenWeatherMap</a>'
             />
           )}
@@ -569,44 +593,41 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
             <TileLayer
               key="temperature"
               url="/owm-tiles/temp_new/{z}/{x}/{y}.png"
-              opacity={0.90}
+              opacity={0.9}
               attribution='<a href="https://openweathermap.org">OpenWeatherMap</a>'
             />
           )}
 
           {/* GeoJSON country borders - always on top of weather data */}
-          <GeoJSON
-            data={bordersData as GeoJsonObject}
-            style={BORDER_STYLE}
-          />
+          <GeoJSON data={bordersData as GeoJsonObject} style={BORDER_STYLE} />
 
           {/* Temperature badges (temperature mode only) */}
-          {mode === 'temperature' && tempPoints.map((pt) => (
-            <Marker
-              key={pt.cityId}
-              position={[pt.lat, pt.lon]}
-              icon={createTempIcon(pt.temp)}
-            >
-              <Popup>
-                <b>{pt.name}</b><br />
-                {pt.temp.toFixed(1)} °C
-              </Popup>
-            </Marker>
-          ))}
+          {mode === 'temperature' &&
+            tempPoints.map((pt) => (
+              <Marker key={pt.cityId} position={[pt.lat, pt.lon]} icon={createTempIcon(pt.temp)}>
+                <Popup>
+                  <b>{pt.name}</b>
+                  <br />
+                  {pt.temp.toFixed(1)} °C
+                </Popup>
+              </Marker>
+            ))}
 
           {/* Wind direction arrows (wind mode only) */}
-          {mode === 'wind' && windPoints.map((pt) => (
-            <Marker
-              key={pt.cityId}
-              position={[pt.lat, pt.lon]}
-              icon={createWindIcon(pt.windSpeed, pt.windDir)}
-            >
-              <Popup>
-                <b>{pt.name}</b><br />
-                {pt.windSpeed.toFixed(1)} m/s, {pt.windDir}°
-              </Popup>
-            </Marker>
-          ))}
+          {mode === 'wind' &&
+            windPoints.map((pt) => (
+              <Marker
+                key={pt.cityId}
+                position={[pt.lat, pt.lon]}
+                icon={createWindIcon(pt.windSpeed, pt.windDir)}
+              >
+                <Popup>
+                  <b>{pt.name}</b>
+                  <br />
+                  {pt.windSpeed.toFixed(1)} m/s, {pt.windDir}°
+                </Popup>
+              </Marker>
+            ))}
 
           {/* City marker */}
           <Marker position={mapCenter} icon={defaultIcon}>
@@ -620,12 +641,12 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
         </MapContainer>
 
         {/* Bottom controls */}
-        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-2 z-[1000]">
+        <div className="absolute right-4 bottom-4 left-4 z-[1000] flex items-center justify-between gap-2">
           {/* Status label */}
-          <div className="bg-white rounded-lg shadow-md px-3 py-2 text-xs text-gray-600">
+          <div className="rounded-lg bg-white px-3 py-2 text-xs text-gray-600 shadow-md">
             {isLoading && isAnimated ? (
               <span className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
+                <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-cyan-500" />
                 Betöltés...
               </span>
             ) : mode === 'radar' && radarFrames[frameIndex] ? (
@@ -633,19 +654,21 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
             ) : mode === 'satellite' && currentFrame ? (
               <span>OMSZ Felhőtérkép {formatSatelliteTime(currentFrame.timestamp)}</span>
             ) : (
-              <span>{activeTab.source} · {activeTab.label}</span>
+              <span>
+                {activeTab.source} · {activeTab.label}
+              </span>
             )}
           </div>
 
           {/* Play/pause + frame counter (animated modes only) */}
           {isAnimated && frameCount > 1 && (
             <div className="flex items-center gap-2">
-              <div className="bg-white rounded-lg shadow-md px-3 py-2 text-xs text-gray-600 font-medium">
+              <div className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-md">
                 {frameIndex + 1} / {frameCount}
               </div>
               <button
                 onClick={() => setIsPlaying((p) => !p)}
-                className="bg-white rounded-lg shadow-md p-2 hover:bg-gray-100 transition-colors"
+                className="rounded-lg bg-white p-2 shadow-md transition-colors hover:bg-gray-100"
                 aria-label={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
@@ -663,23 +686,41 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
           <div className="absolute top-2 right-2 z-[1000] flex items-center gap-2">
             <button
               onClick={enterFullscreen}
-              className="bg-white/90 rounded-lg shadow-md p-2 hover:bg-white transition-colors"
+              className="rounded-lg bg-white/90 p-2 shadow-md transition-colors hover:bg-white"
               aria-label="Teljes képernyő"
               title="Teljes képernyő"
             >
               <Maximize2 className="h-4 w-4 text-gray-700" />
             </button>
-            <span className="bg-white/80 rounded px-2 py-1 text-xs text-gray-500">
+            <span className="rounded bg-white/80 px-2 py-1 text-xs text-gray-500">
               Forrás:{' '}
               {mode === 'radar' ? (
-                <a href="https://www.rainviewer.com" target="_blank" rel="noopener noreferrer"
-                   className="hover:text-cyan-600">RainViewer</a>
+                <a
+                  href="https://www.rainviewer.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-cyan-600"
+                >
+                  RainViewer
+                </a>
               ) : activeTab.source === 'OMSZ' ? (
-                <a href="https://www.met.hu" target="_blank" rel="noopener noreferrer"
-                   className="hover:text-cyan-600">OMSZ</a>
+                <a
+                  href="https://www.met.hu"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-cyan-600"
+                >
+                  OMSZ
+                </a>
               ) : (
-                <a href="https://openweathermap.org" target="_blank" rel="noopener noreferrer"
-                   className="hover:text-cyan-600">OpenWeatherMap</a>
+                <a
+                  href="https://openweathermap.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-cyan-600"
+                >
+                  OpenWeatherMap
+                </a>
               )}
             </span>
           </div>
@@ -688,11 +729,11 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
         {/* Fullscreen chrome: top toolbar (tabs + close) + collapsible legend */}
         {isFullscreen && (
           <>
-            <div className="absolute top-0 left-0 right-0 z-[10000] flex items-start justify-between gap-2 p-2 bg-gradient-to-b from-white/80 to-transparent">
-              <div className="flex-1 min-w-0 overflow-x-auto">{tabsBar}</div>
+            <div className="absolute top-0 right-0 left-0 z-[10000] flex items-start justify-between gap-2 bg-gradient-to-b from-white/80 to-transparent p-2">
+              <div className="min-w-0 flex-1 overflow-x-auto">{tabsBar}</div>
               <button
                 onClick={exitFullscreen}
-                className="shrink-0 bg-white rounded-lg shadow-md p-2 hover:bg-gray-100 transition-colors"
+                className="shrink-0 rounded-lg bg-white p-2 shadow-md transition-colors hover:bg-gray-100"
                 aria-label="Bezárás"
                 title="Bezárás (Esc)"
               >
@@ -707,7 +748,15 @@ export const WeatherMapsWidget = React.memo<WeatherMapsWidgetProps>(({ city }) =
       </div>
 
       {/* Legend bar (normal mode; in fullscreen the collapsible legend is used) */}
-      <div className="px-3 py-2.5" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
+      <div
+        className="px-3 py-2.5"
+        style={{
+          background: 'var(--bg-surface)',
+          border: '0.5px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-md)',
+          boxShadow: 'var(--shadow-sm)',
+        }}
+      >
         <LegendBar legendType={activeTab.legendType} />
       </div>
     </div>

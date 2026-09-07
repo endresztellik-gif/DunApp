@@ -10,7 +10,7 @@
  * - Radar map (OMSZ met.hu ODP)
  */
 
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import {
   Thermometer,
   CloudRain,
@@ -19,29 +19,29 @@ import {
   Droplets,
   Navigation,
   AlertCircle,
-} from 'lucide-react'
-import { CitySelector } from '../../components/selectors/CitySelector'
-import { DataCard } from '../../components/UI/DataCard'
-import { LoadingSpinner } from '../../components/UI/LoadingSpinner'
-import { Footer } from '../../components/Layout/Footer'
-import { ForecastChart } from './ForecastChart'
-import { WeatherMapsWidget } from './WeatherMapsWidget'
-import { PrecipitationSummaryCard } from './PrecipitationSummaryCard'
-import { SunTimesCards } from './SunTimesCards'
-import { MoonTimesCards } from './MoonTimesCards'
-import { useWeatherData } from '../../hooks/useWeatherData'
-import type { City, DataSource } from '../../types'
+} from 'lucide-react';
+import { CitySelector } from '../../components/selectors/CitySelector';
+import { DataCard } from '../../components/UI/DataCard';
+import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
+import { Footer } from '../../components/Layout/Footer';
+import { ForecastChart } from './ForecastChart';
+import { WeatherMapsWidget } from './WeatherMapsWidget';
+import { PrecipitationSummaryCard } from './PrecipitationSummaryCard';
+import { SunTimesCards } from './SunTimesCards';
+import { MoonTimesCards } from './MoonTimesCards';
+import { useWeatherData } from '../../hooks/useWeatherData';
+import type { City, DataSource } from '../../types';
 
 interface MeteorologyModuleProps {
-  cities: City[]
-  initialCity?: City
+  cities: City[];
+  initialCity?: City;
 }
 
 export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, initialCity }) => {
-  const [selectedCity, setSelectedCity] = useState<City | null>(initialCity || cities[0] || null)
+  const [selectedCity, setSelectedCity] = useState<City | null>(initialCity || cities[0] || null);
 
   // Fetch weather data from Supabase
-  const { weatherData, isLoading, error: weatherError } = useWeatherData(selectedCity?.id || null)
+  const { weatherData, isLoading, error: weatherError } = useWeatherData(selectedCity?.id || null);
 
   // Data sources for footer
   const dataSources: DataSource[] = [
@@ -65,14 +65,14 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
       url: 'https://www.yr.no',
       lastUpdate: new Date().toISOString(),
     },
-  ]
+  ];
 
   // Format wind direction
   const getWindDirectionLabel = (degrees: number): string => {
-    const directions = ['É', 'ÉK', 'K', 'DK', 'D', 'DNy', 'Ny', 'ÉNy']
-    const index = Math.round(degrees / 45) % 8
-    return `${directions[index]} (${degrees}°)`
-  }
+    const directions = ['É', 'ÉK', 'K', 'DK', 'D', 'DNy', 'Ny', 'ÉNy'];
+    const index = Math.round(degrees / 45) % 8;
+    return `${directions[index]} (${degrees}°)`;
+  };
 
   return (
     <div className="main-container">
@@ -82,18 +82,25 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
       </div>
 
       {/* Loading State */}
-      {isLoading && (
-        <LoadingSpinner message="Időjárási adatok betöltése..." />
-      )}
+      {isLoading && <LoadingSpinner message="Időjárási adatok betöltése..." />}
 
       {/* Error State */}
       {!isLoading && weatherError && (
-        <div className="mb-6 flex items-start gap-3 p-4" style={{ background: 'var(--status-alert-bg)', color: 'var(--status-alert-text)', border: '0.5px solid var(--status-alert-border)', borderRadius: 'var(--radius-md)' }}>
-          <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" style={{ color: 'var(--status-alert-text)' }} />
+        <div
+          className="mb-6 flex items-start gap-3 p-4"
+          style={{
+            background: 'var(--status-alert-bg)',
+            color: 'var(--status-alert-text)',
+            border: '0.5px solid var(--status-alert-border)',
+            borderRadius: 'var(--radius-md)',
+          }}
+        >
+          <AlertCircle
+            className="mt-0.5 h-5 w-5 flex-shrink-0"
+            style={{ color: 'var(--status-alert-text)' }}
+          />
           <div>
-            <h3 className="mb-1 text-base font-semibold">
-              Hiba az adatok betöltésekor
-            </h3>
+            <h3 className="mb-1 text-base font-semibold">Hiba az adatok betöltésekor</h3>
             <p className="text-sm">
               {weatherError.message || 'Nem sikerült betölteni az időjárási adatokat.'}
             </p>
@@ -103,9 +110,21 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
 
       {/* No City Selected State */}
       {!selectedCity && !weatherError && (
-        <div className="mb-6 p-8 text-center" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}>
-          <Thermometer className="mx-auto mb-3 h-12 w-12" style={{ color: 'var(--accent-primary)' }} />
-          <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Válassz várost</h3>
+        <div
+          className="mb-6 p-8 text-center"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '0.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-md)',
+          }}
+        >
+          <Thermometer
+            className="mx-auto mb-3 h-12 w-12"
+            style={{ color: 'var(--accent-primary)' }}
+          />
+          <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Válassz várost
+          </h3>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Válassz egy várost a fenti listából az időjárási adatok megtekintéséhez.
           </p>
@@ -114,9 +133,21 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
 
       {/* No Data Available State */}
       {selectedCity && !weatherData && !isLoading && !weatherError && (
-        <div className="mb-6 p-8 text-center" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}>
-          <Thermometer className="mx-auto mb-3 h-12 w-12" style={{ color: 'var(--accent-primary)' }} />
-          <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Nincs elérhető adat</h3>
+        <div
+          className="mb-6 p-8 text-center"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '0.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-md)',
+          }}
+        >
+          <Thermometer
+            className="mx-auto mb-3 h-12 w-12"
+            style={{ color: 'var(--accent-primary)' }}
+          />
+          <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Nincs elérhető adat
+          </h3>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Jelenleg nincs időjárási adat ehhez a városhoz: {selectedCity.name}
           </p>
@@ -192,13 +223,23 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
 
           {/* 3-Day Forecast Chart */}
           <div className="mb-6">
-            <h2 className="section-title mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>3 napos előrejelzés</h2>
+            <h2
+              className="section-title mb-4"
+              style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}
+            >
+              3 napos előrejelzés
+            </h2>
             <ForecastChart cityId={selectedCity?.id || ''} />
           </div>
 
           {/* Weather Maps */}
           <div className="mb-6">
-            <h2 className="section-title mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Térképek</h2>
+            <h2
+              className="section-title mb-4"
+              style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}
+            >
+              Térképek
+            </h2>
             <WeatherMapsWidget city={selectedCity} />
           </div>
         </>
@@ -207,5 +248,5 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
       {/* Footer with data source */}
       <Footer dataSources={dataSources} />
     </div>
-  )
-}
+  );
+};

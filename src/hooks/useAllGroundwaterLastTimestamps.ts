@@ -26,7 +26,7 @@ interface UseAllGroundwaterLastTimestampsReturn {
 }
 
 async function fetchAllWellTimestamps(): Promise<WellLastTimestamp[]> {
-  const { data, error } = await supabase.rpc('get_all_well_last_timestamps') as {
+  const { data, error } = (await supabase.rpc('get_all_well_last_timestamps')) as {
     data: any[] | null;
     error: any;
   };

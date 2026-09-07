@@ -20,8 +20,8 @@ import * as supabaseModule from '../../lib/supabase';
 // Mock Supabase
 vi.mock('../../lib/supabase', () => ({
   supabase: {
-    from: vi.fn()
-  }
+    from: vi.fn(),
+  },
 }));
 
 // Mock data
@@ -43,7 +43,7 @@ const mockStation = {
   danger_level_cm: 500,
   is_active: true,
   created_at: '2025-10-01T00:00:00Z',
-  updated_at: '2025-10-01T00:00:00Z'
+  updated_at: '2025-10-01T00:00:00Z',
 };
 
 const mockWaterLevelData = {
@@ -51,7 +51,7 @@ const mockWaterLevelData = {
   water_level_cm: 420,
   flow_rate_m3s: 2500,
   water_temp_celsius: 18.5,
-  timestamp: '2025-10-27T12:00:00Z'
+  timestamp: '2025-10-27T12:00:00Z',
 };
 
 const mockForecastData = [
@@ -59,7 +59,7 @@ const mockForecastData = [
   { station_id: 'station-123', forecast_date: '2025-10-29', water_level_cm: 430, forecast_day: 2 },
   { station_id: 'station-123', forecast_date: '2025-10-30', water_level_cm: 435, forecast_day: 3 },
   { station_id: 'station-123', forecast_date: '2025-10-31', water_level_cm: 440, forecast_day: 4 },
-  { station_id: 'station-123', forecast_date: '2025-11-01', water_level_cm: 445, forecast_day: 5 }
+  { station_id: 'station-123', forecast_date: '2025-11-01', water_level_cm: 445, forecast_day: 5 },
 ];
 
 // Helper to create wrapper with QueryClient
@@ -68,9 +68,9 @@ const createWrapper = () => {
     defaultOptions: {
       queries: {
         retry: false,
-        gcTime: 0
-      }
-    }
+        gcTime: 0,
+      },
+    },
   });
 
   return ({ children }: { children: React.ReactNode }) => (
@@ -85,7 +85,7 @@ describe('useWaterLevelData', () => {
 
   it('should return initial loading state', () => {
     const { result } = renderHook(() => useWaterLevelData('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     expect(result.current.isLoading).toBe(true);
@@ -96,7 +96,7 @@ describe('useWaterLevelData', () => {
 
   it('should not fetch when stationId is null', () => {
     const { result } = renderHook(() => useWaterLevelData(null), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     expect(result.current.isLoading).toBe(false);
@@ -110,9 +110,9 @@ describe('useWaterLevelData', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
-            })
-          })
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_data') {
@@ -122,11 +122,11 @@ describe('useWaterLevelData', () => {
               order: () => ({
                 limit: () => ({
                   single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
-                })
-              })
-            })
-          })
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_forecasts') {
@@ -134,10 +134,10 @@ describe('useWaterLevelData', () => {
           select: () => ({
             eq: () => ({
               order: () => ({
-                limit: vi.fn().mockResolvedValue({ data: mockForecastData, error: null })
-              })
-            })
-          })
+                limit: vi.fn().mockResolvedValue({ data: mockForecastData, error: null }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -145,7 +145,7 @@ describe('useWaterLevelData', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useWaterLevelData('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -166,20 +166,20 @@ describe('useWaterLevelData', () => {
         eq: () => ({
           single: vi.fn().mockResolvedValue({
             data: null,
-            error: { message: 'Station not found' }
+            error: { message: 'Station not found' },
           }),
           maybeSingle: vi.fn().mockResolvedValue({
             data: null,
-            error: { message: 'Station not found' }
-          })
-        })
-      })
+            error: { message: 'Station not found' },
+          }),
+        }),
+      }),
     });
 
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useWaterLevelData('invalid-station'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false), { timeout: 10000 });
@@ -196,9 +196,9 @@ describe('useWaterLevelData', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
-            })
-          })
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_data') {
@@ -208,11 +208,11 @@ describe('useWaterLevelData', () => {
               order: () => ({
                 limit: () => ({
                   single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
-                })
-              })
-            })
-          })
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_forecasts') {
@@ -220,10 +220,10 @@ describe('useWaterLevelData', () => {
           select: () => ({
             eq: () => ({
               order: () => ({
-                limit: vi.fn().mockResolvedValue({ data: mockForecastData, error: null })
-              })
-            })
-          })
+                limit: vi.fn().mockResolvedValue({ data: mockForecastData, error: null }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -231,7 +231,7 @@ describe('useWaterLevelData', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useWaterLevelData('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -256,14 +256,13 @@ describe('useWaterLevelData', () => {
     expect(result.current.station?.highWaterLevelCm).toBe(600);
     expect(result.current.station?.alertLevelCm).toBe(400);
     expect(result.current.station?.dangerLevelCm).toBe(500);
-
   });
 
   it('should handle null optional fields in water level data', async () => {
     const incompleteWaterLevelData = {
       ...mockWaterLevelData,
       flow_rate_m3s: null,
-      water_temp_celsius: null
+      water_temp_celsius: null,
     };
 
     const mockFrom = vi.fn().mockImplementation((table: string) => {
@@ -272,9 +271,9 @@ describe('useWaterLevelData', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
-            })
-          })
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_data') {
@@ -283,12 +282,16 @@ describe('useWaterLevelData', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: incompleteWaterLevelData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: incompleteWaterLevelData, error: null })
-                })
-              })
-            })
-          })
+                  single: vi
+                    .fn()
+                    .mockResolvedValue({ data: incompleteWaterLevelData, error: null }),
+                  maybeSingle: vi
+                    .fn()
+                    .mockResolvedValue({ data: incompleteWaterLevelData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_forecasts') {
@@ -296,10 +299,10 @@ describe('useWaterLevelData', () => {
           select: () => ({
             eq: () => ({
               order: () => ({
-                limit: vi.fn().mockResolvedValue({ data: [], error: null })
-              })
-            })
-          })
+                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -307,7 +310,7 @@ describe('useWaterLevelData', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useWaterLevelData('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -324,9 +327,9 @@ describe('useWaterLevelData', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
-            })
-          })
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_data') {
@@ -336,11 +339,11 @@ describe('useWaterLevelData', () => {
               order: () => ({
                 limit: () => ({
                   single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
-                })
-              })
-            })
-          })
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_forecasts') {
@@ -348,10 +351,10 @@ describe('useWaterLevelData', () => {
           select: () => ({
             eq: () => ({
               order: () => ({
-                limit: vi.fn().mockResolvedValue({ data: [], error: null })
-              })
-            })
-          })
+                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -359,7 +362,7 @@ describe('useWaterLevelData', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useWaterLevelData('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -375,9 +378,9 @@ describe('useWaterLevelData', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
-            })
-          })
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_data') {
@@ -387,11 +390,11 @@ describe('useWaterLevelData', () => {
               order: () => ({
                 limit: () => ({
                   single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
-                })
-              })
-            })
-          })
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_forecasts') {
@@ -399,10 +402,10 @@ describe('useWaterLevelData', () => {
           select: () => ({
             eq: () => ({
               order: () => ({
-                limit: vi.fn().mockResolvedValue({ data: [], error: null })
-              })
-            })
-          })
+                limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -429,9 +432,9 @@ describe('useWaterLevelData', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null })
-            })
-          })
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockStation, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_data') {
@@ -441,11 +444,11 @@ describe('useWaterLevelData', () => {
               order: () => ({
                 limit: () => ({
                   single: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null })
-                })
-              })
-            })
-          })
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_forecasts') {
@@ -453,10 +456,10 @@ describe('useWaterLevelData', () => {
           select: () => ({
             eq: () => ({
               order: () => ({
-                limit: vi.fn().mockResolvedValue({ data: mockForecastData, error: null })
-              })
-            })
-          })
+                limit: vi.fn().mockResolvedValue({ data: mockForecastData, error: null }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -464,7 +467,7 @@ describe('useWaterLevelData', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useWaterLevelData('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));

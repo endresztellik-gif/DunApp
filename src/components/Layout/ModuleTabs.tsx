@@ -14,22 +14,30 @@ interface ModuleTabsProps {
   onModuleChange: (module: ModuleType | null) => void;
 }
 
-export const ModuleTabs: React.FC<ModuleTabsProps> = ({
-  currentModule,
-  onModuleChange,
-}) => {
+export const ModuleTabs: React.FC<ModuleTabsProps> = ({ currentModule, onModuleChange }) => {
   const tabs = [
-    { module: 'meteorology' as ModuleType, label: 'Időjárás', iconId: 'icon-meteo', ariaLabel: 'Meteorológiai modul' },
-    { module: 'water-level' as ModuleType, label: 'Vízállás', iconId: 'icon-water', ariaLabel: 'Vízállás modul' },
-    { module: 'drought' as ModuleType, label: 'Aszály', iconId: 'icon-drought', ariaLabel: 'Aszály modul' },
+    {
+      module: 'meteorology' as ModuleType,
+      label: 'Időjárás',
+      iconId: 'icon-meteo',
+      ariaLabel: 'Meteorológiai modul',
+    },
+    {
+      module: 'water-level' as ModuleType,
+      label: 'Vízállás',
+      iconId: 'icon-water',
+      ariaLabel: 'Vízállás modul',
+    },
+    {
+      module: 'drought' as ModuleType,
+      label: 'Aszály',
+      iconId: 'icon-drought',
+      ariaLabel: 'Aszály modul',
+    },
   ];
 
   return (
-    <nav
-      className="dun-nav"
-      aria-label="Modul navigáció"
-      role="tablist"
-    >
+    <nav className="dun-nav" aria-label="Modul navigáció" role="tablist">
       {tabs.map((tab) => {
         const isActive = currentModule === tab.module;
         return (

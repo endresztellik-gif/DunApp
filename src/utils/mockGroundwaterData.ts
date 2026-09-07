@@ -60,22 +60,20 @@ export function generateMockGroundwaterData(
     const waterLevelMeters = Math.round(waterLevel * 100) / 100;
 
     // MASL (meters above sea level) - optional, only for some wells
-    const waterLevelMasl = Math.random() < 0.7
-      ? Math.round((95 + waterLevelMeters) * 100) / 100
-      : null;
+    const waterLevelMasl =
+      Math.random() < 0.7 ? Math.round((95 + waterLevelMeters) * 100) / 100 : null;
 
     // Water temperature - optional, seasonal variation
     const monthIndex = date.getMonth();
     const baseTemp = 12 + Math.sin((monthIndex / 12) * Math.PI * 2) * 6; // 6-18°C seasonal
-    const waterTemperature = Math.random() < 0.6
-      ? Math.round((baseTemp + (Math.random() - 0.5) * 2) * 10) / 10
-      : null;
+    const waterTemperature =
+      Math.random() < 0.6 ? Math.round((baseTemp + (Math.random() - 0.5) * 2) * 10) / 10 : null;
 
     data.push({
       timestamp: date.toISOString(),
       waterLevelMeters,
       waterLevelMasl,
-      waterTemperature
+      waterTemperature,
     });
   }
 
@@ -87,21 +85,21 @@ export function generateMockGroundwaterData(
  */
 function getBaseWaterLevel(wellCode: string): number {
   const wellBaseLevels: Record<string, number> = {
-    '4576': 3.8,   // Sátorhely
-    '912': 3.2,    // Mohács II.
-    '1461': 2.9,   // Kölked
-    '1460': 3.5,   // Mohács
-    '4481': 3.1,   // Mohács-Sárhát
-    '448': 4.2,    // Dávod
-    '1450': 3.6,   // Hercegszántó
-    '4479': 3.4,   // Nagybaracska
+    '4576': 3.8, // Sátorhely
+    '912': 3.2, // Mohács II.
+    '1461': 2.9, // Kölked
+    '1460': 3.5, // Mohács
+    '4481': 3.1, // Mohács-Sárhát
+    '448': 4.2, // Dávod
+    '1450': 3.6, // Hercegszántó
+    '4479': 3.4, // Nagybaracska
     '132042': 2.8, // Szeremle
-    '662': 4.0,    // Alsónyék
-    '1426': 3.3,   // Érsekcsanád
-    '658': 3.7,    // Decs
-    '656': 3.9,    // Szekszárd-Borrév
-    '653': 4.1,    // Őcsény
-    '660': 3.5     // Báta
+    '662': 4.0, // Alsónyék
+    '1426': 3.3, // Érsekcsanád
+    '658': 3.7, // Decs
+    '656': 3.9, // Szekszárd-Borrév
+    '653': 4.1, // Őcsény
+    '660': 3.5, // Báta
   };
 
   return wellBaseLevels[wellCode] || 3.5; // Default 3.5m

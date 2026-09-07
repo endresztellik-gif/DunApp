@@ -27,13 +27,7 @@ describe('CitySelector - Architecture Validation', () => {
   // CRITICAL TEST: Architecture enforcement
   it('throws error if cities array is empty', () => {
     expect(() => {
-      render(
-        <CitySelector
-          cities={[]}
-          selectedCity={null}
-          onCityChange={mockOnChange}
-        />
-      );
+      render(<CitySelector cities={[]} selectedCity={null} onCityChange={mockOnChange} />);
     }).toThrow('Expected at least 1 city');
   });
 
@@ -346,9 +340,7 @@ describe('CitySelector - Styling', () => {
   });
 
   it('accepts custom className prop', () => {
-    render(
-      <CitySelector {...props} className="custom-test-class" />
-    );
+    render(<CitySelector {...props} className="custom-test-class" />);
     const dropdown = document.querySelector('.selector-dropdown');
     expect(dropdown).toHaveClass('custom-test-class');
   });

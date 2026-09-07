@@ -24,10 +24,7 @@ interface UseDroughtLocationsReturn {
  * Dráva modules show ONLY their own stations (migration 029 added the region column).
  */
 async function fetchDroughtLocations(region?: Region | null): Promise<DroughtLocation[]> {
-  let query = supabase
-    .from('drought_locations')
-    .select('*')
-    .eq('is_active', true);
+  let query = supabase.from('drought_locations').select('*').eq('is_active', true);
 
   if (region) {
     query = query.eq('region', region);

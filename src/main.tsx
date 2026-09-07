@@ -1,11 +1,11 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { registerSW } from 'virtual:pwa-register'
-import './index.css'
-import App from './App.tsx'
-import { SvgSprite } from './components/SvgSprite.tsx'
-import { RegionProvider } from './contexts/RegionContext.tsx'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { registerSW } from 'virtual:pwa-register';
+import './index.css';
+import App from './App.tsx';
+import { SvgSprite } from './components/SvgSprite.tsx';
+import { RegionProvider } from './contexts/RegionContext.tsx';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -16,14 +16,14 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes by default
     },
   },
-})
+});
 
 // Register Service Worker for PWA functionality
 const updateSW = registerSW({
   onNeedRefresh() {
     // Show a prompt to user when new content is available
     if (confirm('New content available. Reload to update?')) {
-      updateSW(true)
+      updateSW(true);
     }
   },
   onOfflineReady() {
@@ -36,14 +36,14 @@ const updateSW = registerSW({
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('DunApp PWA', {
         body: 'App is ready to work offline!',
-        icon: '/icons/icon-192x192.png'
-      })
+        icon: '/icons/icon-192x192.png',
+      });
     }
   },
   onRegisterError(error) {
-    console.error('Service Worker registration failed:', error)
-  }
-})
+    console.error('Service Worker registration failed:', error);
+  },
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -54,4 +54,4 @@ createRoot(document.getElementById('root')!).render(
       </RegionProvider>
     </QueryClientProvider>
   </StrictMode>
-)
+);

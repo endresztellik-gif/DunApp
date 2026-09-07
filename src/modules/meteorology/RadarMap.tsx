@@ -103,7 +103,9 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
     let loaded = 0;
     const promises = newFrames.map((f) =>
       preloadImage(f.url)
-        .then(() => { loaded++; })
+        .then(() => {
+          loaded++;
+        })
         .catch(() => {})
     );
 
@@ -160,7 +162,7 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
   };
 
   return (
-    <div className="relative w-full h-96 bg-white rounded-lg shadow-sm border-2 border-gray-200">
+    <div className="relative h-96 w-full rounded-lg border-2 border-gray-200 bg-white shadow-sm">
       <MapContainer
         key={city.id}
         center={mapCenter}
@@ -181,11 +183,7 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
         />
 
         {currentFrame && (
-          <ImageOverlay
-            url={currentFrame.url}
-            bounds={RADAR_BOUNDS}
-            opacity={0.7}
-          />
+          <ImageOverlay url={currentFrame.url} bounds={RADAR_BOUNDS} opacity={0.7} />
         )}
 
         <Marker position={mapCenter} icon={defaultIcon}>
@@ -199,11 +197,11 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
       </MapContainer>
 
       {/* Controls */}
-      <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-2 z-[1000]">
-        <div className="bg-white rounded-lg shadow-md px-3 py-2 text-xs text-gray-600">
+      <div className="absolute right-4 bottom-4 left-4 z-[1000] flex items-center justify-between gap-2">
+        <div className="rounded-lg bg-white px-3 py-2 text-xs text-gray-600 shadow-md">
           {isLoading ? (
             <span className="flex items-center gap-2">
-              <span className="inline-block w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
+              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-cyan-500" />
               Betöltés...
             </span>
           ) : currentFrame ? (
@@ -215,12 +213,12 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
 
         {frames.length > 1 && (
           <div className="flex items-center gap-2">
-            <div className="bg-white rounded-lg shadow-md px-3 py-2 text-xs text-gray-600 font-medium">
+            <div className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-md">
               {frameIndex + 1} / {frames.length}
             </div>
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              className="bg-white rounded-lg shadow-md p-2 hover:bg-gray-100 transition-colors"
+              className="rounded-lg bg-white p-2 shadow-md transition-colors hover:bg-gray-100"
               aria-label={isPlaying ? 'Pause' : 'Play'}
             >
               {isPlaying ? (
@@ -238,7 +236,7 @@ export const RadarMap = React.memo<RadarMapProps>(({ city }) => {
           href="https://www.met.hu"
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-white/80 rounded px-2 py-1 text-xs text-gray-500 hover:text-cyan-600"
+          className="rounded bg-white/80 px-2 py-1 text-xs text-gray-500 hover:text-cyan-600"
         >
           Forrás: OMSZ
         </a>

@@ -46,23 +46,61 @@ export const SunTimesCards = React.memo(() => {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Sunrise skeleton */}
-        <div className="p-6 animate-pulse" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-11 h-11" style={{ background: 'var(--bg-surface-alt)', borderRadius: '50%' }}></div>
-            <div className="h-4 w-20" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}></div>
+        <div
+          className="animate-pulse p-6"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '0.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-lg)',
+          }}
+        >
+          <div className="mb-4 flex items-center gap-3">
+            <div
+              className="h-11 w-11"
+              style={{ background: 'var(--bg-surface-alt)', borderRadius: '50%' }}
+            ></div>
+            <div
+              className="h-4 w-20"
+              style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}
+            ></div>
           </div>
-          <div className="h-10 w-16 mb-2" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}></div>
-          <div className="h-4 w-24" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}></div>
+          <div
+            className="mb-2 h-10 w-16"
+            style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}
+          ></div>
+          <div
+            className="h-4 w-24"
+            style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}
+          ></div>
         </div>
 
         {/* Sunset skeleton */}
-        <div className="p-6 animate-pulse" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-lg)' }}>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-11 h-11" style={{ background: 'var(--bg-surface-alt)', borderRadius: '50%' }}></div>
-            <div className="h-4 w-20" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}></div>
+        <div
+          className="animate-pulse p-6"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '0.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-lg)',
+          }}
+        >
+          <div className="mb-4 flex items-center gap-3">
+            <div
+              className="h-11 w-11"
+              style={{ background: 'var(--bg-surface-alt)', borderRadius: '50%' }}
+            ></div>
+            <div
+              className="h-4 w-20"
+              style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}
+            ></div>
           </div>
-          <div className="h-10 w-16 mb-2" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}></div>
-          <div className="h-4 w-24" style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}></div>
+          <div
+            className="mb-2 h-10 w-16"
+            style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}
+          ></div>
+          <div
+            className="h-4 w-24"
+            style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-sm)' }}
+          ></div>
         </div>
       </div>
     );

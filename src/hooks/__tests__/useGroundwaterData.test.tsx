@@ -10,8 +10,8 @@ import * as supabaseModule from '../../lib/supabase';
 
 vi.mock('../../lib/supabase', () => ({
   supabase: {
-    from: vi.fn()
-  }
+    from: vi.fn(),
+  },
 }));
 
 const mockWell = {
@@ -21,10 +21,10 @@ const mockWell = {
   county: 'Bács-Kiskun',
   city_name: 'Baja',
   latitude: 46.1811,
-  longitude: 18.9550,
+  longitude: 18.955,
   depth_meters: 45.5,
   well_type: 'monitoring',
-  is_active: true
+  is_active: true,
 };
 
 const mockGroundwaterData = {
@@ -32,12 +32,12 @@ const mockGroundwaterData = {
   water_level_meters: 12.5,
   water_level_masl: 95.3,
   water_temperature: 14.2,
-  timestamp: '2025-10-27T12:00:00Z'
+  timestamp: '2025-10-27T12:00:00Z',
 };
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: 0 } }
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -51,7 +51,7 @@ describe('useGroundwaterData', () => {
 
   it('should return initial loading state', () => {
     const { result } = renderHook(() => useGroundwaterData('well-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     expect(result.current.isLoading).toBe(true);
@@ -61,7 +61,7 @@ describe('useGroundwaterData', () => {
 
   it('should not fetch when wellId is null', () => {
     const { result } = renderHook(() => useGroundwaterData(null), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     expect(result.current.isLoading).toBe(false);
@@ -75,9 +75,9 @@ describe('useGroundwaterData', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockWell, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockWell, error: null })
-            })
-          })
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockWell, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'groundwater_data') {
@@ -87,11 +87,13 @@ describe('useGroundwaterData', () => {
               order: () => ({
                 limit: () => ({
                   single: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null })
-                })
-              })
-            })
-          })
+                  maybeSingle: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockGroundwaterData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -99,7 +101,7 @@ describe('useGroundwaterData', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useGroundwaterData('well-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -117,20 +119,20 @@ describe('useGroundwaterData', () => {
         eq: () => ({
           single: vi.fn().mockResolvedValue({
             data: null,
-            error: { message: 'Well not found' }
+            error: { message: 'Well not found' },
           }),
           maybeSingle: vi.fn().mockResolvedValue({
             data: null,
-            error: { message: 'Well not found' }
-          })
-        })
-      })
+            error: { message: 'Well not found' },
+          }),
+        }),
+      }),
     });
 
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useGroundwaterData('invalid'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false), { timeout: 10000 });
@@ -146,9 +148,9 @@ describe('useGroundwaterData', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockWell, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockWell, error: null })
-            })
-          })
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockWell, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'groundwater_data') {
@@ -158,11 +160,13 @@ describe('useGroundwaterData', () => {
               order: () => ({
                 limit: () => ({
                   single: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null })
-                })
-              })
-            })
-          })
+                  maybeSingle: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockGroundwaterData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -170,7 +174,7 @@ describe('useGroundwaterData', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useGroundwaterData('well-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -186,7 +190,7 @@ describe('useGroundwaterData', () => {
   it('should handle null temperature data', async () => {
     const dataWithoutTemp = {
       ...mockGroundwaterData,
-      water_temperature: null
+      water_temperature: null,
     };
 
     const mockFrom = vi.fn().mockImplementation((table: string) => {
@@ -195,9 +199,9 @@ describe('useGroundwaterData', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockWell, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockWell, error: null })
-            })
-          })
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockWell, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'groundwater_data') {
@@ -207,11 +211,11 @@ describe('useGroundwaterData', () => {
               order: () => ({
                 limit: () => ({
                   single: vi.fn().mockResolvedValue({ data: dataWithoutTemp, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: dataWithoutTemp, error: null })
-                })
-              })
-            })
-          })
+                  maybeSingle: vi.fn().mockResolvedValue({ data: dataWithoutTemp, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -219,7 +223,7 @@ describe('useGroundwaterData', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useGroundwaterData('well-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -235,9 +239,9 @@ describe('useGroundwaterData', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockWell, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockWell, error: null })
-            })
-          })
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockWell, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'groundwater_data') {
@@ -247,11 +251,13 @@ describe('useGroundwaterData', () => {
               order: () => ({
                 limit: () => ({
                   single: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockGroundwaterData, error: null })
-                })
-              })
-            })
-          })
+                  maybeSingle: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockGroundwaterData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -259,7 +265,7 @@ describe('useGroundwaterData', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useGroundwaterData('well-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));

@@ -56,7 +56,9 @@ export const DroughtIndexCard: React.FC<DroughtIndexCardProps> = ({
     >
       {/* Category Status */}
       {droughtIndex !== null && (
-        <p className="text-sm font-medium" style={{ color: 'var(--color-dun-amber-400)' }}>({categoryLabel})</p>
+        <p className="text-sm font-medium" style={{ color: 'var(--color-dun-amber-400)' }}>
+          ({categoryLabel})
+        </p>
       )}
     </DataCard>
   );

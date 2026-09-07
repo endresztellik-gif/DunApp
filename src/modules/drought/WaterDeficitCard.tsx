@@ -32,7 +32,9 @@ export const WaterDeficitCard: React.FC<WaterDeficitCardProps> = ({
     >
       {/* Additional info */}
       {waterDeficit !== null && (
-        <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>35 cm mélység</p>
+        <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+          35 cm mélység
+        </p>
       )}
     </DataCard>
   );

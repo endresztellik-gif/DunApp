@@ -39,13 +39,13 @@ export const WaterDeficitMap: React.FC = () => {
       </MapContainer>
 
       {/* Placeholder note */}
-      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-md p-2 text-xs text-gray-600 z-[1000]">
+      <div className="absolute bottom-4 left-4 z-[1000] rounded-lg bg-white p-2 text-xs text-gray-600 shadow-md">
         Vízhiány hőtérkép: Fejlesztés alatt
       </div>
 
       {/* Legend */}
       <div className="map-legend">
-        <h4 className="text-xs font-semibold text-gray-900 mb-2">Vízhiány (mm)</h4>
+        <h4 className="mb-2 text-xs font-semibold text-gray-900">Vízhiány (mm)</h4>
         <div className="space-y-1 text-xs">
           <div className="map-legend-item">
             <div className="map-legend-color" style={{ backgroundColor: '#90ee90' }} />

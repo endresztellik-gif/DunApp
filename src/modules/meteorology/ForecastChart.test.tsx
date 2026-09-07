@@ -25,9 +25,7 @@ vi.mock('recharts', () => ({
   LineChart: ({ children }: { children: ReactNode }) => (
     <div data-testid="line-chart">{children}</div>
   ),
-  Line: ({ dataKey }: { dataKey: string }) => (
-    <div data-testid={`line-${dataKey}`} />
-  ),
+  Line: ({ dataKey }: { dataKey: string }) => <div data-testid={`line-${dataKey}`} />,
   XAxis: () => <div data-testid="x-axis" />,
   YAxis: ({ yAxisId }: { yAxisId?: string }) => (
     <div data-testid={`y-axis-${yAxisId || 'default'}`} />

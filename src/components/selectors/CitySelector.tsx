@@ -29,7 +29,7 @@ export const CitySelector: React.FC<CitySelectorProps> = ({
   if (cities.length < 1) {
     throw new Error(
       `CitySelector: Expected at least 1 city for Meteorology module, but received ${cities.length}. ` +
-      'This selector is module-specific and cannot be used as a generic selector.'
+        'This selector is module-specific and cannot be used as a generic selector.'
     );
   }
 
@@ -66,28 +66,29 @@ export const CitySelector: React.FC<CitySelectorProps> = ({
   };
 
   return (
-    <div
-      ref={dropdownRef}
-      className={`selector-dropdown ${className}`}
-      onKeyDown={handleKeyDown}
-    >
+    <div ref={dropdownRef} className={`selector-dropdown ${className}`} onKeyDown={handleKeyDown}>
       {/* Selector Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="selector-button-meteorology flex items-center gap-2 px-4 py-2 w-full md:w-auto"
-        style={{ border: '0.5px solid rgba(26,95,122,.18)', color: 'var(--text-primary)', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', cursor: 'pointer', transition: 'var(--transition-fast)' }}
+        className="selector-button-meteorology flex w-full items-center gap-2 px-4 py-2 md:w-auto"
+        style={{
+          border: '0.5px solid rgba(26,95,122,.18)',
+          color: 'var(--text-primary)',
+          background: 'var(--bg-surface)',
+          borderRadius: 'var(--radius-md)',
+          fontFamily: 'var(--font-ui)',
+          fontSize: 'var(--text-sm)',
+          cursor: 'pointer',
+          transition: 'var(--transition-fast)',
+        }}
         aria-label="Település kiválasztása"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
         <MapPin className="h-5 w-5" aria-hidden="true" />
-        <span className="text-base font-medium">
-          {selectedCity?.name || 'Válassz várost'}
-        </span>
+        <span className="text-base font-medium">{selectedCity?.name || 'Válassz várost'}</span>
         <ChevronDown
-          className={`h-4 w-4 transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
-          }`}
+          className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           aria-hidden="true"
         />
       </button>
@@ -95,8 +96,13 @@ export const CitySelector: React.FC<CitySelectorProps> = ({
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="absolute z-10 mt-2 w-full max-h-60 overflow-y-auto flex flex-col"
-          style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)' }}
+          className="absolute z-10 mt-2 flex max-h-60 w-full flex-col overflow-y-auto"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '0.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-md)',
+          }}
           role="listbox"
           aria-label="Települések listája"
         >
@@ -113,10 +119,18 @@ export const CitySelector: React.FC<CitySelectorProps> = ({
                 aria-selected={isSelected}
               >
                 <div className="flex flex-col">
-                  <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-primary)' }}>
+                  <span
+                    style={{
+                      fontSize: 'var(--text-sm)',
+                      fontWeight: 500,
+                      color: 'var(--text-primary)',
+                    }}
+                  >
                     {city.name}
                   </span>
-                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>{city.county} megye</span>
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>
+                    {city.county} megye
+                  </span>
                 </div>
               </button>
             );

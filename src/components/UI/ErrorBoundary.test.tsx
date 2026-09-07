@@ -180,9 +180,7 @@ describe('ErrorBoundary - Styling', () => {
 
   it('renders the retry button with an accessible name', () => {
     renderErrorState();
-    expect(
-      screen.getByRole('button', { name: /újrapróbálkozás/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /újrapróbálkozás/i })).toBeInTheDocument();
   });
 
   it('uses the alert design token for the error icon', () => {

@@ -64,9 +64,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   useEffect(() => {
     const checkSupport = () => {
       const supported =
-        'serviceWorker' in navigator &&
-        'PushManager' in window &&
-        'Notification' in window;
+        'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 
       setIsSupported(supported);
 
@@ -164,7 +162,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       if (insertError) {
         console.error('Failed to save subscription to database:', insertError);
-        throw new Error(`Failed to save subscription: ${insertError.message || insertError.toString()}`);
+        throw new Error(
+          `Failed to save subscription: ${insertError.message || insertError.toString()}`
+        );
       }
 
       setIsSubscribed(true);

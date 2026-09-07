@@ -33,13 +33,11 @@ export const GroundwaterLevelCard: React.FC<GroundwaterLevelCardProps> = ({
 
   // Use real data if available, otherwise placeholder
   const waterLevel: number | null =
-    groundwaterData?.waterLevelMeters ??
-    (selectedWell ? 3.45 : null); // Placeholder until VízÜgy API available
+    groundwaterData?.waterLevelMeters ?? (selectedWell ? 3.45 : null); // Placeholder until VízÜgy API available
 
   // Display as NEGATIVE value (deeper water = more negative)
   // This makes it intuitive: -5m means 5 meters below ground surface
-  const displayValue: string | null =
-    waterLevel !== null ? (-waterLevel).toFixed(2) : null;
+  const displayValue: string | null = waterLevel !== null ? (-waterLevel).toFixed(2) : null;
 
   return (
     <DataCard
@@ -59,7 +57,7 @@ export const GroundwaterLevelCard: React.FC<GroundwaterLevelCardProps> = ({
 
       {/* Additional info */}
       {selectedWell && (
-        <p className="text-xs mt-2" style={{ color: 'var(--text-tertiary)' }}>
+        <p className="mt-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
           Kút: {selectedWell.wellName} (#{selectedWell.wellCode})
         </p>
       )}

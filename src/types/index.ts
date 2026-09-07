@@ -201,7 +201,7 @@ export interface DroughtData {
 export interface GroundwaterData {
   wellId: string;
   waterLevelMeters: number | null;
-  waterLevelMasl: number | null;  // Meters Above Sea Level
+  waterLevelMasl: number | null; // Meters Above Sea Level
   waterTemperature: number | null;
   timestamp: string;
 }
@@ -231,11 +231,11 @@ export interface ApiError {
  * Drought severity categories
  */
 export type DroughtCategory =
-  | 'none'        // No drought (green)
-  | 'mild'        // Mild drought (light yellow)
-  | 'moderate'    // Moderate drought (yellow)
-  | 'severe'      // Severe drought (orange)
-  | 'extreme';    // Extreme drought (red)
+  | 'none' // No drought (green)
+  | 'mild' // Mild drought (light yellow)
+  | 'moderate' // Moderate drought (yellow)
+  | 'severe' // Severe drought (orange)
+  | 'extreme'; // Extreme drought (red)
 
 /**
  * DroughtParameterType
@@ -304,7 +304,7 @@ export interface ChartDataPoint {
  */
 export interface MultiLineChartData {
   date: string;
-  [key: string]: string | number;  // Dynamic keys for station names
+  [key: string]: string | number; // Dynamic keys for station names
 }
 
 // ============================================================================

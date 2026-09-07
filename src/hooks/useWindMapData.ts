@@ -6,8 +6,8 @@ export interface WindPoint {
   name: string;
   lat: number;
   lon: number;
-  windSpeed: number;  // m/s
-  windDir: number;    // degrees, meteorological (FROM direction)
+  windSpeed: number; // m/s
+  windDir: number; // degrees, meteorological (FROM direction)
 }
 
 interface CityRow {

@@ -41,9 +41,12 @@ export const WaterLevelModule: React.FC = () => {
   }, [stations, selectedStation]);
 
   // Fetch water level data for selected station
-  const { waterLevelData, station, isLoading: dataLoading, error: dataError } = useWaterLevelData(
-    selectedStation
-  );
+  const {
+    waterLevelData,
+    station,
+    isLoading: dataLoading,
+    error: dataError,
+  } = useWaterLevelData(selectedStation);
 
   // Data sources for footer
   const dataSources: DataSource[] = [
@@ -74,11 +77,21 @@ export const WaterLevelModule: React.FC = () => {
       <div className="main-container">
         <div
           className="mb-6 flex items-start gap-3 p-4"
-          style={{ background: 'var(--status-alert-bg)', border: '0.5px solid var(--status-alert-border)', borderRadius: 'var(--radius-md)' }}
+          style={{
+            background: 'var(--status-alert-bg)',
+            border: '0.5px solid var(--status-alert-border)',
+            borderRadius: 'var(--radius-md)',
+          }}
         >
-          <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" style={{ color: 'var(--status-alert-text)' }} />
+          <AlertCircle
+            className="mt-0.5 h-5 w-5 flex-shrink-0"
+            style={{ color: 'var(--status-alert-text)' }}
+          />
           <div>
-            <h3 className="mb-1 text-base font-semibold" style={{ color: 'var(--status-alert-text)' }}>
+            <h3
+              className="mb-1 text-base font-semibold"
+              style={{ color: 'var(--status-alert-text)' }}
+            >
               Hiba az állomások betöltésekor
             </h3>
             <p className="text-sm" style={{ color: 'var(--status-alert-text)' }}>
@@ -96,10 +109,16 @@ export const WaterLevelModule: React.FC = () => {
       <div className="main-container">
         <div
           className="mb-6 p-8 text-center"
-          style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}
+          style={{
+            background: 'var(--bg-surface)',
+            border: '0.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-md)',
+          }}
         >
           <Waves className="mx-auto mb-3 h-12 w-12" style={{ color: 'var(--accent-primary)' }} />
-          <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Nincs elérhető állomás</h3>
+          <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Nincs elérhető állomás
+          </h3>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Jelenleg nincs aktív vízállás mérőállomás az adatbázisban.
           </p>
@@ -109,13 +128,15 @@ export const WaterLevelModule: React.FC = () => {
   }
 
   // Find selected station object for selector
-  const selectedStationObj = stations.find(s => s.id === selectedStation) || null;
+  const selectedStationObj = stations.find((s) => s.id === selectedStation) || null;
 
   return (
     <div className="main-container">
       {/* Station Selector */}
       <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Állomás kiválasztása</h3>
+        <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+          Állomás kiválasztása
+        </h3>
         <StationSelector
           stations={stations}
           selectedStation={selectedStationObj}
@@ -123,16 +144,25 @@ export const WaterLevelModule: React.FC = () => {
         />
       </div>
 
-
       {/* Error State - Data Loading Error */}
       {dataError && (
         <div
-          className="mb-6 p-4 flex items-start gap-3"
-          style={{ background: 'var(--status-alert-bg)', border: '0.5px solid var(--status-alert-border)', borderRadius: 'var(--radius-md)' }}
+          className="mb-6 flex items-start gap-3 p-4"
+          style={{
+            background: 'var(--status-alert-bg)',
+            border: '0.5px solid var(--status-alert-border)',
+            borderRadius: 'var(--radius-md)',
+          }}
         >
-          <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--status-alert-text)' }} />
+          <AlertCircle
+            className="mt-0.5 h-5 w-5 flex-shrink-0"
+            style={{ color: 'var(--status-alert-text)' }}
+          />
           <div>
-            <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--status-alert-text)' }}>
+            <h3
+              className="mb-1 text-base font-semibold"
+              style={{ color: 'var(--status-alert-text)' }}
+            >
               Hiba az adatok betöltésekor
             </h3>
             <p className="text-sm" style={{ color: 'var(--status-alert-text)' }}>
@@ -153,10 +183,16 @@ export const WaterLevelModule: React.FC = () => {
       {!selectedStation && !dataError && !dataLoading && (
         <div
           className="mb-6 p-8 text-center"
-          style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}
+          style={{
+            background: 'var(--bg-surface)',
+            border: '0.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-md)',
+          }}
         >
           <Waves className="mx-auto mb-3 h-12 w-12" style={{ color: 'var(--accent-primary)' }} />
-          <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Válassz állomást</h3>
+          <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Válassz állomást
+          </h3>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Válassz egy állomást a fenti listából a vízállási adatok megtekintéséhez.
           </p>
@@ -167,10 +203,16 @@ export const WaterLevelModule: React.FC = () => {
       {selectedStation && !waterLevelData && !dataLoading && !dataError && (
         <div
           className="mb-6 p-8 text-center"
-          style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}
+          style={{
+            background: 'var(--bg-surface)',
+            border: '0.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-md)',
+          }}
         >
           <Waves className="mx-auto mb-3 h-12 w-12" style={{ color: 'var(--accent-primary)' }} />
-          <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Nincs elérhető adat</h3>
+          <h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Nincs elérhető adat
+          </h3>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Jelenleg nincs vízállási adat ehhez az állomáshoz:{' '}
             <strong>{station?.name || 'N/A'}</strong>
@@ -207,9 +249,14 @@ export const WaterLevelModule: React.FC = () => {
 
       {/* 5-Day Forecast Section */}
       <div className="mb-6">
-        <h2 className="section-title mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>5 Napos Előrejelzés</h2>
+        <h2
+          className="section-title mb-4"
+          style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}
+        >
+          5 Napos Előrejelzés
+        </h2>
         <p className="section-subtitle mb-4" style={{ color: 'var(--text-tertiary)' }}>
-          {stations.map(s => s.name).join(', ')} - vízállás előrejelzés
+          {stations.map((s) => s.name).join(', ')} - vízállás előrejelzés
         </p>
 
         {/* Forecast Chart */}
@@ -224,7 +271,12 @@ export const WaterLevelModule: React.FC = () => {
       {/* Water Bodies 3-Day Summary — Duna-specific monitoring points (no Dráva equivalent) */}
       {region !== 'drava' && (
         <div className="mb-6">
-          <h2 className="section-title mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Víztestek Napi Vízállása</h2>
+          <h2
+            className="section-title mb-4"
+            style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}
+          >
+            Víztestek Napi Vízállása
+          </h2>
           <p className="section-subtitle mb-4" style={{ color: 'var(--text-tertiary)' }}>
             Kadia, FTCS (Karapancsa), Belső-Béda - 3 napos összegzés
           </p>

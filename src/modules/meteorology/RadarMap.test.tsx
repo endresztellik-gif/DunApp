@@ -37,9 +37,7 @@ vi.mock('react-leaflet', () => ({
       {children}
     </div>
   ),
-  Popup: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="popup">{children}</div>
-  ),
+  Popup: ({ children }: { children: React.ReactNode }) => <div data-testid="popup">{children}</div>,
   // A RadarMap időközben radar-képréteget kapott (ImageOverlay) és egy
   // InvalidateMapSize segédkomponenst (useMap) — a mock ezekkel nem bővült,
   // ezért mind a 15 teszt "No export is defined on the react-leaflet mock"
@@ -174,5 +172,4 @@ describe('RadarMap - Map Layers', () => {
 
     expect(osmLayer).toBeDefined();
   });
-
 });

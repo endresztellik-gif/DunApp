@@ -21,8 +21,14 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Debug logging (development only - SECURITY: No logs in production)
 if (import.meta.env.DEV) {
-  console.log('[Supabase Config] URL:', supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'MISSING');
-  console.log('[Supabase Config] Key:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING');
+  console.log(
+    '[Supabase Config] URL:',
+    supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'MISSING'
+  );
+  console.log(
+    '[Supabase Config] Key:',
+    supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING'
+  );
 }
 
 // Validate that environment variables are set
@@ -30,11 +36,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('[Supabase Config] Environment variables:', {
     VITE_SUPABASE_URL: supabaseUrl,
     VITE_SUPABASE_ANON_KEY: supabaseAnonKey ? 'present but empty' : 'missing',
-    allEnvVars: import.meta.env
+    allEnvVars: import.meta.env,
   });
   throw new Error(
     'Missing Supabase environment variables. ' +
-    'Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your .env file.'
+      'Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your .env file.'
   );
 }
 
@@ -44,7 +50,7 @@ try {
 } catch (error) {
   throw new Error(
     `Invalid VITE_SUPABASE_URL: ${supabaseUrl}. ` +
-    'Please ensure it is a valid URL (e.g., https://your-project.supabase.co)'
+      'Please ensure it is a valid URL (e.g., https://your-project.supabase.co)'
   );
 }
 
@@ -77,10 +83,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 export async function checkSupabaseConnection(): Promise<boolean> {
   try {
     // Try to query a simple table (meteorology_cities)
-    const { error } = await supabase
-      .from('meteorology_cities')
-      .select('id')
-      .limit(1);
+    const { error } = await supabase.from('meteorology_cities').select('id').limit(1);
 
     if (error) {
       console.error('Supabase connection error:', error);
@@ -238,10 +241,7 @@ export async function createPushSubscription(
  * Helper function to delete a push notification subscription
  */
 export async function deletePushSubscription(endpoint: string) {
-  const { error } = await supabase
-    .from('push_subscriptions')
-    .delete()
-    .eq('endpoint', endpoint);
+  const { error } = await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint);
 
   if (error) {
     console.error('Error deleting push subscription:', error);

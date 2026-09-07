@@ -83,9 +83,7 @@ export async function fetchWaterLevelForecast(stationId: string): Promise<WaterL
  * - refetchInterval: 1 hour (automatic background refresh)
  * - retry: 3 attempts with exponential backoff
  */
-export function useWaterLevelForecast(
-  stationId: string | null
-): UseWaterLevelForecastReturn {
+export function useWaterLevelForecast(stationId: string | null): UseWaterLevelForecastReturn {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['waterLevelForecast', stationId],
     queryFn: () => fetchWaterLevelForecast(stationId!),

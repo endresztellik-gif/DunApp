@@ -57,15 +57,15 @@ function getMoonPhaseName(phase: number): string {
     return 'Újhold';
   } else if (phase < 0.25) {
     return 'Növekvő holdsarló';
-  } else if (phase < 0.30) {
+  } else if (phase < 0.3) {
     return 'Első negyed';
-  } else if (phase < 0.50) {
+  } else if (phase < 0.5) {
     return 'Növekvő púpos hold';
   } else if (phase < 0.55) {
     return 'Telihold';
   } else if (phase < 0.75) {
     return 'Fogyó púpos hold';
-  } else if (phase < 0.80) {
+  } else if (phase < 0.8) {
     return 'Utolsó negyed';
   } else {
     return 'Fogyó holdsarló';

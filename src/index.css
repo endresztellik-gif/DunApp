@@ -8,7 +8,7 @@
  */
 
 /* Tailwind 4.0 - MUST be first for @apply to work */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
 
@@ -141,7 +141,9 @@
   /* Focus visible (for keyboard navigation) */
   :focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--accent-primary);
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 0 4px var(--accent-primary);
   }
 
   /* Remove default button styles */

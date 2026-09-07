@@ -105,13 +105,13 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
   const {
     droughtData,
     isLoading: isDroughtLoading,
-    error: droughtError
+    error: droughtError,
   } = useDroughtData(selectedLocation?.id || null);
 
   const {
     groundwaterData: _groundwaterData,
     isLoading: isGroundwaterLoading,
-    error: groundwaterError
+    error: groundwaterError,
   } = useGroundwaterData(selectedWell?.id || null);
 
   const isLoading = isDroughtLoading || isGroundwaterLoading;
@@ -150,10 +150,23 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
     <div className="main-container">
       {/* Drought Data Error State */}
       {droughtError && (
-        <div className="mb-6 p-4 flex items-start gap-3" style={{ background: 'var(--status-alert-bg)', border: '1.5px solid var(--status-alert-border)', borderRadius: 'var(--radius-md)' }}>
-          <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--status-alert-text)' }} />
+        <div
+          className="mb-6 flex items-start gap-3 p-4"
+          style={{
+            background: 'var(--status-alert-bg)',
+            border: '1.5px solid var(--status-alert-border)',
+            borderRadius: 'var(--radius-md)',
+          }}
+        >
+          <AlertCircle
+            className="mt-0.5 h-5 w-5 flex-shrink-0"
+            style={{ color: 'var(--status-alert-text)' }}
+          />
           <div>
-            <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--status-alert-text)' }}>
+            <h3
+              className="mb-1 text-base font-semibold"
+              style={{ color: 'var(--status-alert-text)' }}
+            >
               Hiba az aszálymonitoring adatok betöltésekor
             </h3>
             <p className="text-sm" style={{ color: 'var(--status-alert-text)' }}>
@@ -165,10 +178,23 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
       {/* Groundwater Data Error State */}
       {groundwaterError && (
-        <div className="mb-6 p-4 flex items-start gap-3" style={{ background: 'var(--status-alert-bg)', border: '1.5px solid var(--status-alert-border)', borderRadius: 'var(--radius-md)' }}>
-          <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--status-alert-text)' }} />
+        <div
+          className="mb-6 flex items-start gap-3 p-4"
+          style={{
+            background: 'var(--status-alert-bg)',
+            border: '1.5px solid var(--status-alert-border)',
+            borderRadius: 'var(--radius-md)',
+          }}
+        >
+          <AlertCircle
+            className="mt-0.5 h-5 w-5 flex-shrink-0"
+            style={{ color: 'var(--status-alert-text)' }}
+          />
           <div>
-            <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--status-alert-text)' }}>
+            <h3
+              className="mb-1 text-base font-semibold"
+              style={{ color: 'var(--status-alert-text)' }}
+            >
               Hiba a talajvíz adatok betöltésekor
             </h3>
             <p className="text-sm" style={{ color: 'var(--status-alert-text)' }}>
@@ -180,8 +206,18 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
       {/* No Location Selected State */}
       {!selectedLocation && !droughtError && (
-        <div className="mb-6 p-4 flex items-start gap-3" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}>
-          <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--text-secondary)' }} />
+        <div
+          className="mb-6 flex items-start gap-3 p-4"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-md)',
+          }}
+        >
+          <AlertCircle
+            className="mt-0.5 h-5 w-5 flex-shrink-0"
+            style={{ color: 'var(--text-secondary)' }}
+          />
           <div>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               Válassz ki egy helyszínt az aszálymonitoring adatok megjelenítéséhez.
@@ -192,8 +228,18 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
       {/* No Data Available States */}
       {selectedLocation && !droughtData && !isDroughtLoading && !droughtError && (
-        <div className="mb-6 p-4 flex items-start gap-3" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}>
-          <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--text-secondary)' }} />
+        <div
+          className="mb-6 flex items-start gap-3 p-4"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-md)',
+          }}
+        >
+          <AlertCircle
+            className="mt-0.5 h-5 w-5 flex-shrink-0"
+            style={{ color: 'var(--text-secondary)' }}
+          />
           <div>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               Jelenleg nincs elérhető aszály adat: <strong>{selectedLocation.locationName}</strong>
@@ -203,8 +249,13 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
       )}
 
       {/* Aszály Adatok Section Header with Location Selector */}
-      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 className="section-title" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Aszály Adatok</h2>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2
+          className="section-title"
+          style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}
+        >
+          Aszály Adatok
+        </h2>
         <DroughtLocationSelector
           locations={locations}
           selectedLocation={selectedLocation}
@@ -214,36 +265,45 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
       </div>
 
       {/* Data Cards WITHOUT Embedded Selectors - 3 Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <DroughtIndexCard
-          selectedLocation={selectedLocation}
-          droughtData={droughtData}
-        />
-        <SoilMoistureCard
-          selectedLocation={selectedLocation}
-          droughtData={droughtData}
-        />
-        <WaterDeficitCard
-          selectedLocation={selectedLocation}
-          droughtData={droughtData}
-        />
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <DroughtIndexCard selectedLocation={selectedLocation} droughtData={droughtData} />
+        <SoilMoistureCard selectedLocation={selectedLocation} droughtData={droughtData} />
+        <WaterDeficitCard selectedLocation={selectedLocation} droughtData={droughtData} />
       </div>
 
       {/* Maps Section - 3 ArcGIS Maps */}
       <div className="mb-6">
-        <h2 className="section-title mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Aszály és Talajvíz Térképek</h2>
+        <h2
+          className="section-title mb-4"
+          style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}
+        >
+          Aszály és Talajvíz Térképek
+        </h2>
         <DroughtMapsWidget />
       </div>
 
       {/* Water Deficit Section - met.hu Interactive Map */}
       <div className="mb-6">
-        <h2 className="section-title mb-4" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Talaj Vízhiány Térkép (met.hu)</h2>
+        <h2
+          className="section-title mb-4"
+          style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}
+        >
+          Talaj Vízhiány Térkép (met.hu)
+        </h2>
         <WaterDeficitDashboard />
       </div>
 
       {/* Talajvízkút Monitoring Section with Well Selector */}
-      <div ref={wellSelectorRef} className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h2 className="section-title" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}>Talajvízkút Monitoring ({wells.length} kút)</h2>
+      <div
+        ref={wellSelectorRef}
+        className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <h2
+          className="section-title"
+          style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)' }}
+        >
+          Talajvízkút Monitoring ({wells.length} kút)
+        </h2>
         <WellSelector
           wells={wells}
           selectedWell={selectedWell}
@@ -259,7 +319,7 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
             well={selectedWell}
             wells={wells}
             onWellSelect={(wellId) => {
-              const found = wells.find(w => w.id === wellId);
+              const found = wells.find((w) => w.id === wellId);
               if (found) handleWellChange(found);
             }}
           />
@@ -268,9 +328,17 @@ export const DroughtModule: React.FC<DroughtModuleProps> = ({
 
       {/* No Well Selected Info */}
       {!selectedWell && wells.length > 0 && (
-        <div className="mb-6 p-6 text-center" style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}>
+        <div
+          className="mb-6 p-6 text-center"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-md)',
+          }}
+        >
           <p style={{ color: 'var(--text-secondary)' }}>
-            Válassz ki egy talajvízkövet a fenti legördülő menüből a 60 napos talajvízszint trend megjelenítéséhez.
+            Válassz ki egy talajvízkövet a fenti legördülő menüből a 60 napos talajvízszint trend
+            megjelenítéséhez.
           </p>
         </div>
       )}

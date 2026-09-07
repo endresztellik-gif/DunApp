@@ -366,9 +366,7 @@ describe('StationSelector - Styling', () => {
   });
 
   it('accepts custom className prop', () => {
-    render(
-      <StationSelector {...props} className="custom-test-class" />
-    );
+    render(<StationSelector {...props} className="custom-test-class" />);
     const dropdown = document.querySelector('.selector-dropdown');
     expect(dropdown).toHaveClass('custom-test-class');
   });

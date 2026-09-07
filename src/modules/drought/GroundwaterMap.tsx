@@ -24,8 +24,10 @@ const createWellIcon = (isSelected: boolean, waterLevel: number | null) => {
   // Color based on water level (green = high, orange = medium, red = low)
   let color = '#9ca3af'; // gray default
   if (waterLevel !== null) {
-    if (waterLevel > 5) color = '#43a047'; // green
-    else if (waterLevel > 3) color = '#ffa500'; // orange
+    if (waterLevel > 5)
+      color = '#43a047'; // green
+    else if (waterLevel > 3)
+      color = '#ffa500'; // orange
     else color = '#ff4500'; // red
   }
 
@@ -109,10 +111,10 @@ export const GroundwaterMap: React.FC<GroundwaterMapProps> = ({
               <Popup>
                 <div className="text-center">
                   <h4 className="font-semibold text-gray-900">{well.wellName}</h4>
-                  <p className="text-sm font-mono text-orange-600">#{well.wellCode}</p>
-                  <p className="text-xs text-gray-600 mt-1">{well.cityName}</p>
+                  <p className="font-mono text-sm text-orange-600">#{well.wellCode}</p>
+                  <p className="mt-1 text-xs text-gray-600">{well.cityName}</p>
                   {waterLevel !== null && (
-                    <p className="text-sm font-semibold text-gray-900 mt-2">
+                    <p className="mt-2 text-sm font-semibold text-gray-900">
                       {(-waterLevel).toFixed(2)} m
                     </p>
                   )}
@@ -130,7 +132,7 @@ export const GroundwaterMap: React.FC<GroundwaterMapProps> = ({
 
       {/* Legend */}
       <div className="map-legend">
-        <h4 className="text-xs font-semibold text-gray-900 mb-2">Mélység (m)</h4>
+        <h4 className="mb-2 text-xs font-semibold text-gray-900">Mélység (m)</h4>
         <div className="space-y-1">
           <div className="map-legend-item">
             <div className="map-legend-color bg-red-600" />

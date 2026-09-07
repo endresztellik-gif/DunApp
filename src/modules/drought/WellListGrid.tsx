@@ -40,18 +40,14 @@ export const WellListGrid: React.FC<WellListGridProps> = ({
           <button
             key={well.id}
             onClick={() => onWellSelect(well)}
-            className={`well-card ${
-              isSelected ? 'border-orange-500 bg-orange-50' : ''
-            }`}
+            className={`well-card ${isSelected ? 'border-orange-500 bg-orange-50' : ''}`}
             aria-label={`${well.wellName} kút kiválasztása`}
             aria-pressed={isSelected}
           >
             <h4 className="well-card-name">{well.wellName}</h4>
             <p className="well-card-code">#{well.wellCode}</p>
-            <p className="text-xs text-gray-600 mt-1">{well.cityName}</p>
-            {well.county && (
-              <p className="text-xs text-gray-500">{well.county} megye</p>
-            )}
+            <p className="mt-1 text-xs text-gray-600">{well.cityName}</p>
+            {well.county && <p className="text-xs text-gray-500">{well.county} megye</p>}
           </button>
         );
       })}

@@ -68,10 +68,22 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <div className="flex items-start gap-3">
             <AlertTriangle
               aria-hidden="true"
-              style={{ color: 'var(--color-dun-alert-500)', flexShrink: 0, width: '24px', height: '24px' }}
+              style={{
+                color: 'var(--color-dun-alert-500)',
+                flexShrink: 0,
+                width: '24px',
+                height: '24px',
+              }}
             />
             <div className="flex-1">
-              <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, color: 'var(--status-alert-text)', marginBottom: 'var(--space-1)' }}>
+              <h3
+                style={{
+                  fontSize: 'var(--text-lg)',
+                  fontWeight: 600,
+                  color: 'var(--status-alert-text)',
+                  marginBottom: 'var(--space-1)',
+                }}
+              >
                 Hiba történt
               </h3>
               <p style={{ fontSize: 'var(--text-sm)', color: 'var(--status-alert-text)' }}>

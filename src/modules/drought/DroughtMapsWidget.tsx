@@ -29,7 +29,8 @@ import { CollapsibleLegend } from '../../components/UI/CollapsibleLegend';
 const WMS_HUGEO = 'https://map.hugeo.hu/arcgis/services/tvz/tvz100_all/MapServer/WMSServer';
 
 // Aszályindex ImageServer (CORS OK)
-const IMAGE_DROUGHT_INDEX = 'https://ovfgis2.vizugy.hu/arcgis/rest/services/Aszalymon/mosaic_hdis/ImageServer';
+const IMAGE_DROUGHT_INDEX =
+  'https://ovfgis2.vizugy.hu/arcgis/rest/services/Aszalymon/mosaic_hdis/ImageServer';
 
 // Map center / zoom — region-dependent.
 // Duna: country view (good for the southern-Duna monitoring area).
@@ -113,16 +114,16 @@ export const DroughtMapsWidget: React.FC = () => {
       };
 
       esriLeafletScript.onerror = () => {
-        setMap1State(prev => ({ ...prev, loading: false, error: 'esri-leaflet betöltési hiba' }));
-        setMap2State(prev => ({ ...prev, loading: false, error: 'esri-leaflet betöltési hiba' }));
+        setMap1State((prev) => ({ ...prev, loading: false, error: 'esri-leaflet betöltési hiba' }));
+        setMap2State((prev) => ({ ...prev, loading: false, error: 'esri-leaflet betöltési hiba' }));
       };
 
       document.head.appendChild(esriLeafletScript);
     };
 
     leafletScript.onerror = () => {
-      setMap1State(prev => ({ ...prev, loading: false, error: 'Leaflet betöltési hiba' }));
-      setMap2State(prev => ({ ...prev, loading: false, error: 'Leaflet betöltési hiba' }));
+      setMap1State((prev) => ({ ...prev, loading: false, error: 'Leaflet betöltési hiba' }));
+      setMap2State((prev) => ({ ...prev, loading: false, error: 'Leaflet betöltési hiba' }));
     };
 
     document.head.appendChild(leafletScript);
@@ -139,7 +140,11 @@ export const DroughtMapsWidget: React.FC = () => {
   useEffect(() => {
     const t = setTimeout(() => {
       Object.values(mapInstancesRef.current).forEach((inst: any) => {
-        try { inst?.map?.invalidateSize(); } catch { /* map may be torn down */ }
+        try {
+          inst?.map?.invalidateSize();
+        } catch {
+          /* map may be torn down */
+        }
       });
     }, 320);
     return () => clearTimeout(t);
@@ -183,38 +188,45 @@ export const DroughtMapsWidget: React.FC = () => {
 
         if (layerType === 'wms') {
           // Native Leaflet WMS (HUGEO - proven to work)
-          dataLayer = L.tileLayer.wms(layerUrl, {
-            layers: layerParam,
-            format: 'image/png',
-            transparent: true,
-            version: '1.3.0',
-            opacity: 0.7
-          }).addTo(map);
+          dataLayer = L.tileLayer
+            .wms(layerUrl, {
+              layers: layerParam,
+              format: 'image/png',
+              transparent: true,
+              version: '1.3.0',
+              opacity: 0.7,
+            })
+            .addTo(map);
         } else if (layerType === 'imageserver') {
           // ImageServer layer (Aszályindex raster)
-          dataLayer = (L as any).esri.imageMapLayer({
-            url: layerUrl,
-            opacity: 0.7,
-            format: 'jpgpng'
-          }).addTo(map);
+          dataLayer = (L as any).esri
+            .imageMapLayer({
+              url: layerUrl,
+              opacity: 0.7,
+              format: 'jpgpng',
+            })
+            .addTo(map);
         } else {
           // MapServer layer (Monitoring - esri-leaflet)
           layerId = parseInt(layerParam);
-          dataLayer = (L as any).esri.dynamicMapLayer({
-            url: layerUrl,
-            opacity: 0.7,
-            layers: [layerId],
-            format: 'png',
-            transparent: true
-          }).addTo(map);
+          dataLayer = (L as any).esri
+            .dynamicMapLayer({
+              url: layerUrl,
+              opacity: 0.7,
+              layers: [layerId],
+              format: 'png',
+              transparent: true,
+            })
+            .addTo(map);
         }
 
         // Add identify on click for monitoring stations
         if (enablePopup) {
           map.on('click', (e: any) => {
-            (L as any).esri.identifyFeatures({
-              url: layerUrl
-            })
+            (L as any).esri
+              .identifyFeatures({
+                url: layerUrl,
+              })
               .on(map)
               .at(e.latlng)
               .layers(`visible:${layerId}`)
@@ -230,10 +242,7 @@ export const DroughtMapsWidget: React.FC = () => {
                       ${props.AdatgazdaNev ? `<p class="text-xs text-gray-500 mt-1" style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem;">Adatgazda: ${props.AdatgazdaNev}</p>` : ''}
                     </div>
                   `;
-                  L.popup()
-                    .setLatLng(e.latlng)
-                    .setContent(popupContent)
-                    .openOn(map);
+                  L.popup().setLatLng(e.latlng).setContent(popupContent).openOn(map);
                 }
               });
           });
@@ -248,11 +257,11 @@ export const DroughtMapsWidget: React.FC = () => {
           const updateProgress = () => {
             const total = Math.max(1, loading);
             const percent = Math.round((loaded / total) * 100);
-            setState(prev => ({ ...prev, progress: percent }));
+            setState((prev) => ({ ...prev, progress: percent }));
 
             if (loaded >= loading && loading > 0) {
               setTimeout(() => {
-                setState(prev => ({ ...prev, loading: false }));
+                setState((prev) => ({ ...prev, loading: false }));
               }, 250);
             }
           };
@@ -274,22 +283,22 @@ export const DroughtMapsWidget: React.FC = () => {
         } else {
           // esri-leaflet events
           dataLayer.on('loading', () => {
-            setState(prev => ({ ...prev, loading: true, progress: 50 }));
+            setState((prev) => ({ ...prev, loading: true, progress: 50 }));
           });
 
           dataLayer.on('load', () => {
-            setState(prev => ({ ...prev, loading: false, progress: 100 }));
+            setState((prev) => ({ ...prev, loading: false, progress: 100 }));
           });
 
           dataLayer.on('requesterror', (error: any) => {
             console.error('Map layer error:', error);
-            setState(prev => ({ ...prev, loading: false, error: 'Térkép betöltési hiba' }));
+            setState((prev) => ({ ...prev, loading: false, error: 'Térkép betöltési hiba' }));
           });
         }
 
         // Timeout after 8 seconds
         setTimeout(() => {
-          setState(prev => ({ ...prev, loading: false }));
+          setState((prev) => ({ ...prev, loading: false }));
         }, TILE_LOAD_TIMEOUT);
 
         // Auto-refresh every 10 minutes
@@ -301,7 +310,7 @@ export const DroughtMapsWidget: React.FC = () => {
             // esri-leaflet: use refresh method
             dataLayer.refresh();
           }
-          setState(prev => ({ ...prev, loading: true, progress: 0 }));
+          setState((prev) => ({ ...prev, loading: true, progress: 0 }));
         }, AUTO_REFRESH_INTERVAL);
 
         const result = { map, dataLayer, refreshInterval };
@@ -313,18 +322,34 @@ export const DroughtMapsWidget: React.FC = () => {
 
         return result;
       } catch (error) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           loading: false,
-          error: error instanceof Error ? error.message : 'Térkép létrehozási hiba'
+          error: error instanceof Error ? error.message : 'Térkép létrehozási hiba',
         }));
         return null;
       }
     };
 
     // Create 2 maps (HUGEO + Aszályindex)
-    const widget1 = createWidget(map1Ref, WMS_HUGEO, 'wms', String(selectedHugeoLayer), setMap1State, false, 'hugeo');
-    const widget2 = createWidget(map2Ref, IMAGE_DROUGHT_INDEX, 'imageserver', '0', setMap2State, false, 'drought');
+    const widget1 = createWidget(
+      map1Ref,
+      WMS_HUGEO,
+      'wms',
+      String(selectedHugeoLayer),
+      setMap1State,
+      false,
+      'hugeo'
+    );
+    const widget2 = createWidget(
+      map2Ref,
+      IMAGE_DROUGHT_INDEX,
+      'imageserver',
+      '0',
+      setMap2State,
+      false,
+      'drought'
+    );
 
     // Cleanup
     return () => {
@@ -354,78 +379,91 @@ export const DroughtMapsWidget: React.FC = () => {
   ) => {
     const isFs = !!id && fullscreenKey === id;
     return (
-    <div className="map-container-standard">
-      <div className="map-header">
-        <div className="flex items-center justify-between w-full">
-          <div>
-            <h3 className="map-title">{title}</h3>
-            <p className="text-xs text-gray-600">{subtitle}</p>
-          </div>
-          {layerSelector && <div className="ml-2">{layerSelector}</div>}
-        </div>
-      </div>
-
-      {/* Map Container — becomes a fullscreen overlay when isFs */}
-      <div className={isFs ? 'fixed inset-0 z-[9998] bg-white' : 'relative w-full h-96 rounded-lg overflow-hidden'}>
-        {/* Loading Overlay */}
-        {state.loading && (
-          <div className="absolute inset-0 bg-white bg-opacity-80 flex flex-col items-center justify-center z-[999]">
-            <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mb-2" />
-            <p className="text-sm text-gray-600">Térkép betöltése... {state.progress}%</p>
-          </div>
-        )}
-
-        {/* Error State */}
-        {state.error && (
-          <div className="absolute inset-0 bg-red-50 flex flex-col items-center justify-center z-[999] p-4">
-            <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
-            <p className="text-sm text-red-700 text-center">{state.error}</p>
-          </div>
-        )}
-
-        {/* Leaflet Map */}
-        <div ref={ref} className="w-full h-full" style={{ position: 'relative', zIndex: 1 }} />
-
-        {/* Enter fullscreen (normal mode) */}
-        {id && !isFs && (
-          <button
-            onClick={() => setFullscreenKey(id)}
-            className="absolute top-2 right-2 z-[1000] bg-white/90 rounded-lg shadow-md p-2 hover:bg-white transition-colors"
-            aria-label="Teljes képernyő"
-            title="Teljes képernyő"
-          >
-            <Maximize2 className="h-4 w-4 text-gray-700" />
-          </button>
-        )}
-
-        {/* Fullscreen chrome: layer selector + close, plus collapsible legend */}
-        {isFs && (
-          <>
-            <div className="absolute top-2 right-2 z-[10000] flex items-center gap-2">
-              {layerSelector}
-              <button
-                onClick={() => setFullscreenKey(null)}
-                className="bg-white rounded-lg shadow-md p-2 hover:bg-gray-100 transition-colors"
-                aria-label="Bezárás"
-                title="Bezárás (Esc)"
-              >
-                <X className="h-5 w-5 text-gray-700" />
-              </button>
+      <div className="map-container-standard">
+        <div className="map-header">
+          <div className="flex w-full items-center justify-between">
+            <div>
+              <h3 className="map-title">{title}</h3>
+              <p className="text-xs text-gray-600">{subtitle}</p>
             </div>
-            {legend && (
-              <CollapsibleLegend className="bottom-4 left-4">{legend}</CollapsibleLegend>
-            )}
-          </>
+            {layerSelector && <div className="ml-2">{layerSelector}</div>}
+          </div>
+        </div>
+
+        {/* Map Container — becomes a fullscreen overlay when isFs */}
+        <div
+          className={
+            isFs
+              ? 'fixed inset-0 z-[9998] bg-white'
+              : 'relative h-96 w-full overflow-hidden rounded-lg'
+          }
+        >
+          {/* Loading Overlay */}
+          {state.loading && (
+            <div className="bg-opacity-80 absolute inset-0 z-[999] flex flex-col items-center justify-center bg-white">
+              <div className="mb-2 h-16 w-16 animate-spin rounded-full border-4 border-orange-200 border-t-orange-500" />
+              <p className="text-sm text-gray-600">Térkép betöltése... {state.progress}%</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {state.error && (
+            <div className="absolute inset-0 z-[999] flex flex-col items-center justify-center bg-red-50 p-4">
+              <AlertCircle className="mb-2 h-8 w-8 text-red-500" />
+              <p className="text-center text-sm text-red-700">{state.error}</p>
+            </div>
+          )}
+
+          {/* Leaflet Map */}
+          <div ref={ref} className="h-full w-full" style={{ position: 'relative', zIndex: 1 }} />
+
+          {/* Enter fullscreen (normal mode) */}
+          {id && !isFs && (
+            <button
+              onClick={() => setFullscreenKey(id)}
+              className="absolute top-2 right-2 z-[1000] rounded-lg bg-white/90 p-2 shadow-md transition-colors hover:bg-white"
+              aria-label="Teljes képernyő"
+              title="Teljes képernyő"
+            >
+              <Maximize2 className="h-4 w-4 text-gray-700" />
+            </button>
+          )}
+
+          {/* Fullscreen chrome: layer selector + close, plus collapsible legend */}
+          {isFs && (
+            <>
+              <div className="absolute top-2 right-2 z-[10000] flex items-center gap-2">
+                {layerSelector}
+                <button
+                  onClick={() => setFullscreenKey(null)}
+                  className="rounded-lg bg-white p-2 shadow-md transition-colors hover:bg-gray-100"
+                  aria-label="Bezárás"
+                  title="Bezárás (Esc)"
+                >
+                  <X className="h-5 w-5 text-gray-700" />
+                </button>
+              </div>
+              {legend && (
+                <CollapsibleLegend className="bottom-4 left-4">{legend}</CollapsibleLegend>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Legend (a térkép alatt) — normal mode only */}
+        {legend && !isFs && !state.loading && !state.error && (
+          <div
+            className="map-legend-below mt-3 px-3 py-2.5"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '0.5px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-md)',
+            }}
+          >
+            {legend}
+          </div>
         )}
       </div>
-
-      {/* Legend (a térkép alatt) — normal mode only */}
-      {legend && !isFs && !state.loading && !state.error && (
-        <div className="map-legend-below mt-3 px-3 py-2.5" style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
-          {legend}
-        </div>
-      )}
-    </div>
     );
   };
 
@@ -434,7 +472,7 @@ export const DroughtMapsWidget: React.FC = () => {
     <select
       value={selectedHugeoLayer}
       onChange={(e) => setSelectedHugeoLayer(Number(e.target.value))}
-      className="px-3 py-1.5 text-sm border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+      className="rounded-lg border border-orange-300 bg-white px-3 py-1.5 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
     >
       <option value={0}>Talajvízszint mélysége</option>
       <option value={1}>Nyugalmi szint</option>
@@ -442,154 +480,159 @@ export const DroughtMapsWidget: React.FC = () => {
   );
 
   // Dynamic legend based on selected layer (HUGEO official colors)
-  const hugeoLegend = selectedHugeoLayer === 0 ? (
-    <div>
-      <h4 className="text-xs font-semibold text-gray-900 mb-2">Talajvízszint mélysége a felszín alatt (m)</h4>
-      <div className="space-y-1 text-xs">
-        <div className="map-legend-item">
-          <div
-            className="map-legend-color"
-            style={{
-              backgroundColor: '#0066CC',
-              width: '20px',
-              height: '20px',
-              border: '1px solid #333',
-              borderRadius: '3px'
-            }}
-          />
-          <span>0-1 m</span>
-        </div>
-        <div className="map-legend-item">
-          <div
-            className="map-legend-color"
-            style={{
-              backgroundColor: '#33CCFF',
-              width: '20px',
-              height: '20px',
-              border: '1px solid #333',
-              borderRadius: '3px'
-            }}
-          />
-          <span>1-2 m</span>
-        </div>
-        <div className="map-legend-item">
-          <div
-            className="map-legend-color"
-            style={{
-              backgroundColor: '#66CC66',
-              width: '20px',
-              height: '20px',
-              border: '1px solid #333',
-              borderRadius: '3px'
-            }}
-          />
-          <span>2-4 m</span>
-        </div>
-        <div className="map-legend-item">
-          <div
-            className="map-legend-color"
-            style={{
-              backgroundColor: '#FFCC33',
-              width: '20px',
-              height: '20px',
-              border: '1px solid #333',
-              borderRadius: '3px'
-            }}
-          />
-          <span>4-8 m</span>
-        </div>
-        <div className="map-legend-item">
-          <div
-            className="map-legend-color"
-            style={{
-              backgroundColor: '#FF9933',
-              width: '20px',
-              height: '20px',
-              border: '1px solid #333',
-              borderRadius: '3px'
-            }}
-          />
-          <span>&gt;8 m</span>
-        </div>
-      </div>
-    </div>
-  ) : (
-    <div>
-      <h4 className="text-xs font-semibold text-gray-900 mb-2">Nyugalmi szint a felszín alatt (m)</h4>
-      <div className="space-y-1 text-xs">
-        <div className="map-legend-item">
-          <div
-            className="map-legend-color"
-            style={{
-              backgroundColor: '#0066CC',
-              width: '20px',
-              height: '20px',
-              border: '1px solid #333',
-              borderRadius: '3px'
-            }}
-          />
-          <span>0-1 m</span>
-        </div>
-        <div className="map-legend-item">
-          <div
-            className="map-legend-color"
-            style={{
-              backgroundColor: '#33CCFF',
-              width: '20px',
-              height: '20px',
-              border: '1px solid #333',
-              borderRadius: '3px'
-            }}
-          />
-          <span>1-2 m</span>
-        </div>
-        <div className="map-legend-item">
-          <div
-            className="map-legend-color"
-            style={{
-              backgroundColor: '#66CC66',
-              width: '20px',
-              height: '20px',
-              border: '1px solid #333',
-              borderRadius: '3px'
-            }}
-          />
-          <span>2-4 m</span>
-        </div>
-        <div className="map-legend-item">
-          <div
-            className="map-legend-color"
-            style={{
-              backgroundColor: '#FFCC33',
-              width: '20px',
-              height: '20px',
-              border: '1px solid #333',
-              borderRadius: '3px'
-            }}
-          />
-          <span>4-8 m</span>
-        </div>
-        <div className="map-legend-item">
-          <div
-            className="map-legend-color"
-            style={{
-              backgroundColor: '#FF9933',
-              width: '20px',
-              height: '20px',
-              border: '1px solid #333',
-              borderRadius: '3px'
-            }}
-          />
-          <span>&gt;8 m</span>
+  const hugeoLegend =
+    selectedHugeoLayer === 0 ? (
+      <div>
+        <h4 className="mb-2 text-xs font-semibold text-gray-900">
+          Talajvízszint mélysége a felszín alatt (m)
+        </h4>
+        <div className="space-y-1 text-xs">
+          <div className="map-legend-item">
+            <div
+              className="map-legend-color"
+              style={{
+                backgroundColor: '#0066CC',
+                width: '20px',
+                height: '20px',
+                border: '1px solid #333',
+                borderRadius: '3px',
+              }}
+            />
+            <span>0-1 m</span>
+          </div>
+          <div className="map-legend-item">
+            <div
+              className="map-legend-color"
+              style={{
+                backgroundColor: '#33CCFF',
+                width: '20px',
+                height: '20px',
+                border: '1px solid #333',
+                borderRadius: '3px',
+              }}
+            />
+            <span>1-2 m</span>
+          </div>
+          <div className="map-legend-item">
+            <div
+              className="map-legend-color"
+              style={{
+                backgroundColor: '#66CC66',
+                width: '20px',
+                height: '20px',
+                border: '1px solid #333',
+                borderRadius: '3px',
+              }}
+            />
+            <span>2-4 m</span>
+          </div>
+          <div className="map-legend-item">
+            <div
+              className="map-legend-color"
+              style={{
+                backgroundColor: '#FFCC33',
+                width: '20px',
+                height: '20px',
+                border: '1px solid #333',
+                borderRadius: '3px',
+              }}
+            />
+            <span>4-8 m</span>
+          </div>
+          <div className="map-legend-item">
+            <div
+              className="map-legend-color"
+              style={{
+                backgroundColor: '#FF9933',
+                width: '20px',
+                height: '20px',
+                border: '1px solid #333',
+                borderRadius: '3px',
+              }}
+            />
+            <span>&gt;8 m</span>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    ) : (
+      <div>
+        <h4 className="mb-2 text-xs font-semibold text-gray-900">
+          Nyugalmi szint a felszín alatt (m)
+        </h4>
+        <div className="space-y-1 text-xs">
+          <div className="map-legend-item">
+            <div
+              className="map-legend-color"
+              style={{
+                backgroundColor: '#0066CC',
+                width: '20px',
+                height: '20px',
+                border: '1px solid #333',
+                borderRadius: '3px',
+              }}
+            />
+            <span>0-1 m</span>
+          </div>
+          <div className="map-legend-item">
+            <div
+              className="map-legend-color"
+              style={{
+                backgroundColor: '#33CCFF',
+                width: '20px',
+                height: '20px',
+                border: '1px solid #333',
+                borderRadius: '3px',
+              }}
+            />
+            <span>1-2 m</span>
+          </div>
+          <div className="map-legend-item">
+            <div
+              className="map-legend-color"
+              style={{
+                backgroundColor: '#66CC66',
+                width: '20px',
+                height: '20px',
+                border: '1px solid #333',
+                borderRadius: '3px',
+              }}
+            />
+            <span>2-4 m</span>
+          </div>
+          <div className="map-legend-item">
+            <div
+              className="map-legend-color"
+              style={{
+                backgroundColor: '#FFCC33',
+                width: '20px',
+                height: '20px',
+                border: '1px solid #333',
+                borderRadius: '3px',
+              }}
+            />
+            <span>4-8 m</span>
+          </div>
+          <div className="map-legend-item">
+            <div
+              className="map-legend-color"
+              style={{
+                backgroundColor: '#FF9933',
+                width: '20px',
+                height: '20px',
+                border: '1px solid #333',
+                borderRadius: '3px',
+              }}
+            />
+            <span>&gt;8 m</span>
+          </div>
+        </div>
+      </div>
+    );
 
   // Drought index legend (HDIs)
   const droughtIndexLegend = (
     <div>
-      <h4 className="text-xs font-semibold text-gray-900 mb-2">Aszályindex</h4>
+      <h4 className="mb-2 text-xs font-semibold text-gray-900">Aszályindex</h4>
       <div className="space-y-1 text-xs">
         <div className="map-legend-item">
           <div
@@ -599,7 +642,7 @@ export const DroughtMapsWidget: React.FC = () => {
               height: '20px',
               border: '1px solid #333',
               borderRadius: '3px',
-              flexShrink: 0
+              flexShrink: 0,
             }}
           />
           <span>Aszálymentes (&lt; 1,33)</span>
@@ -612,7 +655,7 @@ export const DroughtMapsWidget: React.FC = () => {
               height: '20px',
               border: '1px solid #333',
               borderRadius: '3px',
-              flexShrink: 0
+              flexShrink: 0,
             }}
           />
           <span>Enyhe (1,33 - 1,50)</span>
@@ -625,7 +668,7 @@ export const DroughtMapsWidget: React.FC = () => {
               height: '20px',
               border: '1px solid #333',
               borderRadius: '3px',
-              flexShrink: 0
+              flexShrink: 0,
             }}
           />
           <span>Közepes (1,50 - 2,00)</span>
@@ -638,7 +681,7 @@ export const DroughtMapsWidget: React.FC = () => {
               height: '20px',
               border: '1px solid #333',
               borderRadius: '3px',
-              flexShrink: 0
+              flexShrink: 0,
             }}
           />
           <span>Erős (2,00 - 3,00)</span>
@@ -651,7 +694,7 @@ export const DroughtMapsWidget: React.FC = () => {
               height: '20px',
               border: '1px solid #333',
               borderRadius: '3px',
-              flexShrink: 0
+              flexShrink: 0,
             }}
           />
           <span>Rendkívüli (&gt; 3,00)</span>
@@ -663,7 +706,7 @@ export const DroughtMapsWidget: React.FC = () => {
   return (
     <div className="grid grid-cols-1 gap-6">
       {/* Map 1: HUGEO Groundwater Level - Blue tint */}
-      <div className="bg-blue-50 p-6 rounded-2xl">
+      <div className="rounded-2xl bg-blue-50 p-6">
         {renderMap(
           map1Ref,
           map1State,
@@ -676,7 +719,7 @@ export const DroughtMapsWidget: React.FC = () => {
       </div>
 
       {/* Map 2: Drought Index (HDIs) - Green tint */}
-      <div className="bg-green-50 p-6 rounded-2xl">
+      <div className="rounded-2xl bg-green-50 p-6">
         {renderMap(
           map2Ref,
           map2State,

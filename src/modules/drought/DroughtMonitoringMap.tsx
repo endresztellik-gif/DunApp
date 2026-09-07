@@ -32,10 +32,14 @@ const createLocationIcon = (isSelected: boolean, paramValue: number | null) => {
   // Color based on parameter value (example for drought index)
   let color = '#9ca3af'; // gray default
   if (paramValue !== null) {
-    if (paramValue <= 2) color = '#90ee90'; // light green (none)
-    else if (paramValue <= 4) color = '#ffffe0'; // light yellow (mild)
-    else if (paramValue <= 6) color = '#ffd700'; // gold (moderate)
-    else if (paramValue <= 8) color = '#ffa500'; // orange (severe)
+    if (paramValue <= 2)
+      color = '#90ee90'; // light green (none)
+    else if (paramValue <= 4)
+      color = '#ffffe0'; // light yellow (mild)
+    else if (paramValue <= 6)
+      color = '#ffd700'; // gold (moderate)
+    else if (paramValue <= 8)
+      color = '#ffa500'; // orange (severe)
     else color = '#ff4500'; // red (extreme)
   }
 
@@ -79,7 +83,10 @@ export const DroughtMonitoringMap: React.FC<DroughtMonitoringMapProps> = ({
   }
 
   // Mock parameter values (will be replaced with real data)
-  const getLocationParamValue = (_locationId: string, param: DroughtParameterType): number | null => {
+  const getLocationParamValue = (
+    _locationId: string,
+    param: DroughtParameterType
+  ): number | null => {
     // Randomly return null to simulate missing data (10% chance)
     if (Math.random() < 0.1) return null;
     if (param === 'droughtIndex') return 2 + Math.random() * 6;
@@ -97,7 +104,7 @@ export const DroughtMonitoringMap: React.FC<DroughtMonitoringMapProps> = ({
         <select
           value={selectedParameter}
           onChange={(e) => setSelectedParameter(e.target.value as DroughtParameterType)}
-          className="mt-2 w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
           aria-label="Paraméter választása"
         >
           {PARAMETER_OPTIONS.map((opt) => (
@@ -138,7 +145,7 @@ export const DroughtMonitoringMap: React.FC<DroughtMonitoringMapProps> = ({
                   <h4 className="font-semibold text-gray-900">{location.locationName}</h4>
                   <p className="text-xs text-gray-600">{location.county} megye</p>
                   {paramValue !== null && (
-                    <p className="text-sm font-semibold text-gray-900 mt-2">
+                    <p className="mt-2 text-sm font-semibold text-gray-900">
                       {paramValue.toFixed(1)}
                     </p>
                   )}
@@ -152,7 +159,7 @@ export const DroughtMonitoringMap: React.FC<DroughtMonitoringMapProps> = ({
       {/* Legend for drought index */}
       {selectedParameter === 'droughtIndex' && (
         <div className="map-legend">
-          <h4 className="text-xs font-semibold text-gray-900 mb-2">Aszály</h4>
+          <h4 className="mb-2 text-xs font-semibold text-gray-900">Aszály</h4>
           <div className="space-y-1 text-xs">
             <div className="map-legend-item">
               <div className="map-legend-color" style={{ backgroundColor: '#90ee90' }} />

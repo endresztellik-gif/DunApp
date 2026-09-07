@@ -59,8 +59,8 @@ async function fetchDroughtData(locationId: string) {
         county: (locationData as Record<string, unknown>).county as string,
         latitude: (locationData as Record<string, unknown>).latitude as number,
         longitude: (locationData as Record<string, unknown>).longitude as number,
-        isActive: (locationData as Record<string, unknown>).is_active as boolean
-      }
+        isActive: (locationData as Record<string, unknown>).is_active as boolean,
+      },
     };
   }
 
@@ -79,7 +79,7 @@ async function fetchDroughtData(locationId: string) {
       airTemperature: (droughtData as Record<string, unknown>).air_temperature as number,
       precipitation: (droughtData as Record<string, unknown>).precipitation as number,
       relativeHumidity: (droughtData as Record<string, unknown>).relative_humidity as number,
-      timestamp: (droughtData as Record<string, unknown>).timestamp as string
+      timestamp: (droughtData as Record<string, unknown>).timestamp as string,
     },
     location: {
       id: (locationData as Record<string, unknown>).id as string,
@@ -88,8 +88,8 @@ async function fetchDroughtData(locationId: string) {
       county: (locationData as Record<string, unknown>).county as string,
       latitude: (locationData as Record<string, unknown>).latitude as number,
       longitude: (locationData as Record<string, unknown>).longitude as number,
-      isActive: (locationData as Record<string, unknown>).is_active as boolean
-    }
+      isActive: (locationData as Record<string, unknown>).is_active as boolean,
+    },
   };
 }
 
@@ -111,6 +111,6 @@ export function useDroughtData(locationId: string | null): UseDroughtDataReturn 
     location: data?.location || null,
     isLoading,
     error: error as Error | null,
-    refetch
+    refetch,
   };
 }

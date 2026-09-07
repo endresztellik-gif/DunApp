@@ -19,8 +19,8 @@ import * as supabaseModule from '../../lib/supabase';
 // Mock Supabase
 vi.mock('../../lib/supabase', () => ({
   supabase: {
-    from: vi.fn()
-  }
+    from: vi.fn(),
+  },
 }));
 
 // Complete mock data
@@ -32,7 +32,7 @@ const mockMeteorologyFlow = {
     latitude: 46.3481,
     longitude: 18.7097,
     population: 33000,
-    is_active: true
+    is_active: true,
   },
   weatherData: {
     city_id: 'city-123',
@@ -53,8 +53,8 @@ const mockMeteorologyFlow = {
     snow_1h: null,
     snow_3h: null,
     visibility: 10000,
-    timestamp: '2025-10-27T12:00:00Z'
-  }
+    timestamp: '2025-10-27T12:00:00Z',
+  },
 };
 
 const mockWaterLevelFlow = {
@@ -74,20 +74,35 @@ const mockWaterLevelFlow = {
     danger_level_cm: 500,
     is_active: true,
     created_at: '2025-10-01T00:00:00Z',
-    updated_at: '2025-10-01T00:00:00Z'
+    updated_at: '2025-10-01T00:00:00Z',
   },
   waterLevelData: {
     station_id: 'station-123',
     water_level_cm: 420,
     flow_rate_m3s: 2500,
     water_temp_celsius: 18.5,
-    timestamp: '2025-10-27T12:00:00Z'
+    timestamp: '2025-10-27T12:00:00Z',
   },
   forecasts: [
-    { station_id: 'station-123', forecast_date: '2025-10-28', water_level_cm: 425, forecast_day: 1 },
-    { station_id: 'station-123', forecast_date: '2025-10-29', water_level_cm: 430, forecast_day: 2 },
-    { station_id: 'station-123', forecast_date: '2025-10-30', water_level_cm: 435, forecast_day: 3 }
-  ]
+    {
+      station_id: 'station-123',
+      forecast_date: '2025-10-28',
+      water_level_cm: 425,
+      forecast_day: 1,
+    },
+    {
+      station_id: 'station-123',
+      forecast_date: '2025-10-29',
+      water_level_cm: 430,
+      forecast_day: 2,
+    },
+    {
+      station_id: 'station-123',
+      forecast_date: '2025-10-30',
+      water_level_cm: 435,
+      forecast_day: 3,
+    },
+  ],
 };
 
 const mockDroughtFlow = {
@@ -98,7 +113,7 @@ const mockDroughtFlow = {
     county: 'Bács-Kiskun',
     latitude: 46.2167,
     longitude: 19.5667,
-    is_active: true
+    is_active: true,
   },
   droughtData: {
     location_id: 'loc-123',
@@ -114,8 +129,8 @@ const mockDroughtFlow = {
     air_temperature: 22.3,
     precipitation: 0.0,
     relative_humidity: 65,
-    timestamp: '2025-10-27T12:00:00Z'
-  }
+    timestamp: '2025-10-27T12:00:00Z',
+  },
 };
 
 const createWrapper = () => {
@@ -123,9 +138,9 @@ const createWrapper = () => {
     defaultOptions: {
       queries: {
         retry: false,
-        gcTime: 0
-      }
-    }
+        gcTime: 0,
+      },
+    },
   });
 
   return ({ children }: { children: React.ReactNode }) => (
@@ -146,9 +161,11 @@ describe('Integration: Meteorology Data Flow', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null })
-            })
-          })
+              maybeSingle: vi
+                .fn()
+                .mockResolvedValue({ data: mockMeteorologyFlow.city, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'meteorology_data') {
@@ -157,12 +174,16 @@ describe('Integration: Meteorology Data Flow', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null })
-                })
-              })
-            })
-          })
+                  single: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null }),
+                  maybeSingle: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -171,7 +192,7 @@ describe('Integration: Meteorology Data Flow', () => {
 
     // Render hook
     const { result } = renderHook(() => useWeatherData('city-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     // Wait for data to load
@@ -201,14 +222,14 @@ describe('Integration: Meteorology Data Flow', () => {
             eq: () => ({
               single: vi.fn().mockResolvedValue({
                 data: null,
-                error: { message: 'Temporary error' }
+                error: { message: 'Temporary error' },
               }),
               maybeSingle: vi.fn().mockResolvedValue({
                 data: null,
-                error: { message: 'Temporary error' }
-              })
-            })
-          })
+                error: { message: 'Temporary error' },
+              }),
+            }),
+          }),
         };
       }
 
@@ -218,9 +239,11 @@ describe('Integration: Meteorology Data Flow', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null })
-            })
-          })
+              maybeSingle: vi
+                .fn()
+                .mockResolvedValue({ data: mockMeteorologyFlow.city, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'meteorology_data') {
@@ -229,12 +252,16 @@ describe('Integration: Meteorology Data Flow', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null })
-                })
-              })
-            })
-          })
+                  single: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null }),
+                  maybeSingle: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -242,7 +269,7 @@ describe('Integration: Meteorology Data Flow', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useWeatherData('city-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     // First attempt should fail
@@ -266,9 +293,11 @@ describe('Integration: Water Level Data Flow', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.station, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.station, error: null })
-            })
-          })
+              maybeSingle: vi
+                .fn()
+                .mockResolvedValue({ data: mockWaterLevelFlow.station, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_data') {
@@ -277,12 +306,16 @@ describe('Integration: Water Level Data Flow', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null })
-                })
-              })
-            })
-          })
+                  single: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null }),
+                  maybeSingle: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_forecasts') {
@@ -290,10 +323,12 @@ describe('Integration: Water Level Data Flow', () => {
           select: () => ({
             eq: () => ({
               order: () => ({
-                limit: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.forecasts, error: null })
-              })
-            })
-          })
+                limit: vi
+                  .fn()
+                  .mockResolvedValue({ data: mockWaterLevelFlow.forecasts, error: null }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -301,7 +336,7 @@ describe('Integration: Water Level Data Flow', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useWaterLevelData('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -316,7 +351,6 @@ describe('Integration: Water Level Data Flow', () => {
     expect(result.current.station?.lowWaterLevelCm).toBe(200);
     expect(result.current.station?.highWaterLevelCm).toBe(650);
     expect(result.current.station?.alertLevelCm).toBe(400);
-
   });
 
   it('should handle missing forecast data gracefully', async () => {
@@ -326,9 +360,11 @@ describe('Integration: Water Level Data Flow', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.station, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.station, error: null })
-            })
-          })
+              maybeSingle: vi
+                .fn()
+                .mockResolvedValue({ data: mockWaterLevelFlow.station, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_data') {
@@ -337,12 +373,16 @@ describe('Integration: Water Level Data Flow', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null })
-                })
-              })
-            })
-          })
+                  single: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null }),
+                  maybeSingle: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockWaterLevelFlow.waterLevelData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
       if (table === 'water_level_forecasts') {
@@ -350,10 +390,10 @@ describe('Integration: Water Level Data Flow', () => {
           select: () => ({
             eq: () => ({
               order: () => ({
-                limit: vi.fn().mockResolvedValue({ data: null, error: null }) // No forecasts
-              })
-            })
-          })
+                limit: vi.fn().mockResolvedValue({ data: null, error: null }), // No forecasts
+              }),
+            }),
+          }),
         };
       }
     });
@@ -361,7 +401,7 @@ describe('Integration: Water Level Data Flow', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useWaterLevelData('station-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -383,9 +423,11 @@ describe('Integration: Drought Data Flow', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockDroughtFlow.location, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockDroughtFlow.location, error: null })
-            })
-          })
+              maybeSingle: vi
+                .fn()
+                .mockResolvedValue({ data: mockDroughtFlow.location, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'drought_data') {
@@ -394,12 +436,16 @@ describe('Integration: Drought Data Flow', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockDroughtFlow.droughtData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockDroughtFlow.droughtData, error: null })
-                })
-              })
-            })
-          })
+                  single: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockDroughtFlow.droughtData, error: null }),
+                  maybeSingle: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockDroughtFlow.droughtData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -407,7 +453,7 @@ describe('Integration: Drought Data Flow', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useDroughtData('loc-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -442,9 +488,11 @@ describe('Integration: Cache Behavior', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.city, error: null })
-            })
-          })
+              maybeSingle: vi
+                .fn()
+                .mockResolvedValue({ data: mockMeteorologyFlow.city, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'meteorology_data') {
@@ -453,12 +501,16 @@ describe('Integration: Cache Behavior', () => {
             eq: () => ({
               order: () => ({
                 limit: () => ({
-                  single: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null })
-                })
-              })
-            })
-          })
+                  single: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null }),
+                  maybeSingle: vi
+                    .fn()
+                    .mockResolvedValue({ data: mockMeteorologyFlow.weatherData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -470,9 +522,9 @@ describe('Integration: Cache Behavior', () => {
         queries: {
           retry: false,
           gcTime: 10000, // Keep in cache
-          staleTime: 10000 // Consider fresh for 10 seconds
-        }
-      }
+          staleTime: 10000, // Consider fresh for 10 seconds
+        },
+      },
     });
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (

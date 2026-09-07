@@ -48,7 +48,9 @@ export const SoilMoistureCard: React.FC<SoilMoistureCardProps> = ({
     >
       {/* Additional info */}
       {soilMoisture !== null && (
-        <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Átlag (10-100 cm)</p>
+        <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+          Átlag (10-100 cm)
+        </p>
       )}
     </DataCard>
   );

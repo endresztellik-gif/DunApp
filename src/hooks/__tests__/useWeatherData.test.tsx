@@ -186,9 +186,12 @@ describe('useWeatherData - Data Fetching', () => {
       }),
     };
 
-    vi.mocked(supabase.from).mockImplementation(() => ({
-      select: vi.fn().mockReturnValue(mockCitySelect),
-    }) as never);
+    vi.mocked(supabase.from).mockImplementation(
+      () =>
+        ({
+          select: vi.fn().mockReturnValue(mockCitySelect),
+        }) as never
+    );
 
     const { result } = renderHook(() => useWeatherData('invalid-city'), { wrapper });
 

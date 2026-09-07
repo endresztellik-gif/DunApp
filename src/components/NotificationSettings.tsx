@@ -39,13 +39,13 @@ export const NotificationSettings: React.FC = () => {
   // Feliratkozott — kompakt zöld sor
   if (isSubscribed && permission === 'granted') {
     return (
-      <div className="rounded-lg border-2 border-green-200 bg-green-50 px-4 py-3 flex items-center gap-3">
-        <Bell className="h-4 w-4 text-green-600 flex-shrink-0" />
-        <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-3 rounded-lg border-2 border-green-200 bg-green-50 px-4 py-3">
+        <Bell className="h-4 w-4 flex-shrink-0 text-green-600" />
+        <div className="min-w-0 flex-1">
           <span className="text-sm font-semibold text-green-800">Vízállás riasztás aktív</span>
           <p className="text-xs text-green-700">Értesítést kapsz, ha Mohács eléri a 400 cm-t</p>
         </div>
-        <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+        <Check className="h-4 w-4 flex-shrink-0 text-green-600" />
       </div>
     );
   }

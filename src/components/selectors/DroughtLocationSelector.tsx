@@ -32,8 +32,8 @@ export const DroughtLocationSelector: React.FC<DroughtLocationSelectorProps> = (
   if (locations.length < 1) {
     throw new Error(
       `DroughtLocationSelector: Expected at least 1 location for Drought module, but received ${locations.length}. ` +
-      'This selector is module-specific and cannot be used as a generic selector. ' +
-      'For groundwater wells, use WellSelector instead.'
+        'This selector is module-specific and cannot be used as a generic selector. ' +
+        'For groundwater wells, use WellSelector instead.'
     );
   }
 
@@ -78,8 +78,17 @@ export const DroughtLocationSelector: React.FC<DroughtLocationSelectorProps> = (
       {/* Selector Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="selector-button-drought flex items-center gap-2 px-4 py-2 w-full md:w-auto"
-        style={{ border: '0.5px solid rgba(212,133,28,.20)', color: 'var(--text-primary)', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', fontFamily: 'var(--font-ui)', fontSize: 'var(--text-sm)', cursor: 'pointer', transition: 'var(--transition-fast)' }}
+        className="selector-button-drought flex w-full items-center gap-2 px-4 py-2 md:w-auto"
+        style={{
+          border: '0.5px solid rgba(212,133,28,.20)',
+          color: 'var(--text-primary)',
+          background: 'var(--bg-surface)',
+          borderRadius: 'var(--radius-md)',
+          fontFamily: 'var(--font-ui)',
+          fontSize: 'var(--text-sm)',
+          cursor: 'pointer',
+          transition: 'var(--transition-fast)',
+        }}
         aria-label="Monitoring helyszín kiválasztása"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
@@ -89,9 +98,7 @@ export const DroughtLocationSelector: React.FC<DroughtLocationSelectorProps> = (
           {selectedLocation?.locationName || 'Válassz helyszínt'}
         </span>
         <ChevronDown
-          className={`h-4 w-4 transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
-          }`}
+          className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           aria-hidden="true"
         />
       </button>
@@ -99,8 +106,13 @@ export const DroughtLocationSelector: React.FC<DroughtLocationSelectorProps> = (
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="absolute z-10 mt-2 w-full max-h-60 overflow-y-auto flex flex-col"
-          style={{ background: 'var(--bg-surface)', border: '0.5px solid var(--border-default)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)' }}
+          className="absolute z-10 mt-2 flex max-h-60 w-full flex-col overflow-y-auto"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '0.5px solid var(--border-default)',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-md)',
+          }}
           role="listbox"
           aria-label="Monitoring helyszínek listája"
         >
@@ -117,7 +129,13 @@ export const DroughtLocationSelector: React.FC<DroughtLocationSelectorProps> = (
                 aria-selected={isSelected}
               >
                 <div className="flex flex-col">
-                  <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--text-primary)' }}>
+                  <span
+                    style={{
+                      fontSize: 'var(--text-sm)',
+                      fontWeight: 500,
+                      color: 'var(--text-primary)',
+                    }}
+                  >
                     {location.locationName}
                   </span>
                   <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>

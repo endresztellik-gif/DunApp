@@ -10,8 +10,8 @@ import * as supabaseModule from '../../lib/supabase';
 
 vi.mock('../../lib/supabase', () => ({
   supabase: {
-    from: vi.fn()
-  }
+    from: vi.fn(),
+  },
 }));
 
 const mockLocation = {
@@ -21,7 +21,7 @@ const mockLocation = {
   county: 'Bács-Kiskun',
   latitude: 46.2167,
   longitude: 19.5667,
-  is_active: true
+  is_active: true,
 };
 
 const mockDroughtData = {
@@ -38,12 +38,12 @@ const mockDroughtData = {
   air_temperature: 22.3,
   precipitation: 0.0,
   relative_humidity: 65,
-  timestamp: '2025-10-27T12:00:00Z'
+  timestamp: '2025-10-27T12:00:00Z',
 };
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: 0 } }
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -57,7 +57,7 @@ describe('useDroughtData', () => {
 
   it('should return initial loading state', () => {
     const { result } = renderHook(() => useDroughtData('loc-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     expect(result.current.isLoading).toBe(true);
@@ -67,7 +67,7 @@ describe('useDroughtData', () => {
 
   it('should not fetch when locationId is null', () => {
     const { result } = renderHook(() => useDroughtData(null), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     expect(result.current.isLoading).toBe(false);
@@ -81,9 +81,9 @@ describe('useDroughtData', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockLocation, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockLocation, error: null })
-            })
-          })
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockLocation, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'drought_data') {
@@ -93,11 +93,11 @@ describe('useDroughtData', () => {
               order: () => ({
                 limit: () => ({
                   single: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null })
-                })
-              })
-            })
-          })
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -105,7 +105,7 @@ describe('useDroughtData', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useDroughtData('loc-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -122,20 +122,20 @@ describe('useDroughtData', () => {
         eq: () => ({
           single: vi.fn().mockResolvedValue({
             data: null,
-            error: { message: 'Location not found' }
+            error: { message: 'Location not found' },
           }),
           maybeSingle: vi.fn().mockResolvedValue({
             data: null,
-            error: { message: 'Location not found' }
-          })
-        })
-      })
+            error: { message: 'Location not found' },
+          }),
+        }),
+      }),
     });
 
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useDroughtData('invalid'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false), { timeout: 10000 });
@@ -151,9 +151,9 @@ describe('useDroughtData', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockLocation, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockLocation, error: null })
-            })
-          })
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockLocation, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'drought_data') {
@@ -163,11 +163,11 @@ describe('useDroughtData', () => {
               order: () => ({
                 limit: () => ({
                   single: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null })
-                })
-              })
-            })
-          })
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -175,7 +175,7 @@ describe('useDroughtData', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useDroughtData('loc-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -196,9 +196,9 @@ describe('useDroughtData', () => {
           select: () => ({
             eq: () => ({
               single: vi.fn().mockResolvedValue({ data: mockLocation, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: mockLocation, error: null })
-            })
-          })
+              maybeSingle: vi.fn().mockResolvedValue({ data: mockLocation, error: null }),
+            }),
+          }),
         };
       }
       if (table === 'drought_data') {
@@ -208,11 +208,11 @@ describe('useDroughtData', () => {
               order: () => ({
                 limit: () => ({
                   single: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null }),
-                  maybeSingle: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null })
-                })
-              })
-            })
-          })
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockDroughtData, error: null }),
+                }),
+              }),
+            }),
+          }),
         };
       }
     });
@@ -220,7 +220,7 @@ describe('useDroughtData', () => {
     (supabaseModule.supabase.from as any) = mockFrom;
 
     const { result } = renderHook(() => useDroughtData('loc-123'), {
-      wrapper: createWrapper()
+      wrapper: createWrapper(),
     });
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));

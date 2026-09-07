@@ -48,9 +48,9 @@ async function fetchPrecipitationSummary(cityId: string): Promise<PrecipitationS
   // Transform database fields to match PrecipitationSummary type
   return {
     cityId: (data as Record<string, unknown>).city_id as string,
-    last7Days: (data as Record<string, unknown>).last_7_days as number ?? 0,
-    last30Days: (data as Record<string, unknown>).last_30_days as number ?? 0,
-    yearToDate: (data as Record<string, unknown>).year_to_date as number ?? 0,
+    last7Days: ((data as Record<string, unknown>).last_7_days as number) ?? 0,
+    last30Days: ((data as Record<string, unknown>).last_30_days as number) ?? 0,
+    yearToDate: ((data as Record<string, unknown>).year_to_date as number) ?? 0,
     updatedAt: (data as Record<string, unknown>).updated_at as string,
   };
 }

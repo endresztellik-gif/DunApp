@@ -44,12 +44,7 @@ describe('EmptyState - Rendering', () => {
   });
 
   it('renders description when provided', () => {
-    render(
-      <EmptyState
-        message="No data"
-        description="Try adjusting your filters"
-      />
-    );
+    render(<EmptyState message="No data" description="Try adjusting your filters" />);
     expect(screen.getByText('Try adjusting your filters')).toBeInTheDocument();
   });
 
@@ -191,12 +186,7 @@ describe('EmptyState - Content Variations', () => {
   });
 
   it('renders with message and description', () => {
-    render(
-      <EmptyState
-        message="No data available"
-        description="Please try again later"
-      />
-    );
+    render(<EmptyState message="No data available" description="Please try again later" />);
     expect(screen.getByText('No data available')).toBeInTheDocument();
     expect(screen.getByText('Please try again later')).toBeInTheDocument();
   });
@@ -208,11 +198,7 @@ describe('EmptyState - Content Variations', () => {
     };
 
     render(
-      <EmptyState
-        message="Error loading data"
-        description="An error occurred"
-        action={action}
-      />
+      <EmptyState message="Error loading data" description="An error occurred" action={action} />
     );
 
     expect(screen.getByText('Error loading data')).toBeInTheDocument();
