@@ -10,6 +10,22 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     css: true,
     testTimeout: 30000, // 30 seconds for async operations
+    /**
+     * `src/lib/supabase.ts` importáláskor DOB, ha nincs VITE_SUPABASE_URL /
+     * VITE_SUPABASE_ANON_KEY. Néhány teszt behúzza a valódi modult a
+     * `Header → usePushNotifications → lib/supabase` láncon, ezért a suite
+     * eddig csendben a fejlesztő lokális `.env`-jétől függött: gépen zöld,
+     * CI-ban "Missing Supabase environment variables" (2026-09-07).
+     *
+     * Ezek SZÁNDÉKOSAN hamis értékek — a tesztek a Supabase-klienst mockolják,
+     * hálózati hívás nem történik. A cél csak az, hogy a modul importálható
+     * legyen, és a futtatás gépfüggetlen legyen.
+     */
+    env: {
+      VITE_SUPABASE_URL: 'https://test.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key-not-a-real-credential',
+      VITE_VAPID_PUBLIC_KEY: 'test-vapid-public-key',
+    },
     exclude: [
       '**/node_modules/**',
       '**/dist/**',

@@ -50,9 +50,15 @@ Kiemelendő két teszt:
 
 Egy testability-tanulság: a hook **maga** ír elő `retry: 3`-at, és a query-szintű beállítás erősebb a `QueryClient` defaultjánál, ezért a teszt `retry: false`-a nem érvényesül. A `retryDelay`-t viszont a hook nem adja meg → a wrapperben `retryDelay: 0`-val a 3 újrapróbálkozás azonnal lefut, és a hibaágas tesztek nem futnak bele az exponenciális backoff (~7 mp) okozta időtúllépésbe.
 
-### CI
+### CI — és egy rejtett függés, amit a kapu élesítése azonnal kibuktatott
 
-A vitest kapu **élesítve** (`continue-on-error: false`). Ezzel a `ci.yml`-ben már csak a **Prettier** maradt maszkolva (104 formázatlan fájl a `src/`-ben) — az a hátralévő tétel.
+A vitest kapu **élesítve** (`continue-on-error: false`), és az első éles futás **el is bukott** — de nem regresszió miatt: az `App.test.tsx` be sem tudott töltődni, mert a `Header → usePushNotifications → lib/supabase` láncon behúzza a valódi Supabase-klienst, ami `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` hiányában **importáláskor dob**.
+
+Vagyis a teljes suite eddig **csendben a fejlesztő lokális `.env`-jétől függött**: a gépen zöld, a CI-ban „Missing Supabase environment variables". Ezt a hamis zöld évekig elfedte — a kapu élesítése egy futás alatt megtalálta.
+
+Javítás: determinisztikus teszt-env a `vitest.config.ts`-ben (`test.env`), szándékosan hamis értékekkel — a tesztek a Supabase-klienst mockolják, hálózati hívás nincs, a cél csak az importálhatóság és a gépfüggetlenség. Ellenőrizve úgy, hogy a `.env`-et ideiglenesen félretettem: **356/356 zöld `.env` nélkül is.**
+
+Ezzel a `ci.yml`-ben már csak a **Prettier** maradt maszkolva (104 formázatlan fájl a `src/`-ben) — az a hátralévő tétel.
 
 ---
 
