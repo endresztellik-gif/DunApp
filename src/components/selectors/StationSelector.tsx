@@ -100,7 +100,7 @@ export const StationSelector: React.FC<StationSelectorProps> = ({
               <button
                 key={station.id}
                 onClick={() => handleStationSelect(station)}
-                className={`dun-selector-item${isSelected ? ' selector-dropdown-item-selected font-medium' : ' selector-dropdown-item'}`}
+                className={`dun-selector-item ${isSelected ? 'selector-dropdown-item-selected font-medium' : 'selector-dropdown-item'}`}
                 style={isSelected ? { background: 'var(--bg-surface-alt)' } : {}}
                 role="option"
                 aria-selected={isSelected}

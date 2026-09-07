@@ -111,7 +111,7 @@ export const DroughtLocationSelector: React.FC<DroughtLocationSelectorProps> = (
               <button
                 key={location.id}
                 onClick={() => handleLocationSelect(location)}
-                className={`dun-selector-item${isSelected ? ' selector-dropdown-item-selected font-medium' : ' selector-dropdown-item'}`}
+                className={`dun-selector-item ${isSelected ? 'selector-dropdown-item-selected font-medium' : 'selector-dropdown-item'}`}
                 style={isSelected ? { background: 'var(--bg-surface-alt)' } : {}}
                 role="option"
                 aria-selected={isSelected}

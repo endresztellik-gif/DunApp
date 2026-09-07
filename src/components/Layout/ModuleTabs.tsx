@@ -36,7 +36,7 @@ export const ModuleTabs: React.FC<ModuleTabsProps> = ({
           <button
             key={tab.module}
             onClick={() => onModuleChange(tab.module)}
-            className={`dun-nav-item${isActive ? ' active' : ''}`}
+            className={`dun-nav-item ${isActive ? 'active' : ''}`}
             aria-label={tab.ariaLabel}
             aria-current={isActive ? 'page' : undefined}
             role="tab"

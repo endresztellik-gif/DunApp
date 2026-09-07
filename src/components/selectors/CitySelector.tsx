@@ -107,7 +107,7 @@ export const CitySelector: React.FC<CitySelectorProps> = ({
               <button
                 key={city.id}
                 onClick={() => handleCitySelect(city)}
-                className={`dun-selector-item${isSelected ? ' selector-dropdown-item-selected font-medium' : ' selector-dropdown-item'}`}
+                className={`dun-selector-item ${isSelected ? 'selector-dropdown-item-selected font-medium' : 'selector-dropdown-item'}`}
                 style={isSelected ? { background: 'var(--bg-surface-alt)' } : {}}
                 role="option"
                 aria-selected={isSelected}
