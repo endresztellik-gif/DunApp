@@ -8,6 +8,63 @@
 
 ---
 
+## 2026-09-07 — Prettier: az utolsó maszkolt CI-kapu, és amit menet közben eltört
+
+Az utolsó `continue-on-error: true` lépés rendezése. **A formázás nem ment simán — és pont ez volt a tanulságos.**
+
+### 1. A config volt az outlier, nem a kód
+
+A `.prettierrc.json`-ban `"semi": false` állt, miközben a kódbázis **minden fájlja pontosvesszővel** íródott. Ezt a beállítást soha nem alkalmazták (a `format:check` végig maszkolva futott), tehát egy sosem érvényesült szándék állt szemben 100+ fájlnyi tényleges gyakorlattal. Mérés:
+
+| | fájl | változás |
+|---|---|---|
+| `semi: false` (eredeti config) | 105 | +12 490 / −7 178 — ebből **5 190 pontosvessző törlése** |
+| `semi: true` (a kód stílusa) | 86 | +7 553 / −2 239 |
+
+A config lett igazítva a kódhoz (`semi: true`), nem fordítva.
+
+### 2. A formázó eltört 9 tesztet — valódi hibával
+
+A `npm run format` után a suite 9 bukással jött vissza. Nem álriasztás volt: a **`prettier-plugin-tailwindcss` levágta a vezető szóközt** a className-template ternary ágaiból.
+
+```
+-  `dun-selector-item${isSelected ? ' selector-dropdown-item-selected …' : ' selector-…'}`
++  `dun-selector-item${isSelected ? 'selector-dropdown-item-selected …' : 'selector-…'}`
+```
+
+Eredmény: `dun-selector-itemselector-dropdown-item-selected` — **összeragadt osztálynév**, ami némán elrontja a kijelölt elem stílusát a legördülőkben. A plugin minden osztály-sztringet önálló class-listaként kezel és trimmel, ezért a határon lévő szóköz elvész.
+
+**5 hely volt érintett** (ModuleTabs + a 4 selector), és a 9 bukó teszt pontosan ezeket fedte le — a független grep ugyanezt az 5-öt találta, tehát **néma kár nem maradt**. Ez egyben a tesztkapu élesítésének első kézzelfogható haszna: két órával korábban ez a hiba észrevétlenül kiment volna prodra.
+
+Javítás: a szóköz a `${...}`-en **kívülre** került (`` `dun-selector-item ${…}` ``) — viselkedésben azonos, de immunis a formázóra és olvashatóbb.
+
+### 3. Két commit, hogy a blame ne sérüljön
+
+- `a35f31e` — **refactor**: az 5 className-template javítása (szemantikus, látszania kell a blame-ben).
+- `f1392ff` — **style**: a tisztán formázási commit.
+
+Új `.git-blame-ignore-revs` a formázási commit hash-ével. A GitHub webes blame automatikusan figyelembe veszi; lokálisan egyszer kell:
+
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
+Ellenőrizve: a csak újratördelt sorokra a blame az **eredeti szerzőt** mutatja (`ddab244`, 2026-03-03), a className-javítás sorára viszont a refactor-commitot — pontosan ahogy kell.
+
+### Eredmény: mind az 5 CI-kapu éles
+
+| Kapu | |
+|---|---|
+| ESLint | ✅ éles |
+| Prettier | ✅ éles |
+| TypeScript | ✅ éles |
+| vitest (+ coverage rács) | ✅ éles |
+| Deno edge tesztek | ✅ éles |
+
+A `ci.yml`-ben nem maradt `continue-on-error: true`.
+
+---
+
 ## 2026-09-07 — vitest triázs (2. kör): 55 → 0 bukás, a tesztkapu élesítve
 
 **356 teszt zöld, 0 bukás** (kiindulás: 71 bukás / 290 zöld). Háromszori teljes futtatás azonos eredményt ad → sorrendfüggetlen.

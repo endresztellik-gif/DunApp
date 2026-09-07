@@ -1,0 +1,10 @@
+# Tömeges, tisztán formázási commitok — a `git blame` ugorja át őket.
+#
+# Használat lokálisan (egyszer, klónonként):
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# A GitHub webes blame-nézete automatikusan figyelembe veszi ezt a fájlt.
+#
+# IDE CSAK olyan commit kerülhet, ami NEM változtat viselkedést.
+
+# style: Prettier futtatva a src/ egészén (2026-09-07)
+f1392ffea5e83fbfa8fdeea4c45ba9ab7aea4baf

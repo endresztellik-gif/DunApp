@@ -34,9 +34,7 @@ jobs:
 
       - name: Run Prettier format check
         run: npm run format:check
-        continue-on-error: true # NEM ÉLES: 104 formázatlan fájl a src/-ben.
-        # Egy `npm run format` megoldja, de az egész src/ git blame-jét elmossa,
-        # ezért külön commitba + .git-blame-ignore-revs-be tartozik.
+        continue-on-error: false # ÉLES: a src/ formázva (2026-09-07)
 
       - name: Run TypeScript type check
         run: npx tsc --noEmit
