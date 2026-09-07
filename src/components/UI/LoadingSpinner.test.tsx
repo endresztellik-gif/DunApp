@@ -6,6 +6,19 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { LoadingSpinner } from './LoadingSpinner';
 
+/**
+ * A forgó elemnek soha nem volt `.spinner` osztálya a redesign óta — a
+ * tesztek a régi osztálynevet keresték, ezért 9 teszt bukott. A forgó div-et
+ * az `aria-hidden="true"` azonosítja: ez akadálymentességi szerződés
+ * (a képernyőolvasó a `role="status"` szövegét olvassa, a grafikát nem),
+ * tehát stabilabb horgony, mint bármelyik Tailwind utility-osztály.
+ */
+function getSpinner(): HTMLElement {
+  const el = document.querySelector('[role="status"] [aria-hidden="true"]');
+  if (!el) throw new Error('A spinner elem nem található');
+  return el as HTMLElement;
+}
+
 describe('LoadingSpinner - Rendering', () => {
   it('renders with default message', () => {
     render(<LoadingSpinner />);
@@ -21,7 +34,7 @@ describe('LoadingSpinner - Rendering', () => {
 
   it('renders spinner element', () => {
     render(<LoadingSpinner />);
-    const spinner = document.querySelector('.spinner');
+    const spinner = getSpinner();
     expect(spinner).toBeInTheDocument();
   });
 
@@ -34,7 +47,7 @@ describe('LoadingSpinner - Rendering', () => {
 describe('LoadingSpinner - Sizes', () => {
   it('applies small size classes', () => {
     render(<LoadingSpinner size="sm" />);
-    const spinner = document.querySelector('.spinner');
+    const spinner = getSpinner();
     expect(spinner).toHaveClass('h-6');
     expect(spinner).toHaveClass('w-6');
     expect(spinner).toHaveClass('border-2');
@@ -42,7 +55,7 @@ describe('LoadingSpinner - Sizes', () => {
 
   it('applies medium size classes by default', () => {
     render(<LoadingSpinner />);
-    const spinner = document.querySelector('.spinner');
+    const spinner = getSpinner();
     expect(spinner).toHaveClass('h-8');
     expect(spinner).toHaveClass('w-8');
     expect(spinner).toHaveClass('border-4');
@@ -50,7 +63,7 @@ describe('LoadingSpinner - Sizes', () => {
 
   it('applies medium size classes when specified', () => {
     render(<LoadingSpinner size="md" />);
-    const spinner = document.querySelector('.spinner');
+    const spinner = getSpinner();
     expect(spinner).toHaveClass('h-8');
     expect(spinner).toHaveClass('w-8');
     expect(spinner).toHaveClass('border-4');
@@ -58,7 +71,7 @@ describe('LoadingSpinner - Sizes', () => {
 
   it('applies large size classes', () => {
     render(<LoadingSpinner size="lg" />);
-    const spinner = document.querySelector('.spinner');
+    const spinner = getSpinner();
     expect(spinner).toHaveClass('h-12');
     expect(spinner).toHaveClass('w-12');
     expect(spinner).toHaveClass('border-4');
@@ -88,16 +101,25 @@ describe('LoadingSpinner - Accessibility', () => {
 
   it('spinner has aria-hidden attribute', () => {
     render(<LoadingSpinner />);
-    const spinner = document.querySelector('.spinner');
+    const spinner = getSpinner();
     expect(spinner).toHaveAttribute('aria-hidden', 'true');
   });
 });
 
 describe('LoadingSpinner - Styling', () => {
-  it('applies cyan color to spinner', () => {
+  // A `border-cyan-600` Tailwind-osztály helyett a komponens azóta design
+  // tokent használ (`var(--accent-primary)`). A token neve a szerződés — arra
+  // állítunk, nem egy konkrét színosztályra.
+  it('uses the accent design token for the spinner colour', () => {
     render(<LoadingSpinner />);
-    const spinner = document.querySelector('.spinner');
-    expect(spinner).toHaveClass('border-cyan-600');
+    const spinner = getSpinner();
+    // A jsdom a két beállítást egyetlen shorthanddé vonja össze
+    // ("transparent var(--accent-primary) var(--accent-primary)") és a
+    // longhandeket nem bontja ki `var()` érték mellett — a borderBottomColor
+    // üres sztringet adna. Ezért a shorthandben keressük a tokent, a
+    // felső oldalt viszont önállóan is meg tudjuk kérdezni.
+    expect(spinner.style.borderColor).toContain('var(--accent-primary)');
+    expect(spinner.style.borderTopColor).toBe('transparent');
   });
 
   it('applies default flex layout', () => {
@@ -123,15 +145,13 @@ describe('LoadingSpinner - Message Display', () => {
     expect(messages.length).toBeGreaterThan(0);
   });
 
-  it('message has correct text color', () => {
-    render(<LoadingSpinner message="Wait" />);
-    const message = document.querySelector('p.text-sm');
-    expect(message).toHaveClass('text-gray-600');
-  });
-
-  it('message has correct text size', () => {
-    render(<LoadingSpinner message="Wait" />);
-    const message = document.querySelector('p.text-sm');
-    expect(message).toHaveClass('text-sm');
+  // Ugyanez az üzenetnél: a `p` már nem visel Tailwind-osztályt, a
+  // tipográfiát design tokenek adják.
+  it('message uses the secondary text and small size tokens', () => {
+    const { container } = render(<LoadingSpinner message="Wait" />);
+    const message = container.querySelector('p') as HTMLElement;
+    expect(message).toBeInTheDocument();
+    expect(message.style.color).toBe('var(--text-secondary)');
+    expect(message.style.fontSize).toBe('var(--text-sm)');
   });
 });

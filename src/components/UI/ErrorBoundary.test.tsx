@@ -156,49 +156,40 @@ describe('ErrorBoundary - Accessibility', () => {
   });
 });
 
+/**
+ * A redesign óta nincsenek `.error-card` / `.error-message` /
+ * `.error-retry-button` osztályok, és a piros szín sem Tailwind-osztály
+ * (`text-red-600`), hanem design token. A hibapanel stabil horgonya a
+ * `role="alert"` — ez akadálymentességi szerződés: enélkül a képernyőolvasó
+ * nem jelezné a hibát. Erre építünk osztálynevek helyett.
+ */
 describe('ErrorBoundary - Styling', () => {
-  it('applies error-card class', () => {
+  const renderErrorState = () =>
     render(
       <ErrorBoundary>
         <ThrowError />
       </ErrorBoundary>
     );
 
-    const errorCard = document.querySelector('.error-card');
-    expect(errorCard).toBeInTheDocument();
+  it('announces the error via an alert landmark', () => {
+    renderErrorState();
+    const alert = screen.getByRole('alert');
+    expect(alert).toBeInTheDocument();
+    expect(alert).toHaveAttribute('aria-live', 'assertive');
   });
 
-  it('applies error-message class to message', () => {
-    render(
-      <ErrorBoundary>
-        <ThrowError />
-      </ErrorBoundary>
-    );
-
-    const errorMessage = document.querySelector('.error-message');
-    expect(errorMessage).toBeInTheDocument();
+  it('renders the retry button with an accessible name', () => {
+    renderErrorState();
+    expect(
+      screen.getByRole('button', { name: /újrapróbálkozás/i })
+    ).toBeInTheDocument();
   });
 
-  it('applies error-retry-button class to button', () => {
-    render(
-      <ErrorBoundary>
-        <ThrowError />
-      </ErrorBoundary>
-    );
-
-    const retryButton = document.querySelector('.error-retry-button');
-    expect(retryButton).toBeInTheDocument();
-  });
-
-  it('error icon has red color class', () => {
-    render(
-      <ErrorBoundary>
-        <ThrowError />
-      </ErrorBoundary>
-    );
-
-    const icon = document.querySelector('.text-red-600');
+  it('uses the alert design token for the error icon', () => {
+    renderErrorState();
+    const icon = screen.getByRole('alert').querySelector('[aria-hidden="true"]') as HTMLElement;
     expect(icon).toBeInTheDocument();
+    expect(icon.style.color).toBe('var(--color-dun-alert-500)');
   });
 });
 
@@ -230,9 +221,11 @@ describe('ErrorBoundary - Error Display', () => {
       </ErrorBoundary>
     );
 
-    // Icon should be rendered with correct size classes
-    const icon = document.querySelector('.h-6.w-6');
+    // A `.h-6.w-6` Tailwind-osztályok helyett a méret azóta inline stílus.
+    // Az ikon a hibapanelen belüli, segédtechnológia elől rejtett elem.
+    const icon = screen.getByRole('alert').querySelector('[aria-hidden="true"]') as HTMLElement;
     expect(icon).toBeInTheDocument();
+    expect(icon.style.width).toBe('24px');
   });
 });
 

@@ -1,16 +1,25 @@
 /**
  * RadarMap Component Tests
  *
- * Tests for the radar map component with Leaflet and RainViewer integration.
- * Tests map rendering, radar data fetching, animation controls, and empty states.
+ * Tests for the radar map component (Leaflet).
+ *
+ * MEGJEGYZÉS (2026-09-07): a korábbi 'Radar Data Fetching', 'Animation
+ * Controls' és 'RainViewer overlay' blokkok TÖRÖLVE lettek. Azok a
+ * RainViewer JSON API-t mockolták (api.rainviewer.com/public/weather-maps.json),
+ * a komponenst viszont azóta met.hu ODP radarra írták át, ami nem is hív
+ * JSON-indexet — a képkocka-URL-eket időbélyegből számolja. Törölt kód
+ * tesztjei voltak, nem hibás tesztek működő kódra.
+ *
+ * Ami maradt: megjelenítési állapotok, várostérkép-középpont, marker + popup,
+ * és az OSM alapréteg — ezek a jelenlegi komponenst mérik.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { RadarMap } from './RadarMap';
 import type { City } from '../../types';
 
-// Mock fetch for RainViewer API
+// A komponens nem hív JSON API-t, de a képelőtöltés miatt legyen fetch.
 global.fetch = vi.fn();
 
 // Mock Leaflet components
@@ -136,295 +145,7 @@ describe('RadarMap - City Marker', () => {
 
     expect(screen.getByText('Szekszárd')).toBeInTheDocument();
     expect(screen.getByText('Tolna megye')).toBeInTheDocument();
-    expect(screen.getByText(/46.3475°, 18.7067°/)).toBeInTheDocument();
-  });
-});
-
-describe('RadarMap - Radar Data Fetching', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('should fetch radar frames on mount', async () => {
-    const mockRadarResponse = {
-      radar: {
-        past: [
-          { path: '/v2/radar/1698417600/256' },
-          { path: '/v2/radar/1698421200/256' },
-          { path: '/v2/radar/1698424800/256' },
-        ],
-      },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockRadarResponse,
-    } as Response);
-
-    const mockCity: City = {
-      id: 'city-1',
-      name: 'Szekszárd',
-      county: 'Tolna',
-      latitude: 46.3475,
-      longitude: 18.7067,
-      population: 33000,
-      isActive: true,
-    };
-
-    render(<RadarMap city={mockCity} />);
-
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('https://api.rainviewer.com/public/weather-maps.json');
-    }, { timeout: 5000 });
-  });
-
-  it('should display loading state initially', () => {
-    const mockRadarResponse = {
-      radar: {
-        past: [],
-      },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockRadarResponse,
-    } as Response);
-
-    const mockCity: City = {
-      id: 'city-1',
-      name: 'Szekszárd',
-      county: 'Tolna',
-      latitude: 46.3475,
-      longitude: 18.7067,
-      population: 33000,
-      isActive: true,
-    };
-
-    render(<RadarMap city={mockCity} />);
-
-    expect(screen.getByText('⏳ Radarkép betöltése...')).toBeInTheDocument();
-  });
-
-  it('should show success status when radar frames loaded', async () => {
-    const mockRadarResponse = {
-      radar: {
-        past: [
-          { path: '/v2/radar/1698417600/256' },
-          { path: '/v2/radar/1698421200/256' },
-        ],
-      },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockRadarResponse,
-    } as Response);
-
-    const mockCity: City = {
-      id: 'city-1',
-      name: 'Szekszárd',
-      county: 'Tolna',
-      latitude: 46.3475,
-      longitude: 18.7067,
-      population: 33000,
-      isActive: true,
-    };
-
-    render(<RadarMap city={mockCity} />);
-
-    await waitFor(() => {
-      expect(screen.getByText('✅ Radar: 2 frame')).toBeInTheDocument();
-    }, { timeout: 5000 });
-  });
-
-  it('should show error status when fetch fails', async () => {
-    vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'));
-
-    const mockCity: City = {
-      id: 'city-1',
-      name: 'Szekszárd',
-      county: 'Tolna',
-      latitude: 46.3475,
-      longitude: 18.7067,
-      population: 33000,
-      isActive: true,
-    };
-
-    render(<RadarMap city={mockCity} />);
-
-    await waitFor(() => {
-      expect(screen.getByText('❌ Radarkép nem elérhető')).toBeInTheDocument();
-    }, { timeout: 5000 });
-  });
-
-  it('should handle empty radar data', async () => {
-    const mockRadarResponse = {
-      radar: {
-        past: [],
-      },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockRadarResponse,
-    } as Response);
-
-    const mockCity: City = {
-      id: 'city-1',
-      name: 'Szekszárd',
-      county: 'Tolna',
-      latitude: 46.3475,
-      longitude: 18.7067,
-      population: 33000,
-      isActive: true,
-    };
-
-    render(<RadarMap city={mockCity} />);
-
-    await waitFor(() => {
-      expect(screen.getByText('❌ Radarkép nem elérhető')).toBeInTheDocument();
-    }, { timeout: 5000 });
-  });
-});
-
-describe('RadarMap - Animation Controls', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('should show play/pause button when radar frames available', async () => {
-    const mockRadarResponse = {
-      radar: {
-        past: [
-          { path: '/v2/radar/1698417600/256' },
-          { path: '/v2/radar/1698421200/256' },
-        ],
-      },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockRadarResponse,
-    } as Response);
-
-    const mockCity: City = {
-      id: 'city-1',
-      name: 'Szekszárd',
-      county: 'Tolna',
-      latitude: 46.3475,
-      longitude: 18.7067,
-      population: 33000,
-      isActive: true,
-    };
-
-    render(<RadarMap city={mockCity} />);
-
-    await waitFor(() => {
-      expect(screen.getByLabelText('Pause animation')).toBeInTheDocument();
-    }, { timeout: 5000 });
-  });
-
-  it('should toggle between play and pause on button click', async () => {
-    const mockRadarResponse = {
-      radar: {
-        past: [
-          { path: '/v2/radar/1698417600/256' },
-          { path: '/v2/radar/1698421200/256' },
-        ],
-      },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockRadarResponse,
-    } as Response);
-
-    const mockCity: City = {
-      id: 'city-1',
-      name: 'Szekszárd',
-      county: 'Tolna',
-      latitude: 46.3475,
-      longitude: 18.7067,
-      population: 33000,
-      isActive: true,
-    };
-
-    render(<RadarMap city={mockCity} />);
-
-    await waitFor(() => {
-      expect(screen.getByLabelText('Pause animation')).toBeInTheDocument();
-    }, { timeout: 5000 });
-
-    const button = screen.getByLabelText('Pause animation');
-    fireEvent.click(button);
-
-    await waitFor(() => {
-      expect(screen.getByLabelText('Play animation')).toBeInTheDocument();
-    }, { timeout: 5000 });
-  });
-
-  it('should display frame counter', async () => {
-    const mockRadarResponse = {
-      radar: {
-        past: [
-          { path: '/v2/radar/1698417600/256' },
-          { path: '/v2/radar/1698421200/256' },
-          { path: '/v2/radar/1698424800/256' },
-        ],
-      },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockRadarResponse,
-    } as Response);
-
-    const mockCity: City = {
-      id: 'city-1',
-      name: 'Szekszárd',
-      county: 'Tolna',
-      latitude: 46.3475,
-      longitude: 18.7067,
-      population: 33000,
-      isActive: true,
-    };
-
-    render(<RadarMap city={mockCity} />);
-
-    await waitFor(() => {
-      // Should start with last frame (latest)
-      expect(screen.getByText('3 / 3')).toBeInTheDocument();
-    }, { timeout: 5000 });
-  });
-
-  it('should not show controls when only one frame', async () => {
-    const mockRadarResponse = {
-      radar: {
-        past: [{ path: '/v2/radar/1698417600/256' }],
-      },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockRadarResponse,
-    } as Response);
-
-    const mockCity: City = {
-      id: 'city-1',
-      name: 'Szekszárd',
-      county: 'Tolna',
-      latitude: 46.3475,
-      longitude: 18.7067,
-      population: 33000,
-      isActive: true,
-    };
-
-    render(<RadarMap city={mockCity} />);
-
-    await waitFor(() => {
-      expect(screen.queryByLabelText('Pause animation')).not.toBeInTheDocument();
-      expect(screen.queryByLabelText('Play animation')).not.toBeInTheDocument();
-    }, { timeout: 5000 });
+    // A popup a koordinátákat már nem jeleníti meg (csak név + megye).
   });
 });
 
@@ -454,36 +175,4 @@ describe('RadarMap - Map Layers', () => {
     expect(osmLayer).toBeDefined();
   });
 
-  it('should render RainViewer radar overlay when frames available', async () => {
-    const mockRadarResponse = {
-      radar: {
-        past: [{ path: '/v2/radar/1698417600/256' }],
-      },
-    };
-
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockRadarResponse,
-    } as Response);
-
-    const mockCity: City = {
-      id: 'city-1',
-      name: 'Szekszárd',
-      county: 'Tolna',
-      latitude: 46.3475,
-      longitude: 18.7067,
-      population: 33000,
-      isActive: true,
-    };
-
-    render(<RadarMap city={mockCity} />);
-
-    await waitFor(() => {
-      const tileLayers = screen.getAllByTestId('tile-layer');
-      const radarLayer = tileLayers.find((layer) =>
-        layer.getAttribute('data-url')?.includes('rainviewer')
-      );
-      expect(radarLayer).toBeDefined();
-    }, { timeout: 5000 });
-  });
 });

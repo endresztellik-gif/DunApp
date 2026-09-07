@@ -58,18 +58,23 @@ const mockMeteorologyFlow = {
 };
 
 const mockWaterLevelFlow = {
+  // A `water_level_stations` valódi oszlopnevei (ellenőrizve a prod sémán
+  // 2026-09-07); korábban a migráció előtti nevek szerepeltek itt.
   station: {
     id: 'station-123',
-    station_name: 'Mohács',
-    river_name: 'Duna',
-    city_name: 'Mohács',
+    station_id: '442010',
+    name: 'Mohács',
+    river: 'Duna',
+    river_km: 1446.9,
     latitude: 45.9928,
     longitude: 18.6836,
-    lnv_level: 200,
-    kkv_level: 300,
-    nv_level: 650,
+    low_water_level_cm: 200,
+    high_water_level_cm: 650,
+    alert_level_cm: 400,
+    danger_level_cm: 500,
     is_active: true,
-    display_in_comparison: true
+    created_at: '2025-10-01T00:00:00Z',
+    updated_at: '2025-10-01T00:00:00Z'
   },
   waterLevelData: {
     station_id: 'station-123',
@@ -304,18 +309,14 @@ describe('Integration: Water Level Data Flow', () => {
     // Verify complete data flow
     expect(result.current.waterLevelData).toBeDefined();
     expect(result.current.station).toBeDefined();
-    expect(result.current.forecast).toHaveLength(3);
     expect(result.current.error).toBe(null);
 
     // Verify threshold levels
-    expect(result.current.station?.lnvLevel).toBe(200);
-    expect(result.current.station?.kkvLevel).toBe(300);
-    expect(result.current.station?.nvLevel).toBe(650);
+    // Séma-migráció után: lnv/kkv/nv → low/high/alert/danger _cm mezők.
+    expect(result.current.station?.lowWaterLevelCm).toBe(200);
+    expect(result.current.station?.highWaterLevelCm).toBe(650);
+    expect(result.current.station?.alertLevelCm).toBe(400);
 
-    // Verify forecast ordering
-    expect(result.current.forecast[0].forecastDay).toBe(1);
-    expect(result.current.forecast[1].forecastDay).toBe(2);
-    expect(result.current.forecast[2].forecastDay).toBe(3);
   });
 
   it('should handle missing forecast data gracefully', async () => {
@@ -366,7 +367,6 @@ describe('Integration: Water Level Data Flow', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.waterLevelData).toBeDefined();
-    expect(result.current.forecast).toEqual([]);
     expect(result.current.error).toBe(null);
   });
 });

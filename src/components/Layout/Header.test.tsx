@@ -10,6 +10,22 @@ import { RegionProvider } from '../../contexts/RegionContext';
 import type { ReactElement } from 'react';
 import type { ModuleType } from '../../types';
 
+// Az értesítés-gomb csak `isSupported && permission !== 'denied'` esetén
+// renderel. A jsdom nem támogatja a Web Push API-t, ezért a valódi hook
+// `isSupported: false`-t adna, és a gomb sosem jelenne meg — a tesztnek nem
+// a böngésző képességét kell mérnie, hanem a Header viselkedését.
+vi.mock('../../hooks/usePushNotifications', () => ({
+  usePushNotifications: () => ({
+    isSupported: true,
+    permission: 'default' as NotificationPermission,
+    isSubscribed: false,
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+    isLoading: false,
+    error: null,
+  }),
+}));
+
 // Header reads the Duna/Dráva region from context — wrap every render in the provider.
 const render = (ui: ReactElement) => rtlRender(<RegionProvider>{ui}</RegionProvider>);
 

@@ -44,9 +44,7 @@ jobs:
 
       - name: Run tests with coverage
         run: npm run test:coverage
-        continue-on-error: true # NEM ÉLES: 55 bukó teszt (volt 71).
-        # Mind elavult teszt megváltozott/megszűnt viselkedésre — a triázs
-        # a DEVELOPMENT_LOG 2026-09-07 bejegyzésében. Élesíteni azután lehet.
+        continue-on-error: false # ÉLES: 356/356 zöld (2026-09-07, triázs 2. kör)
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2

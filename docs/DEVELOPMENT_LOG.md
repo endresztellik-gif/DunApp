@@ -8,6 +8,54 @@
 
 ---
 
+## 2026-09-07 — vitest triázs (2. kör): 55 → 0 bukás, a tesztkapu élesítve
+
+**356 teszt zöld, 0 bukás** (kiindulás: 71 bukás / 290 zöld). Háromszori teljes futtatás azonos eredményt ad → sorrendfüggetlen.
+
+### App.test — 14 → 0, három egymásra rakódó ok
+
+1. **HomePage-landing.** Az `App` a `!activeModule` ágon a `HomePage`-et rendereli, amiben nincs `Header`. Új `renderAppInModule()` helper lép be egy modulba a render után — a landing csempéi `<button>`-ok `<h2>` címkével, tehát elérhető név szerint kattinthatók, nem kellett hozzá `data-testid`.
+2. **`lazy()` + `Suspense`.** A modulok aszinkron töltődnek, a tesztek viszont szinkron `getByTestId`-t hívtak. → `findBy` + async tesztek.
+3. **Explicit `role="tablist"`.** A `ModuleTabs` `<nav>`-ja explicit `role="tablist"`-et állít, ami **felülírja** az implicit `navigation` szerepet — a `getByRole('navigation')` sosem találhatta meg.
+
+Ráadásul a fájl csak a `useCities`-t mockolta; a `useDroughtLocations` és a `useGroundwaterWells` valódi Supabase-hívásra futott, ezért a fájl önmagában átment, a teljes suite-ban viszont **sorrendfüggően** elbukott. Most mindkettő mockolva.
+
+### UI-komponensek — 22 → 0, role-alapon (nem `data-testid`)
+
+A tesztek a redesign előtti CSS-osztályokat keresték (`.spinner`, `.empty-state`, `.error-card`, `text-red-600`, `bg-cyan-600`). Új horgonyok: a `role="status"` / `role="alert"` és az azon belüli `aria-hidden="true"` elem.
+
+**Miért role és nem `data-testid`:** a `data-testid` olyan jelölés, ami kizárólag a tesztért van — ha a `LoadingSpinner` elveszíti a `role="status"`-t, a képernyőolvasók elnémulnak, de a testid-es teszt zölden futna tovább. A role-alapú teszt viszont elbukik, mert azt méri, amit a felhasználó és a segédtechnológia ténylegesen érzékel.
+
+**Fontos: a méret-tesztek nem voltak elavultak.** A `h-6 w-6 border-2` osztályok ma is pontosan ott vannak a komponensben — csak a `.spinner` szelektor volt rossz. Ténylegesen elavult mindössze 3+2 stílusteszt, ahol a komponens Tailwind-osztályról **design tokenre** váltott; ezek most a token nevére állítanak (`var(--accent-primary)`, `var(--text-secondary)`), ami a valódi szerződés.
+
+Egy jsdom-részlet mérés alapján, nem találgatásból: a `borderColor` + `borderTopColor` együttesét a jsdom egyetlen shorthanddé vonja össze, és `var()` érték mellett nem bontja longhandekre — a `borderBottomColor` üres sztringet ad. Ezért a shorthandben keressük a tokent.
+
+**Mellékesen egy vakon átmenő teszt is kiderült:** az `EmptyState` „does not render description when not provided" a nemlétező `.empty-state-text`-et kereste, ami mindig `null` volt — a teszt akkor is zöld lett volna, ha a leírás **megjelenik**. Most `queryByText`-tel valóban mér.
+
+### Vízállás-tesztek — a fixture-ök a migráció előtti sémát használták
+
+A `useWaterLevelData` és a `data-flow` fixture-jei még a régi oszlopneveket vitték (`station_name`, `river_name`, `city_name`, `lnv_level`, `kkv_level`, `nv_level`), a valódi tábla viszont `station_id` / `name` / `river` / `river_km` / `low_water_level_cm` / `high_water_level_cm` / `alert_level_cm` / `danger_level_cm` (ellenőrizve a prod sémán). A fixture-ök és az állítások átírva; a `cityName`-nek nincs is megfelelője, az kikerült.
+
+### RadarMap — 15 → 6 teszt, a törölt kód tesztjei eltávolítva
+
+A mock kiegészítése (`ImageOverlay`, `useMap`) után maradt 10 teszt a **RainViewer** JSON API-t mockolta, a komponens viszont **met.hu ODP** radarra lett átírva, ami nem is hív JSON-indexet. Ezek nem hibás tesztek működő kódra voltak, hanem törölt kód tesztjei — a „Radar Data Fetching", „Animation Controls" és „RainViewer overlay" blokkok törölve, a fejlécben dokumentálva, hogy miért. Ami maradt (6 teszt): megjelenítési állapotok, térképközéppont, marker + popup, OSM alapréteg — ezek a jelenlegi komponenst mérik.
+
+### ÚJ: `useWaterLevelForecast.test.tsx` — 10 teszt a korábban fedezet nélküli útvonalra
+
+Ez a hook adja az „5 Napos Előrejelzés" kártyát, és **nulla tesztfedezete volt** — pont az, ami 2026-08-25 és 09-07 között némán megállt. A régi `forecast` állítások a `useWaterLevelData` tesztjében laktak, de a funkció külön hookba költözött és a séma is változott; azok törölve, a fedezet ide került, a **valódi** oszlopnevekkel.
+
+Kiemelendő két teszt:
+- **Regressziós teszt a mostani kiesésre:** ha a legfrissebb kiadás minden dátuma múltbeli, a hook **üres listát** ad, nem hibát — pontosan ez volt a látható tünet („Nincs előrejelzési adat").
+- **Negatív értékek épsége:** kisvíznél a Duna vízállása negatív (Baja `-12 … -19` cm). Egy „csak számjegy" parse előjel nélkül hozná — éles hiba lenne.
+
+Egy testability-tanulság: a hook **maga** ír elő `retry: 3`-at, és a query-szintű beállítás erősebb a `QueryClient` defaultjánál, ezért a teszt `retry: false`-a nem érvényesül. A `retryDelay`-t viszont a hook nem adja meg → a wrapperben `retryDelay: 0`-val a 3 újrapróbálkozás azonnal lefut, és a hibaágas tesztek nem futnak bele az exponenciális backoff (~7 mp) okozta időtúllépésbe.
+
+### CI
+
+A vitest kapu **élesítve** (`continue-on-error: false`). Ezzel a `ci.yml`-ben már csak a **Prettier** maradt maszkolva (104 formázatlan fájl a `src/`-ben) — az a hátralévő tétel.
+
+---
+
 ## 2026-09-07 — vitest triázs (1. kör): 71 → 55 bukás, és a CI hamis zöldje
 
 **A legfontosabb felfedezés: a CI sosem volt piros — hamis zöldet jelentett.** A `ci.yml`-ben négy lépés `continue-on-error: true` volt (ESLint, Prettier, vitest, Deno edge tesztek), tehát a workflow **sikert írt ki** úgy, hogy közben a lint el sem futott, 71 teszt bukott és a Deno teszteket senki nem nézte. Ez rosszabb a pirosnál: pirosnál van ok utánanézni, hamis zöldnél nincs.

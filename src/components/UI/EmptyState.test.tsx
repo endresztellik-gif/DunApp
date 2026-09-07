@@ -7,6 +7,25 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { Inbox, Search, AlertCircle } from 'lucide-react';
 import { EmptyState } from './EmptyState';
 
+/**
+ * A redesign óta nincsenek `.empty-state*` osztályok — a komponens a
+ * `dun-card` osztályt és inline design tokeneket használ. A tesztek a régi
+ * neveket keresték, ezért 8 teszt bukott.
+ *
+ * Stabil horgonyok helyettük: a gyökér a `role="status"`, az ikon pedig az
+ * azon belüli `aria-hidden="true"` elem. Mindkettő akadálymentességi
+ * szerződés, nem stílus — nem törik el a következő restyle-tól.
+ */
+function getRoot(): HTMLElement {
+  return screen.getByRole('status');
+}
+
+function getIcon(): HTMLElement {
+  const el = getRoot().querySelector('[aria-hidden="true"]');
+  if (!el) throw new Error('Az ikon nem található');
+  return el as HTMLElement;
+}
+
 describe('EmptyState - Rendering', () => {
   it('renders message', () => {
     render(<EmptyState message="Nincs elérhető adat" />);
@@ -15,7 +34,7 @@ describe('EmptyState - Rendering', () => {
 
   it('renders default Inbox icon when no icon provided', () => {
     render(<EmptyState message="Test" />);
-    const icon = document.querySelector('.empty-state-icon');
+    const icon = getIcon();
     expect(icon).toBeInTheDocument();
   });
 
@@ -36,8 +55,10 @@ describe('EmptyState - Rendering', () => {
 
   it('does not render description when not provided', () => {
     render(<EmptyState message="No data" />);
-    const description = document.querySelector('.empty-state-text');
-    expect(description).not.toBeInTheDocument();
+    // Negatív teszt → queryByText (a getByText dobna). Eredetileg
+    // `.empty-state-text`-et keresett, ami sosem létezett: mindig `null` jött,
+    // így a teszt akkor is zöld lett volna, ha a leírás MEGJELENIK.
+    expect(screen.queryByText('Description')).not.toBeInTheDocument();
   });
 });
 
@@ -99,7 +120,7 @@ describe('EmptyState - Accessibility', () => {
 
   it('icon has aria-hidden attribute', () => {
     render(<EmptyState message="Test" />);
-    const icon = document.querySelector('.empty-state-icon');
+    const icon = getIcon();
     expect(icon).toHaveAttribute('aria-hidden', 'true');
   });
 
@@ -116,54 +137,33 @@ describe('EmptyState - Accessibility', () => {
 });
 
 describe('EmptyState - Styling', () => {
-  it('applies empty-state class', () => {
+  it('renders on the shared card surface', () => {
     render(<EmptyState message="Test" />);
-    const emptyState = document.querySelector('.empty-state');
-    expect(emptyState).toBeInTheDocument();
+    expect(getRoot()).toHaveClass('dun-card');
   });
 
   it('accepts custom className', () => {
-    render(
-      <EmptyState message="Test" className="custom-class" />
-    );
-    const emptyState = document.querySelector('.empty-state');
-    expect(emptyState).toHaveClass('custom-class');
+    render(<EmptyState message="Test" className="custom-class" />);
+    expect(getRoot()).toHaveClass('custom-class');
   });
 
-  it('applies empty-state-icon class to icon', () => {
+  it('renders an icon that is hidden from assistive technology', () => {
     render(<EmptyState message="Test" />);
-    const icon = document.querySelector('.empty-state-icon');
-    expect(icon).toBeInTheDocument();
+    expect(getIcon()).toBeInTheDocument();
   });
 
-  it('applies empty-state-text class to description', () => {
-    render(
-      <EmptyState message="Test" description="Description" />
-    );
-    const description = document.querySelector('.empty-state-text');
-    expect(description).toBeInTheDocument();
+  it('renders the description text', () => {
+    render(<EmptyState message="Test" description="Description" />);
+    expect(screen.getByText('Description')).toBeInTheDocument();
   });
 
-  it('action button has cyan background color', () => {
-    const action = {
-      label: 'Action',
-      onClick: vi.fn(),
-    };
-
-    render(<EmptyState message="Test" action={action} />);
+  // A `bg-cyan-600` / `hover:bg-cyan-700` Tailwind-osztályok helyett a gomb
+  // azóta design tokent használ. A token neve a szerződés.
+  it('action button uses the accent design token', () => {
+    render(<EmptyState message="Test" action={{ label: 'Action', onClick: vi.fn() }} />);
     const button = screen.getByRole('button');
-    expect(button).toHaveClass('bg-cyan-600');
-  });
-
-  it('action button has hover effect', () => {
-    const action = {
-      label: 'Action',
-      onClick: vi.fn(),
-    };
-
-    render(<EmptyState message="Test" action={action} />);
-    const button = screen.getByRole('button');
-    expect(button).toHaveClass('hover:bg-cyan-700');
+    expect(button.style.background).toBe('var(--accent-primary)');
+    expect(button.style.color).toBe('var(--text-inverse)');
   });
 });
 

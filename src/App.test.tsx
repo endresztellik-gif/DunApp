@@ -26,6 +26,26 @@ vi.mock('./hooks/useCities', () => ({
   }),
 }));
 
+// A DroughtModule csak akkor renderel, ha van helyszín ÉS kút (App.tsx).
+// Ez a két hook korábban NEM volt mockolva, ezért valódi Supabase-lekérdezésre
+// futott: önmagában futtatva a fájl átment, a teljes suite-ban viszont
+// sorrendfüggően elbukott. Mockolással determinisztikus lesz.
+vi.mock('./hooks/useDroughtLocations', () => ({
+  useDroughtLocations: () => ({
+    locations: mockData.MOCK_DROUGHT_LOCATIONS,
+    isLoading: false,
+    error: null,
+  }),
+}));
+
+vi.mock('./hooks/useGroundwaterWells', () => ({
+  useGroundwaterWells: () => ({
+    wells: mockData.MOCK_GROUNDWATER_WELLS,
+    isLoading: false,
+    error: null,
+  }),
+}));
+
 // Mock the module components to avoid complex dependencies
 vi.mock('./modules/meteorology/MeteorologyModule', () => ({
   MeteorologyModule: vi.fn(() => <div data-testid="meteorology-module">Meteorology Module</div>),
@@ -50,6 +70,27 @@ function renderWithQueryClient(ui: ReactNode) {
   );
 }
 
+/**
+ * Az App a `!activeModule` ágon a **HomePage** landinget rendereli, amiben
+ * nincs Header és nincs modul-navigáció. Ezek a tesztek mind a modul-nézetet
+ * vizsgálják (banner, tablist, modulváltás), ezért a render után be kell
+ * lépni egy modulba.
+ *
+ * A landing csempéi `<button>`-ok `<h2>` címkével, tehát elérhető név szerint
+ * kattinthatók — nem kell hozzá data-testid.
+ */
+async function renderAppInModule(
+  moduleName: RegExp = /meteorológia/i,
+  testId = 'meteorology-module'
+) {
+  const result = renderWithQueryClient(<App />);
+  fireEvent.click(screen.getByRole('button', { name: moduleName }));
+  // A modulok `lazy()` + `Suspense` alatt vannak → aszinkron jelennek meg,
+  // ezért findBy kell, nem getBy.
+  await screen.findByTestId(testId);
+  return result;
+}
+
 describe('App Component', () => {
   beforeEach(() => {
     // App reads the region from context; default to Duna so the home screen shows modules.
@@ -63,78 +104,79 @@ describe('App Component', () => {
     });
   });
   describe('Initial Render', () => {
-    it('renders without crashing', () => {
-      renderWithQueryClient(<App />);
+    it('renders without crashing', async () => {
+      await renderAppInModule();
       expect(screen.getByRole('banner')).toBeInTheDocument();
     });
 
-    it('renders the Header component', () => {
-      renderWithQueryClient(<App />);
+    it('renders the Header component', async () => {
+      await renderAppInModule();
       const header = screen.getByRole('banner');
       expect(header).toBeInTheDocument();
     });
 
-    it('renders the DunApp logo', () => {
-      renderWithQueryClient(<App />);
-      expect(screen.getByText(/Dun/i)).toBeInTheDocument();
-      expect(screen.getByText(/App/i)).toBeInTheDocument();
+    it('renders the DunApp logo', async () => {
+      await renderAppInModule();
+      // A /Dun/i több elemre is illett (logó + HomePage szövegek). A logó
+      // gomb elérhető neve egyedi és stabil szerződés.
+      expect(screen.getByRole('button', { name: /dunapp főoldal/i })).toBeInTheDocument();
     });
 
-    it('displays Meteorology module by default', () => {
-      renderWithQueryClient(<App />);
-      expect(screen.getByTestId('meteorology-module')).toBeInTheDocument();
+    it('displays Meteorology module by default', async () => {
+      await renderAppInModule();
+      expect(await screen.findByTestId('meteorology-module')).toBeInTheDocument();
       expect(screen.queryByTestId('water-level-module')).not.toBeInTheDocument();
       expect(screen.queryByTestId('drought-module')).not.toBeInTheDocument();
     });
   });
 
   describe('Module Navigation', () => {
-    it('renders all three module tabs', () => {
-      renderWithQueryClient(<App />);
-      const navigation = screen.getByRole('navigation', { name: /modul navigáció/i });
+    it('renders all three module tabs', async () => {
+      await renderAppInModule();
+      const navigation = screen.getByRole('tablist', { name: /modul navigáció/i });
 
       expect(within(navigation).getByLabelText(/meteorológiai modul/i)).toBeInTheDocument();
       expect(within(navigation).getByLabelText(/vízállás modul/i)).toBeInTheDocument();
       expect(within(navigation).getByLabelText(/aszály modul/i)).toBeInTheDocument();
     });
 
-    it('switches to Water Level module when tab is clicked', () => {
-      renderWithQueryClient(<App />);
+    it('switches to Water Level module when tab is clicked', async () => {
+      await renderAppInModule();
       const waterLevelTab = screen.getByLabelText(/vízállás modul/i);
 
       fireEvent.click(waterLevelTab);
 
-      expect(screen.getByTestId('water-level-module')).toBeInTheDocument();
+      expect(await screen.findByTestId('water-level-module')).toBeInTheDocument();
       expect(screen.queryByTestId('meteorology-module')).not.toBeInTheDocument();
       expect(screen.queryByTestId('drought-module')).not.toBeInTheDocument();
     });
 
-    it('switches to Drought module when tab is clicked', () => {
-      renderWithQueryClient(<App />);
+    it('switches to Drought module when tab is clicked', async () => {
+      await renderAppInModule();
       const droughtTab = screen.getByLabelText(/aszály modul/i);
 
       fireEvent.click(droughtTab);
 
-      expect(screen.getByTestId('drought-module')).toBeInTheDocument();
+      expect(await screen.findByTestId('drought-module')).toBeInTheDocument();
       expect(screen.queryByTestId('meteorology-module')).not.toBeInTheDocument();
       expect(screen.queryByTestId('water-level-module')).not.toBeInTheDocument();
     });
 
-    it('can switch back to Meteorology module', () => {
-      renderWithQueryClient(<App />);
+    it('can switch back to Meteorology module', async () => {
+      await renderAppInModule();
       const waterLevelTab = screen.getByLabelText(/vízállás modul/i);
       const meteorologyTab = screen.getByLabelText(/meteorológiai modul/i);
 
       fireEvent.click(waterLevelTab);
-      expect(screen.getByTestId('water-level-module')).toBeInTheDocument();
+      expect(await screen.findByTestId('water-level-module')).toBeInTheDocument();
 
       fireEvent.click(meteorologyTab);
-      expect(screen.getByTestId('meteorology-module')).toBeInTheDocument();
+      expect(await screen.findByTestId('meteorology-module')).toBeInTheDocument();
       expect(screen.queryByTestId('water-level-module')).not.toBeInTheDocument();
     });
 
-    it('highlights the active module tab', () => {
-      renderWithQueryClient(<App />);
+    it('highlights the active module tab', async () => {
+      await renderAppInModule();
       const meteorologyTab = screen.getByLabelText(/meteorológiai modul/i);
       const waterLevelTab = screen.getByLabelText(/vízállás modul/i);
 
@@ -181,14 +223,14 @@ describe('App Component', () => {
   });
 
   describe('Accessibility', () => {
-    it('has a main landmark', () => {
-      renderWithQueryClient(<App />);
+    it('has a main landmark', async () => {
+      await renderAppInModule();
       expect(screen.getByRole('main')).toBeInTheDocument();
     });
 
-    it('has proper ARIA labels on module tabs', () => {
-      renderWithQueryClient(<App />);
-      const navigation = screen.getByRole('navigation', { name: /modul navigáció/i });
+    it('has proper ARIA labels on module tabs', async () => {
+      await renderAppInModule();
+      const navigation = screen.getByRole('tablist', { name: /modul navigáció/i });
 
       const meteorologyTab = within(navigation).getByLabelText(/meteorológiai modul/i);
       const waterLevelTab = within(navigation).getByLabelText(/vízállás modul/i);
@@ -199,8 +241,8 @@ describe('App Component', () => {
       expect(droughtTab).toHaveAttribute('aria-selected');
     });
 
-    it('has proper role attributes for tabs', () => {
-      renderWithQueryClient(<App />);
+    it('has proper role attributes for tabs', async () => {
+      await renderAppInModule();
       const tablist = screen.getByRole('tablist');
       expect(tablist).toBeInTheDocument();
 
@@ -210,22 +252,22 @@ describe('App Component', () => {
   });
 
   describe('Responsive Design', () => {
-    it('applies responsive padding classes to main content', () => {
-      renderWithQueryClient(<App />);
+    it('applies responsive padding classes to main content', async () => {
+      await renderAppInModule();
       const main = screen.getByRole('main');
       expect(main).toHaveClass('px-4', 'py-6', 'md:py-8');
     });
 
-    it('applies min-h-screen to root container', () => {
-      const { container } = renderWithQueryClient(<App />);
+    it('applies min-h-screen to root container', async () => {
+      const { container } = await renderAppInModule();
       const rootDiv = container.firstChild as HTMLElement;
       expect(rootDiv).toHaveClass('min-h-screen');
     });
   });
 
   describe('Module-Specific Selectors', () => {
-    it('does NOT render any global location selectors in App component', () => {
-      const { container } = renderWithQueryClient(<App />);
+    it('does NOT render any global location selectors in App component', async () => {
+      const { container } = await renderAppInModule();
       const appHtml = container.innerHTML;
 
       // App.tsx should NOT contain any selectors - they are module-specific
@@ -233,11 +275,11 @@ describe('App Component', () => {
       expect(appHtml).not.toContain('location-selector');
     });
 
-    it('passes correct data to each module', () => {
-      renderWithQueryClient(<App />);
+    it('passes correct data to each module', async () => {
+      await renderAppInModule();
 
       // Meteorology should receive 4 cities
-      const meteorologyModule = screen.getByTestId('meteorology-module');
+      const meteorologyModule = await screen.findByTestId('meteorology-module');
       expect(meteorologyModule).toBeInTheDocument();
 
       // Switch to Water Level
@@ -247,7 +289,7 @@ describe('App Component', () => {
 
       // Switch to Drought
       fireEvent.click(screen.getByLabelText(/aszály modul/i));
-      const droughtModule = screen.getByTestId('drought-module');
+      const droughtModule = await screen.findByTestId('drought-module');
       expect(droughtModule).toBeInTheDocument();
     });
   });
