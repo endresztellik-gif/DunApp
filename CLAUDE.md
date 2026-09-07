@@ -35,6 +35,21 @@ Diagnosztikai jel: a függvény 200-at ad vissza, de üres eredménnyel, és a f
 megugrik (retry-backoff). Cert-ellenőrzés Deno szemszögéből:
 `openssl s_client -connect <host>:443 -servername <host> -CAfile <mozilla cacert.pem>`
 
+**Első lépés, ha bármelyik modul adata elavultnak tűnik:**
+
+```bash
+./scripts/refresh-data.sh --status        # csak megmutatja, mennyire friss minden tábla
+./scripts/refresh-data.sh                 # minden Edge Function kézi kiváltása
+./scripts/refresh-data.sh water           # csak a vízállás + előrejelzés
+```
+
+Csoportok: `water` · `bodies` · `groundwater` · `drought` · `meteo` · `precip`.
+A script a `.env` anon kulcsát használja, és a végén kiírja, melyik tábla milyen friss.
+
+**Ismert, forrásoldali leállás (nem javítható nálunk):** az FTCS (TSZ 130033) és a
+Kadia (TSZ 130038) víztest **2026-08-03 óta** nem ad adatot — sem a vizugy REST API,
+sem a HTML tábla. A `refresh-data.sh` ezekre várhatóan `SIKERTELEN`-t ír.
+
 ---
 
 ## QUICK REFERENCE
