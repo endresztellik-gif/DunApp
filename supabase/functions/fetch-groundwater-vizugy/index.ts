@@ -34,6 +34,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 import { sanitizeError } from '../_shared/error-sanitizer.ts';
 import { fetchTimeSeries, DATA_TYPE } from '../_shared/vizugy-api-client.ts';
+import { eszignoFetch } from '../_shared/eszigno-fetch.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -104,7 +105,7 @@ async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Respons
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetch(url, {
+    return await eszignoFetch(url, {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',

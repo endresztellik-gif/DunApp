@@ -33,6 +33,8 @@
  * Compatible with PecApp and DunApp.
  */
 
+import { eszignoFetch } from './eszigno-fetch.ts';
+
 const AUTH_URL = 'https://data.vizugy.hu/AuthApi/auth/token';
 const API_BASE = 'https://vmservice.vizugy.hu/vraquery';
 const ORIGIN_HEADER = 'https://data.vizugy.hu';
@@ -99,7 +101,7 @@ async function getToken(): Promise<string> {
   const now = Date.now();
   if (_cachedToken && now < _tokenExpiry) return _cachedToken;
 
-  const res = await fetch(AUTH_URL, {
+  const res = await eszignoFetch(AUTH_URL, {
     headers: {
       Origin: ORIGIN_HEADER,
       Referer: `${ORIGIN_HEADER}/`,
@@ -132,7 +134,7 @@ async function getToken(): Promise<string> {
 
 export async function fetchStations(): Promise<VizugyStation[]> {
   const token = await getToken();
-  const res = await fetch(`${API_BASE}/Vra/InternetVmo/11/false`, {
+  const res = await eszignoFetch(`${API_BASE}/Vra/InternetVmo/11/false`, {
     headers: {
       Authorization: `Bearer ${token}`,
       Origin: ORIGIN_HEADER,
@@ -164,7 +166,7 @@ export async function fetchStations(): Promise<VizugyStation[]> {
  */
 export async function fetchGroundwaterStations(): Promise<GroundwaterStation[]> {
   const token = await getToken();
-  const res = await fetch(`${API_BASE}/Vra/InternetVmo/${STATION_LIST.GROUNDWATER}/false`, {
+  const res = await eszignoFetch(`${API_BASE}/Vra/InternetVmo/${STATION_LIST.GROUNDWATER}/false`, {
     headers: {
       Authorization: `Bearer ${token}`,
       Origin: ORIGIN_HEADER,
@@ -205,7 +207,7 @@ export async function fetchTimeSeries(
     valueFilter: 'Relativ',
   };
 
-  const res = await fetch(`${API_BASE}/TS/TsShortList`, {
+  const res = await eszignoFetch(`${API_BASE}/TS/TsShortList`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,

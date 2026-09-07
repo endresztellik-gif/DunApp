@@ -1,26 +1,35 @@
 /**
- * hydroinfo.hu fetch helper — supplies the CA chain the server fails to send.
+ * TLS fetch helper for the Hungarian water-authority sites (hydroinfo.hu, *.vizugy.hu).
  *
- * Problem (2026-08-25): hydroinfo.hu installed a new leaf certificate issued by
- * "e-Szigno RSA OV TLS CA 2026", but keeps serving the *ECC* intermediate
- * ("e-Szigno OV TLS CA 2026") in the TLS handshake. Browsers and macOS recover
- * by chasing the AIA "CA Issuers" URL; Deno's rustls stack does not, so every
- * fetch from the Edge Function died with:
+ * Problem: these servers present a leaf issued by "e-Szigno RSA OV TLS CA 2026"
+ * but keep serving the *ECC* intermediate ("e-Szigno OV TLS CA 2026" — no "RSA")
+ * in the TLS handshake, so the chain never closes. Browsers and macOS recover by
+ * chasing the AIA "CA Issuers" URL; Deno's rustls stack does not, so every fetch
+ * from an Edge Function dies with:
  *
  *   client error (Connect): invalid peer certificate: UnknownIssuer
  *
- * Symptom: water_level_forecasts stopped updating on 2026-08-25 09:00 UTC while
- * current levels (vizugy REST API) kept flowing.
+ * Observed damage (found 2026-09-07):
+ *   - www.hydroinfo.hu  new cert 2026-08-25 08:35 UTC
+ *       → water_level_forecasts frozen since 2026-08-25 09:00 UTC
+ *   - www.vizugy.hu     new cert 2026-08-26 12:39 UTC
+ *       → fetch-ftcs-water-level / fetch-kadia-water-level dead (UI showed "N/A")
  *
- * Fix: pin the two certificates the server omits as extra trust anchors:
+ * Fix: pin the two certificates the servers omit as extra trust anchors:
  *   - e-Szigno RSA OV TLS CA 2026   (leaf issuer, valid 2026-03-18 → 2029-03-17)
  *   - e-Szigno RSA TLS Root CA 2025 (its issuer,  valid 2025-07-30 → 2029-12-30)
  *
- * If hydroinfo.hu ever fixes its chain this stays harmless — the anchors are
- * simply added to the default store, never replacing it.
+ * The anchors are *added* to the default store, never replacing it — so hosts with
+ * a correct chain keep verifying normally, and if these sites ever fix their
+ * configuration this helper stays harmless.
+ *
+ * Applied pre-emptively to vmservice/data/aszalymonitoring.vizugy.hu as well:
+ * those still run an "e-Szigno SSL CA 2014" cert that expires 2026-09-12, and a
+ * renewal onto the same misconfigured chain would silently kill current water
+ * levels, groundwater and drought data the same way.
  */
 
-const HYDROINFO_CA_CERTS = [
+const ESZIGNO_CA_CERTS = [
   // e-Szigno RSA OV TLS CA 2026
   `-----BEGIN CERTIFICATE-----
 MIIGPTCCBCWgAwIBAgINAUD2P2jVGzuXbGcgCjANBgkqhkiG9w0BAQ0FADBgMQsw
@@ -109,14 +118,14 @@ function getClient(): unknown {
   }).createHttpClient;
 
   if (typeof create !== 'function') {
-    console.warn('⚠️  Deno.createHttpClient unavailable — hydroinfo TLS pinning disabled');
+    console.warn('⚠️  Deno.createHttpClient unavailable — e-Szigno TLS pinning disabled');
     return null;
   }
 
   try {
-    _client = create({ caCerts: HYDROINFO_CA_CERTS });
+    _client = create({ caCerts: ESZIGNO_CA_CERTS });
   } catch (error) {
-    console.warn('⚠️  Failed to build hydroinfo HTTP client:', (error as Error).message);
+    console.warn('⚠️  Failed to build e-Szigno HTTP client:', (error as Error).message);
     _client = null;
   }
 
@@ -124,12 +133,19 @@ function getClient(): unknown {
 }
 
 /**
- * Fetch a hydroinfo.hu URL with the missing intermediate CA supplied.
+ * Fetch a hydroinfo.hu / vizugy.hu URL with the missing intermediate CA supplied.
  * Falls back to a plain fetch when the runtime lacks `Deno.createHttpClient`.
+ *
+ * Accepts the same `init` as `fetch`; a default User-Agent is added unless the
+ * caller sets one.
  */
-export function hydroinfoFetch(url: string): Promise<Response> {
+export function eszignoFetch(url: string, init: RequestInit = {}): Promise<Response> {
   const client = getClient();
-  const init: RequestInit = { headers: { 'User-Agent': USER_AGENT } };
-  if (client) (init as Record<string, unknown>).client = client;
-  return fetch(url, init);
+  const headers = new Headers(init.headers);
+  if (!headers.has('User-Agent')) headers.set('User-Agent', USER_AGENT);
+
+  const merged: RequestInit = { ...init, headers };
+  if (client) (merged as Record<string, unknown>).client = client;
+
+  return fetch(url, merged);
 }

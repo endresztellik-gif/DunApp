@@ -25,6 +25,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { sanitizeError } from '../_shared/error-sanitizer.ts';
+import { eszignoFetch } from '../_shared/eszigno-fetch.ts';
 
 // ============================================================================
 // CONFIGURATION
@@ -217,7 +218,7 @@ async function fetchPatternData(locationUUID: string): Promise<PatternResponse> 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
-      const response = await fetch(url, {
+      const response = await eszignoFetch(url, {
         method: 'GET',
         headers: {
           'User-Agent': 'DunApp PWA/1.0 (https://dunapp-pwa.netlify.app)',

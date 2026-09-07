@@ -8,6 +8,73 @@
 
 ---
 
+## 2026-09-07 — Teljes tanúsítvány-audit: e-Szigno lánchiba (hydroinfo.hu + www.vizugy.hu)
+
+Az előrejelzés-javítás után **végignéztük az összes külső HTTPS-végpontot**, mert a hiba osztálya (rossz CA-lánc) más forrásoknál is előjöhet. Módszer: `openssl s_client` a Mozilla root store-ral (`curl.se/ca/cacert.pem`, 121 gyökér), AIA-chasing **nélkül** — pontosan ahogy a Deno/rustls látja.
+
+### Eredmény — Edge Function (Deno) végpontok
+
+| Host | Állapot | Használó |
+|---|---|---|
+| `www.hydroinfo.hu` | ❌ **TÖRÖTT** → javítva | `fetch-water-level` (előrejelzés) |
+| `www.vizugy.hu` | ❌ **TÖRÖTT** → javítva | `fetch-ftcs/kadia-water-level`, `fetch-groundwater-vizugy` (PHP fallback) |
+| `vmservice.vizugy.hu` | ⚠️ OK, de cert **2026-09-12-én lejár** → megelőzőleg pinelve | `vizugy-api-client` (minden aktuális vízállás + talajvíz) |
+| `data.vizugy.hu` | ⚠️ ua. | `vizugy-api-client` (auth token) |
+| `aszalymonitoring.vizugy.hu` | ⚠️ ua. | `fetch-drought` |
+| `api.met.no`, `api.openweathermap.org`, `api.open-meteo.com`, `archive-api.open-meteo.com`, `fcm.googleapis.com` | ✅ OK | meteo, csapadék, push |
+| `vizadat.hu` | ⛔ nem elérhető (connection timeout) | csak a **holt** `fetch-groundwater` (nincs cronja, `fetch-groundwater-vizugy` váltotta) |
+
+**Frontend (böngésző) végpontok:** mind a 12 ✅ (`rainviewer`, `met.hu`, `odp.met.hu`, `map.hugeo.hu`, `ovfgis2/geoportal.vizugy.hu`, OSM, cartocdn, unpkg, supabase, netlify). A böngésző amúgy is AIA-chasingel, ott ez a hibaosztály nem jelentkezik.
+
+### A második törött host: `www.vizugy.hu`
+
+Ugyanaz a minta, mint a hydroinfónál: `*.vizugy.hu` leaf **2026-08-26 12:39 UTC**-tól, kibocsátó `e-Szigno RSA OV TLS CA 2026`, de a szerver az **ECC** köztest küldi. Napló:
+
+```
+❌ FTCS error: TypeError: error sending request for url (https://www.vizugy.hu/?mapModule=OpGrafikon...):
+   client error (Connect): invalid peer certificate: UnknownIssuer
+```
+
+Ez volt a képernyőképen a „Víztestek Napi Vízállása" tábla **FTCS / Kadia = N/A**-ja.
+
+### Megelőző pinelés a 2026-09-12-i lejárat miatt
+
+A `vmservice` / `data` / `aszalymonitoring.vizugy.hu` még a régi `e-Szigno SSL CA 2014` certet futtatja, ami **2026-09-12-én lejár**. Ha ugyanarra a hibásan konfigurált láncra újítanak (ahogy a `www` és a `hydroinfo` tette), akkor **egyszerre halna meg az aktuális vízállás, a talajvíz és az aszály modul**. Ezért ezek is átmentek a pinelt kliensre — a pinelt CA már a *jövőbeli* kibocsátó, tehát a rotáció nem tud kárt okozni.
+
+### Kód
+
+A `_shared/hydroinfo-fetch.ts` átnevezve **`_shared/eszigno-fetch.ts`**-re, `eszignoFetch(url, init?)` általános aláírással (teljes `RequestInit`, default User-Agent csak ha a hívó nem ad). Átállított hívási helyek: `fetch-water-level` (2), `fetch-ftcs-water-level`, `fetch-kadia-water-level`, `fetch-groundwater-vizugy` (PHP fallback), `fetch-drought`, `_shared/vizugy-api-client.ts` (4 — auth + 2 station-lista + timeseries).
+
+### Ellenőrzés (deploy után, éles hívással)
+
+| Függvény | Eredmény |
+|---|---|
+| `fetch-water-level` | 5/5 állomás, **6-6 előrejelzési nap** |
+| `fetch-groundwater-vizugy` | 24 kút, 0 hiba, 8998 rekord — ebből **11 kút a korábban törött PHP-úton** |
+| `fetch-drought` | 8/8 helyszín |
+| `fetch-belso-beda-water-level` | OK (167 reading) |
+| `fetch-ftcs` / `fetch-kadia` | TLS ✅, de lásd lent |
+
+### ⚠️ FTCS és Kadia: a FORRÁS állt le, nem mi
+
+A TLS javítása után az FTCS/Kadia már eléri az oldalt, de `No data in HTML scrape`. Kivizsgálva:
+- a `www.vizugy.hu` `vizmercelista` táblája **üres** (csak fejléc, nulla adatsor),
+- a REST API (`adatFajtaKod=68`) TSZ **130033** és **130038** utolsó észlelése egyaránt **2026-08-03 04:00 UTC**,
+- ugyanez a dátum van a mi `water_body_measurements` táblánkban → **nem vesztettünk adatot**, a forrás hallgat.
+
+Összehasonlításul Belső-Béda (TSZ 150035) ugyanabban az ablakban 666 readinget ad. Tehát a két szivattyútelepi mérce a vízügynél állt le; ezt nálunk nem lehet javítani. (Megfontolandó: az UI „N/A" helyett mutassa az utolsó ismert értéket + dátumot.)
+
+### Egyéb, közben talált eltérések (nem javítva)
+
+- **Halott cron duplikátumok 401-gyel:** `fetch-meteorology-hourly` (jobid 5, `5 * * * *`) az `invoke_fetch_meteorology()`-t hívja **elavult Bearer tokennel** → óránként 401 (24 db/nap). Az igazi meteo a jobid 1 (`*/20`), az megy. Ugyanez `fetch-drought` (jobid 3 ✅ 200) vs `fetch-drought-daily` (jobid 6 ❌ 401, `invoke_fetch_drought()` nem küld Authorizationt). Tisztítás: `SELECT cron.unschedule(5); SELECT cron.unschedule(6);`
+- **Elavult CLAUDE.md cron-tábla** — javítva ebben a körben a valós állapotra.
+- **Befagyott talajvízkutak a forrásnál:** Decs (2026-03-31), Nagybaracska / Szeremle (04-13), Alsónyék / Báta / Őcsény (05-29), Dávod (06-16). A többi 12 kút friss.
+- `supabase/functions/fetch-groundwater` (vizadat.hu) **holt kód** — nincs cronja, a host sem válaszol.
+
+**Tanulság.** Egy CA-rotáció egyszerre több hostot is elvisz, ha közös a kibocsátó — a `*.vizugy.hu` és a `hydroinfo.hu` ugyanattól a Microsec köztestől kap certet. Érdemes a cert-lejáratot monitorozni: a `vizugy.hu` aldomainek **2026-09-12-i** lejárata ugyanezt a kört ismételné meg.
+
+---
+
 ## 2026-09-07 — Vízállás-előrejelzés leállt: hydroinfo.hu TLS lánchiba (UnknownIssuer)
 
 **Tünet.** A vízállás modulban a „5 Napos Előrejelzés" kártya „Nincs előrejelzési adat"-ot mutatott, miközben a hydroinfo.hu weben rendben megjelenítette az előrejelzést. Az aktuális vízállás / vízhozam frissült — csak az előrejelzés nem.

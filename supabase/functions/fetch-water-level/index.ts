@@ -22,7 +22,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts';
 import { sanitizeError } from '../_shared/error-sanitizer.ts';
 import { fetchTimeSeries, DATA_TYPE } from '../_shared/vizugy-api-client.ts';
-import { hydroinfoFetch } from '../_shared/hydroinfo-fetch.ts';
+import { eszignoFetch } from '../_shared/eszigno-fetch.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -148,7 +148,7 @@ async function scrapeHydroinfoDetailTable(
 ): Promise<Array<{ day: number; waterLevel: number; uncertainty: number; date: string }>> {
   const url = `https://www.hydroinfo.hu/tables/${hydroinfoId}H.html`;
 
-  const response = await fetchWithRetry(() => hydroinfoFetch(url));
+  const response = await fetchWithRetry(() => eszignoFetch(url));
 
   const buffer = await response.arrayBuffer();
   const html = new TextDecoder('iso-8859-2').decode(buffer);
@@ -200,7 +200,7 @@ async function scrapeHydroinfoConsolidated(): Promise<
   Record<string, Array<{ day: number; waterLevel: number; uncertainty: number; date: string }>>
 > {
   const url = 'https://www.hydroinfo.hu/tables/dunelotH.html';
-  const response = await fetchWithRetry(() => hydroinfoFetch(url));
+  const response = await fetchWithRetry(() => eszignoFetch(url));
 
   const buffer = await response.arrayBuffer();
   const html = new TextDecoder('iso-8859-2').decode(buffer);

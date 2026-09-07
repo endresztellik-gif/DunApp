@@ -13,6 +13,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { sanitizeError } from '../_shared/error-sanitizer.ts';
 import { fetchTimeSeries, DATA_TYPE } from '../_shared/vizugy-api-client.ts';
+import { eszignoFetch } from '../_shared/eszigno-fetch.ts';
 
 const KADIA_TSZ = 130038;
 const KADIA_VOA_URL =
@@ -43,7 +44,7 @@ function selectDailyReadings(
 }
 
 async function scrapeFromHtml(): Promise<Map<string, DailyReading>> {
-  const response = await fetch(KADIA_VOA_URL);
+  const response = await eszignoFetch(KADIA_VOA_URL);
   const html = await response.text();
 
   const pattern =

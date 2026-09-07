@@ -3,7 +3,7 @@
 > CENTRAL REFERENCE DOCUMENT
 > Claude Code: Read this file FIRST before every task.
 
-**Last updated:** 2026-06-26
+**Last updated:** 2026-09-07
 **Version:** 4.2.0
 **Project status:** Production Ready (All modules operational, all cron jobs active)
 
@@ -17,6 +17,23 @@
 Helyes: `<div className="... px-3 py-2.5">` (block layout).
 
 **Default view:** center `[45.85, 18.5]`, zoom 9, height `h-64 sm:h-96`
+
+---
+
+## Külső HTTPS források — e-Szigno CA lánchiba
+
+A `hydroinfo.hu` és a `*.vizugy.hu` **hibás TLS láncot szolgál ki**: a leafet az
+`e-Szigno RSA OV TLS CA 2026` bocsátja ki, de a szerver az ECC `e-Szigno OV TLS CA 2026`
+köztest küldi. Böngésző AIA-chasinggel elfedi, **a Deno (rustls) nem** → minden Edge
+Function fetch `invalid peer certificate: UnknownIssuer` hibával hal el, némán.
+
+**Szabály:** Edge Function-ből `hydroinfo.hu`-t vagy `*.vizugy.hu`-t **soha ne hívj sima
+`fetch()`-csel** — használd az `_shared/eszigno-fetch.ts` → `eszignoFetch(url, init?)`
+helpert, ami pineli a hiányzó CA-kat. Részletek: `docs/DEVELOPMENT_LOG.md` 2026-09-07.
+
+Diagnosztikai jel: a függvény 200-at ad vissza, de üres eredménnyel, és a futásideje
+megugrik (retry-backoff). Cert-ellenőrzés Deno szemszögéből:
+`openssl s_client -connect <host>:443 -servername <host> -CAfile <mozilla cacert.pem>`
 
 ---
 
@@ -87,13 +104,21 @@ WARNING: MODULE-SPECIFIC SELECTORS
 
 ## CURRENT CRON JOB STATUS
 
-| Job Name | Schedule | Edge Function | jobid | Status |
-|----------|----------|---------------|-------|--------|
-| fetch-meteorology-hourly | `5 * * * *` | fetch-meteorology | - | Active |
-| fetch-water-level-hourly | `10 * * * *` | fetch-water-level | - | Active |
-| fetch-precipitation-summary-daily | `0 6 * * *` | fetch-precipitation-summary | 9 | Active |
-| fetch-drought-daily | `0 6 * * *` | fetch-drought | - | Active |
-| fetch-groundwater-daily | `0 5 * * *` | fetch-groundwater-vizugy (smart) | 13 | Active |
+Verified against `cron.job` on 2026-09-07.
+
+| jobid | Job Name | Schedule | Edge Function | Status |
+|-------|----------|----------|---------------|--------|
+| 1 | fetch-meteorology | `*/20 * * * *` | fetch-meteorology | Active |
+| 2 | fetch-water-level | `0 * * * *` | fetch-water-level | Active |
+| 3 | fetch-drought | `0 6 * * *` | fetch-drought | Active |
+| 4 | check-water-level-alert | `0 */6 * * *` | check-water-level-alert | Active |
+| 9 | fetch-precipitation-summary-daily | `0 6 * * *` | fetch-precipitation-summary | Active |
+| 12 | fetch-water-bodies-daily | `0 7 * * *` | fetch-belso-beda / ftcs / kadia | Active |
+| 13 | fetch-groundwater-daily | `0 5 * * *` | fetch-groundwater-vizugy (smart) | Active |
+| 5 | fetch-meteorology-hourly | `5 * * * *` | fetch-meteorology | **DEAD — 401** (stale token in `invoke_fetch_meteorology()`; jobid 1 covers it) |
+| 6 | fetch-drought-daily | `0 6 * * *` | fetch-drought | **DEAD — 401** (`invoke_fetch_drought()` sends no Authorization; jobid 3 covers it) |
+
+Cleanup for the dead duplicates: `SELECT cron.unschedule(5); SELECT cron.unschedule(6);`
 
 All cron jobs use Supabase project URL: `https://zpwoicpajmvbtmtumsah.supabase.co`
 
