@@ -54,25 +54,29 @@ export default defineConfig({
         'src/components/**/*.tsx',
       ],
       /**
-       * RÁCS (ratchet), nem cél. A korábbi 80% sosem teljesült — a tényleges
-       * szint 2026-09-07-én: statements 42.64 / branches 45.2 /
-       * functions 53.07 / lines 43.35. Amíg a `test:coverage` lépés
-       * `continue-on-error: true` volt, ez észrevétlen maradt; a kapu
-       * élesítésekor azonnal pirosra váltott.
+       * RÁCS (ratchet), nem cél. A korábbi 80% sosem teljesült — amíg a
+       * `test:coverage` lépés `continue-on-error: true` volt, ez észrevétlen
+       * maradt; a kapu élesítésekor azonnal pirosra váltott.
        *
-       * Az itteni értékek a MAI szint alatt vannak pár ponttal: így a kapu
-       * a VISSZAESÉST fogja meg (ez az, amit egy CI-kapunak tudnia kell),
-       * anélkül hogy apróságokon csapkodna.
+       * Az értékek mindig a MAI szint alatt vannak pár ponttal: így a kapu a
+       * VISSZAESÉST fogja meg (ez az, amit egy CI-kapunak tudnia kell),
+       * anélkül hogy apróságokon csapkodna. Ha a fedezet nő, ezeket a
+       * számokat kell utána húzni.
        *
-       * A 80% továbbra is a cél — ha a fedezet nő, ezeket a számokat kell
-       * utána húzni. Legnagyobb hiányzó területek: a modulkomponensek
-       * (meteorology / water-level / drought) és a térkép-widgetek.
+       * Mérések:
+       *   2026-09-07 (1.) statements 42.64 / branches 45.2  / functions 53.07 / lines 43.35
+       *   2026-09-07 (2.) statements 50.36 / branches 51.25 / functions 64.24 / lines 50.00
+       *     ← +20 teszt: régió-szűrő hookok (useStations / useDroughtLocations /
+       *       useGroundwaterWells) és useFullscreen, mind 0%-ról indulva.
+       *
+       * A 80% továbbra is a cél. A legnagyobb hiányzó terület most a
+       * `components/` (16%) — a modulkomponensek és a térkép-widgetek.
        */
       thresholds: {
-        statements: 40,
-        branches: 43,
-        functions: 51,
-        lines: 41,
+        statements: 48,
+        branches: 49,
+        functions: 62,
+        lines: 48,
       },
     },
   },

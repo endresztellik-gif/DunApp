@@ -8,6 +8,53 @@
 
 ---
 
+## 2026-09-07 — Cert-figyelés automatizálva + lefedettség 42,6% → 50,4%
+
+A session két nyitott tétele. Mindkettő ugyanarra a gyökérproblémára válasz: **a kiváltó hiba néma volt** — az Edge Function 200-at adott vissza üres eredménnyel, és két hétig egy felhasználói bejelentés derítette ki.
+
+### 1. `scripts/check-certs.sh` + heti `cert-watch.yml`
+
+Mind a **16 külső hostot** ellenőrzi a Mozilla root store-ral, **AIA-chasing nélkül** — pontosan úgy, ahogy a Deno/rustls látja. Amit itt „LÁNCHIBA"-ként jelez, az élesben `invalid peer certificate: UnknownIssuer`.
+
+A pinelt CA-kat az `_shared/eszigno-fetch.ts`-ből olvassa ki, tehát **nincs duplikált igazság**: ha ott frissül a tanúsítvány, a script automatikusan követi.
+
+Kilépési kód: **1 csak törött láncnál** (az az éles kiesés). A közeli lejárat figyelmeztetés + GitHub-annotáció, de exit 0 — a tanúsítvány még érvényes; a veszélyes pillanat a **megújítás**, és ez a projekt pont ott hasalt el kétszer (hydroinfo.hu 08-25, www.vizugy.hu 08-26).
+
+A workflow hetente hétfőn 05:30 UTC fut (a napi cronok után), kézzel is indítható, és azonnal lefut a pinelt CA-k vagy a script módosításakor.
+
+**Az első futás rögtön igazolta magát:** `vmservice` / `data` / `aszalymonitoring` / `ovfgis2` / `geoportal.vizugy.hu` tanúsítványa **4 nap múlva (2026-09-12) lejár** — a korábban csak papíron jelzett kockázat mostantól gépi figyelés alatt van.
+
+Három bash-csapda menet közben, mind kommentelve a scriptben: üres tömb kibontása `set -u` alatt (bash 3.2 macOS-en „unbound variable"), a macOS `date -j -f` nem eszi meg az openssl dátumformátumát (`python3`-ra váltva), és a `printf %s` nem értelmezi az escape-eket (`%b` kell).
+
+### 2. Lefedettség: 42,64% → 50,36% (+20 teszt)
+
+Nem találomra, hanem a **0%-on álló, üzletileg fontos** kódra:
+
+**`useRegionFilteredHooks.test.tsx` (11 teszt)** — `useStations` / `useDroughtLocations` / `useGroundwaterWells`. A Duna/Dráva szétválasztás üzleti szabály, és korábban már el is tört (a kút-időbélyeg táblázat mind a 19 kutat mutatta, 2026-06-26). Amit véd:
+- mindig szűr `is_active`-ra (kutaknál `enabled`-re is),
+- a régió a helyes oszlopra megy: a helyszíneknél/kutaknál `region`, az állomásoknál viszont **`river`** a `RIVER_BY_REGION` leképezéssel — a régiókód ékezet nélküli (`drava`), a folyónév ékezetes (`Dráva`), és egy elgépelés itt **csendben üres listát** adna;
+- **a régió a `queryKey` része** — ez a legfontosabb: ha nem lenne benne, a felhasználó Drávára váltva a Duna gyorsítótárazott adatait látná, új kérés nélkül. A teszt közös `QueryClient`-tel vált régiót és ellenőrzi, hogy tényleg új lekérdezés indul.
+
+**`useFullscreen.test.tsx` (9 teszt)** — mind az öt teljes képernyős térkép ezt használja. A legfontosabb, amit véd: a `document.body.style.overflow` **visszaállítása**. Két külön eset:
+- belépéskori érték visszaállítása (nem fixen `''`) — különben egy külső scroll-lockot oldana fel helyette;
+- **unmount teljes képernyő közben** (a felhasználó modult vált) — cleanup nélkül az egész alkalmazás görgethetetlen maradna.
+
+**Visszatérő tanulság, immár másodszor:** ezek a hookok maguk írnak elő `retry: 3`-at, és a query-szintű beállítás erősebb a `QueryClient` defaultjánál — a teszt `retry: false`-a nem érvényesül. A `retryDelay`-t viszont nem adják meg, így a wrapperben `retryDelay: 0`-val a hibaágas tesztek nem futnak bele az exponenciális backoffba.
+
+### A rács feljebb húzva
+
+| | statements | branches | functions | lines |
+|---|---|---|---|---|
+| 1. mérés | 42,64 | 45,2 | 53,07 | 43,35 |
+| **2. mérés** | **50,36** | **51,25** | **64,24** | **50,00** |
+| küszöb most | 48 | 49 | 62 | 48 |
+
+A `vitest.config.ts`-ben a mérések története is benne van, hogy a következő kör lássa a trendet. A 80% marad a cél; a legnagyobb hiányzó terület most a `components/` (16%).
+
+**Tesztek: 376 zöld** (volt 356).
+
+---
+
 ## 2026-09-07 — Prettier: az utolsó maszkolt CI-kapu, és amit menet közben eltört
 
 Az utolsó `continue-on-error: true` lépés rendezése. **A formázás nem ment simán — és pont ez volt a tanulságos.**
