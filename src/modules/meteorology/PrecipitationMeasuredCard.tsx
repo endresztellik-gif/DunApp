@@ -198,18 +198,18 @@ export const PrecipitationMeasuredCard = React.memo<PrecipitationMeasuredCardPro
         )}
 
         {/* Data Grid */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {tiles.map(({ label, value, Icon, note }) => (
             <div
               key={label}
-              className="p-3 text-center"
+              className="p-2 text-center sm:p-3"
               style={{ background: 'var(--bg-surface-alt)', borderRadius: 'var(--radius-md)' }}
             >
               <div className="mb-2 flex items-center justify-center">
                 <Icon className="h-5 w-5" style={{ color: 'var(--accent-primary)' }} />
               </div>
               <div
-                className="text-2xl font-bold"
+                className="text-xl font-bold sm:text-2xl"
                 style={{ fontFamily: 'var(--font-data)', color: 'var(--text-data)' }}
               >
                 {formatMm(value)}
@@ -230,10 +230,10 @@ export const PrecipitationMeasuredCard = React.memo<PrecipitationMeasuredCardPro
         </div>
 
         {/* Method + coverage */}
-        <div className="mt-4 space-y-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
-          <p>{methodLine}</p>
-          <p>{coverageLine}</p>
-          <p>Utolsó mérési nap: {formatDay(data.dataThrough)}</p>
+        <div className="mt-4 space-y-1" style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-xs">{methodLine}</p>
+          <p className="text-xs">{coverageLine}</p>
+          <p className="text-xs">Utolsó mérési nap: {formatDay(data.dataThrough)}</p>
         </div>
 
         {/* Footer */}
