@@ -199,6 +199,7 @@ out(color, dt.astimezone().strftime("%Y-%m-%d %H:%M"), f" {DIM}({age:.1f} óráj
   check_table "Időjárás (aktuális)"         "meteorology_data"        "timestamp"
   check_table "Időjárás-előrejelzés"        "meteorology_forecasts"   "created_at"
   check_table "Csapadék-összegzés"          "precipitation_summary"   "updated_at"
+  check_table "Csapadék (mért, HungaroMet)" "precipitation_measured_summary" "updated_at"
 
   echo -e "  ${DIM}zöld < 36 óra · sárga 36–168 óra · piros > 1 hét vagy hiányzik${NC}"
 }
@@ -230,6 +231,7 @@ want groundwater && invoke fetch-groundwater-vizugy       "Talajvízkutak"      
 want drought     && invoke fetch-drought                  "Aszály (8 helyszín)"        300
 want meteo       && invoke fetch-meteorology              "Időjárás"                   180
 want precip      && invoke fetch-precipitation-summary    "Csapadék-összegzés"         180
+want precip      && invoke fetch-precipitation-measured   "Csapadék (mért, HungaroMet)" 180
 
 freshness
 

@@ -3,8 +3,45 @@
 > **Cél:** Az összes fejlesztési döntés, hotfix, architektúrális választás és tanulság egy helyen.
 > Minden jövőbeli fejlesztés előtt érdemes átolvasni.
 
-**Utolsó frissítés:** 2026-09-07
-**Projekt verzió:** 4.5.0
+**Utolsó frissítés:** 2026-10-12
+**Projekt verzió:** 4.6.0
+
+---
+
+## 2026-10-12 — Mért csapadék: HungaroMet mérőállomások, párhuzamosan a régi rendszerrel
+
+**Probléma:** a 7 napos / 30 napos / tárgyévi csapadék nem tűnt reálisnak. Okok (élő adattal ellenőrizve):
+a `fetch-precipitation-summary` két különböző Open-Meteo modellt kever (Forecast API az utolsó 30 napra, Archive/ERA5 a tárgyévre), amelyek
+napi értéke 2–6 mm-rel eltér; a ma−3 napi átfedés miatt 1 nap duplán számolódik (`slice(-3)`); a csapadék ERA5-rácsa ~25 km (nem ~5 km);
+a hiányzó adat 0 mm-nek számít; a `CITIES` tömbben csak 4 város van (Bátaapáti + Barcs/Őrtilos/Vízvár sosem frissül → a régi kártyán hibaállapot).
+Mérési kontroll jan. 1.–aug. 31.: Baja állomás 352,5 mm (Open-Meteo −2%), Kölked 304,4 mm (+14%), Szálka 332,1 mm (+6%).
+
+**Megoldás (a régi rendszer VÁLTOZATLAN, 2027-ig párhuzamosan fut):**
+- Forrás: HungaroMet ODP napi csapadékmérők (`weather/weather_reports/synoptic/hungary/daily_rain/csv/HABP_1RD_YYYYMMDD.csv.zip`, egy fájl = egy nap,
+  ~150–200 állomás, a mappa csak az utolsó ~9 napot tartja). A régebbi napokhoz az állomásonkénti `climate/observations_hungary/daily_rain/recent/…_akt.zip`
+  (jan. 1.-től, de csak a lezárt hónapokig: 2026-10-12-én aug. 31-ig).
+- Módszer: legközelebbi állomás ≤ 10 km → közvetlen érték; különben 2–4 állomás ≤ 30 km → IDW (1/d²); különben nincs érték. Hiányzó nap sosem 0 mm.
+  A tárgyév mindig az adott év január 1-jétől számolódik (`summarizeWindows`), évváltáskor magától újraindul.
+- Új: migráció `030` (4 tábla: `precipitation_station_daily`, `precipitation_city_daily`, `precipitation_measured_summary`, `precipitation_compare_log`),
+  migráció `031` (cron 14: `fetch-precipitation-measured-daily`, 07:30 UTC), Edge Function `fetch-precipitation-measured` (`--no-verify-jwt`),
+  `_shared/precipitation-geo.ts`, hook `usePrecipitationMeasured`, `PrecipitationMeasuredCard` (a régi kártya alatt).
+- A napi futás az ÖSSZES elérhető napi fájlt feldolgozza (idempotens) → a kiesett/késő nap magától pótlódik.
+- Összesítést csak az a város kap, akinek az ÉLŐ napi feedben (synoptic) is van mérőállomása (az utolsó ~9 napban volt becslése). Vízvár/Őrtilos állomása csak az éves `recent` fájlban szerepel → a visszatöltés létrehozott nekik sort, de a napi futás nem frissítette volna (csendben elavul) → a függvény törli; a kártya "nincs naponta frissülő mérőállomás"-t ír.
+- Visszatöltés 2026-10-12-én lefutott (a `PRECIP_BACKFILL_TOKEN` utána `supabase secrets unset`). Átvételi pont: Baja jan.–aug. 352,5 mm, Mohács 304,4 mm ✓; ~31 becsült nap (szept. 1.–okt. 1.). Mért érték Barcsnál (523 mm jan.–aug.) ~28%-kal magasabb az Open-Meteo-nál (409 mm okt. 5-ig) – a Dráva-vidék csapadékosabb, de érdemes figyelni.
+- Visszatöltés: `POST …/fetch-precipitation-measured?backfill=2026` + `x-backfill-token` fejléc (`PRECIP_BACKFILL_TOKEN` secret; nélküle 403).
+  A mérés nélküli napokat Open-Meteo Archive értékkel tölti, `method='model'` jelöléssel; a kártya külön számolja a becsült napokat.
+- `precipitation_compare_log`: a régi és új összesítés napi másolata a 2027-es értékeléshez.
+
+**Tanulságok:**
+- A HungaroMet napi fájlok NEM egyformán teljesek (okt. 2–10.: 147–199 állomás; az okt. 9-i fájlban csak 39). Ahol nincs elég állomás, ott nincs érték,
+  a kártya "mért X nap a Y-ból" lefedettséget mutat. A `Q_r` minőségjelző "fejlesztésre fenntartva" (mindig üres) – nem szűrünk rá.
+- A napi érték az adott nap 06:45-től a következő nap 06:45-ig tart (Hellmann-mérő), nem naptári nap.
+- Az országos interpolált évi csapadéktérkép (MISH) az aktuális évre nem nyílt adat (`homogenized_data/gridded_data_series` 2021-ben frissült) → saját IDW.
+- A Supabase MCP `create_edge_function_secret` nem kap értéket a kliensből: a secretet a felhasználó adja meg a Dashboardon.
+- A `deno check` / `npx -y deno` helyben futtatható típusellenőrzéshez (a futás a `deno.lock`-ot módosítja → `git checkout deno.lock`).
+
+**Nyitott (esedékes: 2026. december):** a Kölked-i HungaroMet PWS állomás ügye (a pwshalozat.met.hu szerint a szállítási határidő legkésőbb 2027-05-31, de a felhasználó szerint 2026 decemberében esedékes); van-e adat-API-ja (az oldal csak webportált említ)? Kölked 9. városként való felvétele (a 39308-as állomás ma is ott van).
+A régi és új rendszer összevetése a `precipitation_compare_log` alapján; a régi kivezetése. A régi függvény hibái (dupla nap, hiányzó 4 város) érintetlenek.
 
 ---
 

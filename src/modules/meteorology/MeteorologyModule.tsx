@@ -27,6 +27,7 @@ import { Footer } from '../../components/Layout/Footer';
 import { ForecastChart } from './ForecastChart';
 import { WeatherMapsWidget } from './WeatherMapsWidget';
 import { PrecipitationSummaryCard } from './PrecipitationSummaryCard';
+import { PrecipitationMeasuredCard } from './PrecipitationMeasuredCard';
 import { SunTimesCards } from './SunTimesCards';
 import { MoonTimesCards } from './MoonTimesCards';
 import { useWeatherData } from '../../hooks/useWeatherData';
@@ -219,6 +220,11 @@ export const MeteorologyModule: React.FC<MeteorologyModuleProps> = ({ cities, in
           {/* Precipitation Summary */}
           <div className="mb-6">
             <PrecipitationSummaryCard cityId={selectedCity?.id || null} />
+          </div>
+
+          {/* Precipitation Summary - mért / interpolált (HungaroMet), párhuzamosan a modell-alapúval */}
+          <div className="mb-6">
+            <PrecipitationMeasuredCard cityId={selectedCity?.id || null} />
           </div>
 
           {/* 3-Day Forecast Chart */}

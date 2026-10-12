@@ -3,8 +3,8 @@
 > CENTRAL REFERENCE DOCUMENT
 > Claude Code: Read this file FIRST before every task.
 
-**Last updated:** 2026-09-07
-**Version:** 4.2.0
+**Last updated:** 2026-10-12
+**Version:** 4.3.0
 **Project status:** Production Ready (All modules operational, all cron jobs active)
 
 ## WeatherMapsWidget v3.0 — kritikus konfiguráció
@@ -116,7 +116,8 @@ WARNING: MODULE-SPECIFIC SELECTORS
 - **Edge Functions:** `fetch-water-level`, `fetch-belso-beda-water-level`, `fetch-ftcs-water-level`, `fetch-kadia-water-level`
 - **Cron:** Hourly at :10 (`10 * * * *`)
 - **Features:** Live water levels, push notifications (alert at >=400cm), historical data
-- **Precipitation:** `fetch-precipitation-summary`, cron daily at 06:00 UTC (`0 6 * * *`)
+- **Precipitation:** `fetch-precipitation-summary`, cron daily at 06:00 UTC (`0 6 * * *`) — Open-Meteo, modell-alapú (kétféle modell keveredik, lásd `docs/DEVELOPMENT_LOG.md` 2026-10-12)
+- **Precipitation (mért, párhuzamos rendszer, 2027-ig):** `fetch-precipitation-measured`, cron daily 07:30 UTC (`30 7 * * *`, jobid 14) — HungaroMet napi csapadékmérők + IDW interpoláció, tárgyév mindig jan. 1-től; külön kártya: `PrecipitationMeasuredCard`
 - **Status:** Operational
 
 ### Drought Module
@@ -142,6 +143,7 @@ Verified against `cron.job` on 2026-09-07.
 | 3 | fetch-drought | `0 6 * * *` | fetch-drought | Active |
 | 4 | check-water-level-alert | `0 */6 * * *` | check-water-level-alert | Active |
 | 9 | fetch-precipitation-summary-daily | `0 6 * * *` | fetch-precipitation-summary | Active |
+| 14 | fetch-precipitation-measured-daily | `30 7 * * *` | fetch-precipitation-measured | Active |
 | 12 | fetch-water-bodies-daily | `0 7 * * *` | fetch-belso-beda / ftcs / kadia | Active |
 | 13 | fetch-groundwater-daily | `0 5 * * *` | fetch-groundwater-vizugy (smart) | Active |
 | 5 | fetch-meteorology-hourly | `5 * * * *` | fetch-meteorology | **DEAD — 401** (stale token in `invoke_fetch_meteorology()`; jobid 1 covers it) |
@@ -181,6 +183,8 @@ supabase/
     fetch-drought/index.ts
     fetch-groundwater-vizugy/index.ts  # PRIMARY groundwater function (vizugy.hu)
     fetch-precipitation-summary/index.ts
+    fetch-precipitation-measured/index.ts  # HungaroMet mért csapadék (napi + ?backfill=YYYY)
+    _shared/precipitation-geo.ts           # tiszta logika: CSV-parse, IDW, ablak-összegzés
     send-push-notification/index.ts
     check-water-level-alert/index.ts
   migrations/                       # DB migrations 001-025

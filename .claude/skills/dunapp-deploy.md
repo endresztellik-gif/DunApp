@@ -25,6 +25,7 @@ Available functions:
 - `fetch-drought`
 - `fetch-groundwater-vizugy` (primary groundwater function)
 - `fetch-precipitation-summary`
+- `fetch-precipitation-measured` (HungaroMet mért csapadék; `--no-verify-jwt`; visszatöltés: `?backfill=YYYY` + `x-backfill-token`, secret `PRECIP_BACKFILL_TOKEN` — használat után `supabase secrets unset`)
 - `send-push-notification`
 - `check-water-level-alert`
 - `fetch-belso-beda-water-level`

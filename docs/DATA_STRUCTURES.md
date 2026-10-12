@@ -722,3 +722,26 @@ interface DroughtState {
 
 *Adat Struktúra Dokumentáció v1.0 - 2025-10-24*
 *Referencia: DunApp működő prototípus képek alapján*
+
+---
+
+## 🌧️ Mért csapadék-összesítés (`precipitation_measured_summary`)
+
+```ts
+interface PrecipitationMeasured {
+  cityId: string;
+  last7Days: number | null;      // null = az ablakban egy napra sincs adat (nem 0 mm)
+  last30Days: number | null;
+  yearToDate: number | null;     // mindig az adott év jan. 1-jétől
+  daysAvailable7: number;
+  daysAvailable30: number;
+  daysMeasuredYtd: number;       // mért vagy interpolált napok
+  daysModeledYtd: number;        // Open-Meteo-val pótolt napok (backfill rés)
+  daysExpectedYtd: number;       // jan. 1-től dataThrough-ig
+  dataThrough: string;           // YYYY-MM-DD, az utolsó mérési nap
+  method: 'station' | 'idw';     // station: ≤10 km-es állomás; idw: 2–4 állomás ≤30 km
+  stations: { id: string; name: string; km: number | null }[];
+  nearestKm: number | null;
+  updatedAt: string;
+}
+```

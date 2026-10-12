@@ -186,6 +186,7 @@ supabase functions deploy fetch-meteorology --no-verify-jwt
 supabase functions deploy fetch-water-level --no-verify-jwt
 supabase functions deploy fetch-drought --no-verify-jwt
 supabase functions deploy check-water-level-alert --no-verify-jwt
+supabase functions deploy fetch-precipitation-measured --no-verify-jwt
 
 # Verify deployment
 supabase functions list

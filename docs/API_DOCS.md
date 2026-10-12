@@ -41,6 +41,27 @@ RainViewer        -                      -                      Direct client fe
 
 ## Edge Functions
 
+### `fetch-precipitation-measured`
+
+Mért (HungaroMet mérőállomás) vagy interpolált (IDW) csapadék-összesítés városonként: 7 nap, 30 nap, tárgyév (az adott év jan. 1-jétől).
+A `fetch-precipitation-summary` (Open-Meteo) MELLETT fut, azt nem módosítja.
+
+**Runtime:** Deno · **Trigger:** pg_cron naponta 07:30 UTC (jobid 14) + manuális POST · `--no-verify-jwt`
+**Location:** `supabase/functions/fetch-precipitation-measured/index.ts` (+ `_shared/precipitation-geo.ts`)
+
+```
+POST https://YOUR_PROJECT_ID.supabase.co/functions/v1/fetch-precipitation-measured            # napi mód (az utolsó ~9 napi fájl)
+POST …/fetch-precipitation-measured?backfill=2026   (x-backfill-token: <PRECIP_BACKFILL_TOKEN>) # egyszeri visszatöltés
+```
+
+Válasz: `{ success, mode, dataThrough, filesProcessed, modelFilledDays, results: [{ city, status, method, nearestKm, yearToDate, daysMeasured, daysModeled, daysExpected }] }`.
+`status: "no-station"` = a településhez nincs elég közeli mérőállomás (nincs `precipitation_measured_summary` sor).
+
+Táblák: `precipitation_station_daily`, `precipitation_city_daily`, `precipitation_measured_summary` (ezt olvassa a frontend), `precipitation_compare_log`.
+Forrásmegjelölés (kötelező): *Adatbázis: Meteorológiai Adattár, HungaroMet Nonprofit Zrt.*
+
+---
+
 ### `fetch-meteorology`
 
 Fetches current weather and 6-hourly forecast data for all 4 cities.

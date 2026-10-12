@@ -156,8 +156,8 @@ export const PrecipitationSummaryCard = React.memo<PrecipitationSummaryCardProps
             border: '0.5px solid var(--border-subtle)',
           }}
         >
-          Közelítő, modell-alapú adat (Open-Meteo rácsháló, ~5 km felbontás). Lokális záporoknál a
-          valódi mérésektől ±50%-os eltérés is lehetséges.
+          Közelítő, modell-alapú adat (Open-Meteo, a csapadék ~25 km-es rácson). Lokális záporoknál
+          a valódi mérésektől ±50%-os eltérés is lehetséges. A mért értéket a lenti kártya mutatja.
         </div>
       )}
 
